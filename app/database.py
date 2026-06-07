@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, Date
+from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, Date, Text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from datetime import datetime, date
@@ -39,6 +39,17 @@ class UserProfile(Base):
     target_protein = Column(Integer, nullable=False)
     target_carbs = Column(Integer, nullable=False)
     target_fat = Column(Integer, nullable=False)
+
+
+class DayScore(Base):
+    __tablename__ = "day_scores"
+
+    id = Column(Integer, primary_key=True, index=True)
+    date = Column(Date, nullable=False, unique=True)
+    score = Column(Integer, nullable=False)  # 1-5
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
 def get_db():

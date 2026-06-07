@@ -75,6 +75,27 @@
       <p class="text-xs text-gray-600">Sin registros</p>
     </div>
     {% endif %}
+
+    <!-- Score badge -->
+    <div class="border-t border-gray-700 pt-3 mt-2 flex items-center justify-between">
+      {% if d.score %}
+        {% set score_colors = {1: '#ef4444', 2: '#f97316', 3: '#f59e0b', 4: '#84cc16', 5: '#34d399'} %}
+        <div class="flex items-center gap-1">
+          {% for i in range(1, 6) %}
+          <span style="color: {% if i <= d.score %}{{ score_colors[d.score] }}{% else %}#374151{% endif %}; font-size: 1rem;">★</span>
+          {% endfor %}
+          <span class="text-xs text-gray-400 ml-1">{{ d.score }}/5</span>
+        </div>
+        {% if d.score_notes %}
+        <span class="text-xs text-gray-500 truncate max-w-[100px]" title="{{ d.score_notes }}">{{ d.score_notes }}</span>
+        {% endif %}
+      {% else %}
+        <span class="text-xs text-gray-600 italic">Sin puntaje</span>
+        {% if d.is_today %}
+        <a href="/" class="text-xs text-brand-400 hover:underline">Puntuar →</a>
+        {% endif %}
+      {% endif %}
+    </div>
   </div>
   {% endfor %}
 </div>

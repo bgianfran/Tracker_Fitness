@@ -113,6 +113,75 @@
 
 </div>
 
+<!-- Score + Weekly Progress -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+
+  <!-- Puntaje del día -->
+  <div class="bg-gray-800 rounded-2xl p-5 border border-gray-700">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-base font-semibold text-white">Puntaje del día</h2>
+      {% if today_score %}
+      <span class="text-xs bg-brand-900/50 text-brand-400 px-2 py-1 rounded-lg font-medium border border-brand-800/50">
+        Guardado ✓
+      </span>
+      {% endif %}
+    </div>
+    <form method="post" action="/score" id="score-form">
+      <input type="hidden" name="score_date" value="{{ today }}">
+      <div class="flex items-center gap-1 mb-4" id="star-container">
+        {% for i in range(1, 6) %}
+        <button type="button"
+          data-val="{{ i }}"
+          onclick="selectScore({{ i }})"
+          class="star-btn text-4xl transition-transform hover:scale-110 focus:outline-none"
+          style="color: {% if today_score and today_score.score >= i %}#f59e0b{% else %}#374151{% endif %};">
+          ★
+        </button>
+        {% endfor %}
+      </div>
+      <input type="hidden" name="score" id="score-input" value="{{ today_score.score if today_score else '' }}">
+      <textarea name="notes" placeholder="Nota opcional (ej: entrené bien, comí limpio...)"
+        class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-brand-500 resize-none mb-3"
+        rows="2">{{ today_score.notes if today_score else '' }}</textarea>
+      <button type="submit" id="score-save-btn"
+        class="w-full bg-brand-500 hover:bg-brand-600 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold py-2 rounded-xl transition-colors text-sm"
+        {% if not today_score %}disabled{% endif %}>
+        {{ 'Actualizar puntaje' if today_score else 'Guardar puntaje' }}
+      </button>
+    </form>
+  </div>
+
+  <!-- Progreso semanal de puntos -->
+  <div class="bg-gray-800 rounded-2xl p-5 border border-gray-700">
+    <div class="flex items-center justify-between mb-1">
+      <h2 class="text-base font-semibold text-white">Semana en puntos</h2>
+      <span class="text-2xl font-bold
+        {% if weekly_total >= weekly_goal %}text-brand-400{% elif weekly_total >= weekly_goal * 0.6 %}text-yellow-400{% else %}text-gray-400{% endif %}">
+        {{ weekly_total }}<span class="text-base font-normal text-gray-500">/{{ weekly_goal }}</span>
+      </span>
+    </div>
+    <p class="text-xs text-gray-500 mb-4">{{ scored_days }} de 7 días puntuados — objetivo: {{ weekly_goal }} pts</p>
+
+    <!-- Weekly bar -->
+    <div class="h-3 bg-gray-700 rounded-full overflow-hidden mb-4">
+      <div class="h-full rounded-full transition-all duration-700
+        {% if weekly_total >= weekly_goal %}bg-brand-400{% elif weekly_total >= weekly_goal * 0.6 %}bg-yellow-400{% else %}bg-blue-400{% endif %}"
+        style="width: {{ [((weekly_total / weekly_goal) * 100)|round(1), 100]|min }}%"></div>
+    </div>
+
+    <!-- Stars scale legend -->
+    <div class="grid grid-cols-5 gap-1 text-center">
+      {% set score_labels = [("1", "Mal día", "#ef4444"), ("2", "Regular", "#f97316"), ("3", "Ok", "#f59e0b"), ("4", "Bien", "#84cc16"), ("5", "Perfecto", "#34d399")] %}
+      {% for val, label, color in score_labels %}
+      <div class="bg-gray-700/50 rounded-lg py-2 px-1">
+        <div class="text-lg" style="color: {{ color }};">★</div>
+        <div class="text-xs text-gray-400 leading-tight">{{ label }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
 <!-- Chart + Meals -->
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
@@ -222,6 +291,35 @@
 
 {% block scripts %}
 <script>
+// Star rating
+function selectScore(val) {
+  document.getElementById('score-input').value = val;
+  document.getElementById('score-save-btn').disabled = false;
+  document.getElementById('score-save-btn').textContent = 'Guardar puntaje';
+  const colors = { 1: '#ef4444', 2: '#f97316', 3: '#f59e0b', 4: '#84cc16', 5: '#34d399' };
+  document.querySelectorAll('.star-btn').forEach(btn => {
+    const v = parseInt(btn.dataset.val);
+    btn.style.color = v <= val ? colors[val] : '#374151';
+  });
+}
+document.querySelectorAll('.star-btn').forEach(btn => {
+  btn.addEventListener('mouseenter', () => {
+    const val = parseInt(btn.dataset.val);
+    const colors = { 1: '#ef4444', 2: '#f97316', 3: '#f59e0b', 4: '#84cc16', 5: '#34d399' };
+    document.querySelectorAll('.star-btn').forEach(b => {
+      b.style.color = parseInt(b.dataset.val) <= val ? colors[val] : '#374151';
+    });
+  });
+  btn.addEventListener('mouseleave', () => {
+    const current = parseInt(document.getElementById('score-input').value) || 0;
+    const colors = { 1: '#ef4444', 2: '#f97316', 3: '#f59e0b', 4: '#84cc16', 5: '#34d399' };
+    document.querySelectorAll('.star-btn').forEach(b => {
+      const v = parseInt(b.dataset.val);
+      b.style.color = current > 0 && v <= current ? colors[current] : '#374151';
+    });
+  });
+});
+
 {% if totals.calories > 0 %}
 const ctx = document.getElementById('macroChart').getContext('2d');
 new Chart(ctx, {

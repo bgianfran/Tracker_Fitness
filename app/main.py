@@ -6,7 +6,7 @@ from sqlalchemy import func
 from datetime import date, timedelta
 import os
 
-from app.database import get_db, init_db, FoodEntry, UserProfile
+from app.database import get_db, init_db, FoodEntry, UserProfile, DayScore
 from app.food_data import search_foods, get_food, FOOD_DATABASE
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -83,6 +83,15 @@ def dashboard(request: Request, db: Session = Depends(get_db)):
                  "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"]
     today_str = f"{days_es[today.weekday()]}, {today.day} de {months_es[today.month - 1]} de {today.year}"
 
+    # Score for today
+    today_score = db.query(DayScore).filter(DayScore.date == today).first()
+
+    # Weekly score (last 7 days)
+    week_start = today - timedelta(days=6)
+    week_scores = db.query(DayScore).filter(DayScore.date >= week_start).all()
+    weekly_total = sum(s.score for s in week_scores)
+    weekly_goal = 30  # 7 days × ~4.3 average
+
     return templates.TemplateResponse("dashboard.html", {
         "request": request,
         "profile": profile,
@@ -91,6 +100,10 @@ def dashboard(request: Request, db: Session = Depends(get_db)):
         "meals": meals,
         "today_str": today_str,
         "today": today,
+        "today_score": today_score,
+        "weekly_total": weekly_total,
+        "weekly_goal": weekly_goal,
+        "scored_days": len(week_scores),
     })
 
 
@@ -187,6 +200,7 @@ def history(request: Request, db: Session = Depends(get_db)):
         carbs = round(sum(e.carbs for e in entries), 1)
         fat = round(sum(e.fat for e in entries), 1)
 
+        score_obj = db.query(DayScore).filter(DayScore.date == day).first()
         label = f"{days_es[day.weekday()]} {day.day}/{months_es[day.month - 1]}"
         days_data.append({
             "date": day,
@@ -198,6 +212,8 @@ def history(request: Request, db: Session = Depends(get_db)):
             "fat": fat,
             "cal_pct": min(round((cals / profile.target_calories) * 100), 150) if cals else 0,
             "protein_pct": min(round((protein / profile.target_protein) * 100), 150) if protein else 0,
+            "score": score_obj.score if score_obj else None,
+            "score_notes": score_obj.notes if score_obj else "",
         })
 
     chart_labels = [d["label"] for d in days_data]
@@ -211,6 +227,48 @@ def history(request: Request, db: Session = Depends(get_db)):
         "chart_labels": chart_labels,
         "chart_calories": chart_calories,
         "chart_protein": chart_protein,
+    })
+
+
+# ─── Score ──────────────────────────────────────────────────────────────────
+
+@app.post("/score")
+def save_score(
+    db: Session = Depends(get_db),
+    score: int = Form(...),
+    notes: str = Form(""),
+    score_date: str = Form(""),
+):
+    target_date = date.fromisoformat(score_date) if score_date else date.today()
+    if not (1 <= score <= 5):
+        raise HTTPException(status_code=400, detail="Puntaje debe ser entre 1 y 5")
+
+    existing = db.query(DayScore).filter(DayScore.date == target_date).first()
+    if existing:
+        existing.score = score
+        existing.notes = notes
+    else:
+        db.add(DayScore(date=target_date, score=score, notes=notes))
+    db.commit()
+    return RedirectResponse(url="/", status_code=303)
+
+
+@app.get("/api/scores/week")
+def api_week_scores(db: Session = Depends(get_db)):
+    today = date.today()
+    week_start = today - timedelta(days=6)
+    scores = db.query(DayScore).filter(DayScore.date >= week_start).all()
+    return JSONResponse(content={str(s.date): s.score for s in scores})
+
+
+# ─── Reminders ──────────────────────────────────────────────────────────────
+
+@app.get("/reminders", response_class=HTMLResponse)
+def reminders_page(request: Request, db: Session = Depends(get_db)):
+    profile = db.query(UserProfile).first()
+    return templates.TemplateResponse("reminders.html", {
+        "request": request,
+        "profile": profile,
     })
 
 

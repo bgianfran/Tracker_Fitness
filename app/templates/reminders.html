@@ -1,0 +1,249 @@
+{% extends "base.html" %}
+{% block title %}Recordatorios – FitTracker{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+
+  <div class="mb-6">
+    <h1 class="text-2xl font-bold text-white">Recordatorios</h1>
+    <p class="text-gray-400 text-sm mt-1">Configurá cuándo querés que te avisemos para registrar tus comidas y tu entrenamiento.</p>
+  </div>
+
+  <!-- Permiso de notificaciones -->
+  <div id="permission-card" class="bg-gray-800 rounded-2xl p-5 border border-gray-700 mb-6 hidden">
+    <div class="flex items-start gap-4">
+      <div class="bg-yellow-500/10 p-3 rounded-xl flex-shrink-0">
+        <svg class="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+        </svg>
+      </div>
+      <div class="flex-1">
+        <h3 class="font-semibold text-white mb-1">Activar notificaciones</h3>
+        <p class="text-sm text-gray-400 mb-3">Para recibir recordatorios necesitás permitir notificaciones en tu navegador.</p>
+        <button onclick="requestPermission()"
+          class="bg-brand-500 hover:bg-brand-600 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors">
+          Permitir notificaciones
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="permission-denied" class="bg-red-900/20 border border-red-800/50 rounded-2xl p-4 mb-6 hidden">
+    <p class="text-red-400 text-sm">
+      Bloqueaste las notificaciones. Para activarlas, hacé clic en el candado de la barra de dirección del navegador y permitilas.
+    </p>
+  </div>
+
+  <!-- Estado de notificaciones -->
+  <div class="bg-gray-800 rounded-2xl p-5 border border-gray-700 mb-6">
+    <div class="flex items-center justify-between">
+      <div>
+        <h2 class="font-semibold text-white">Notificaciones del navegador</h2>
+        <p id="notif-status-text" class="text-sm text-gray-400 mt-0.5">Cargando estado...</p>
+      </div>
+      <div id="notif-status-badge" class="text-xs px-3 py-1.5 rounded-lg font-medium"></div>
+    </div>
+  </div>
+
+  <!-- Recordatorios configurables -->
+  <div class="bg-gray-800 rounded-2xl p-5 border border-gray-700 mb-6">
+    <h2 class="font-semibold text-white mb-4">Horarios de recordatorio</h2>
+    <p class="text-xs text-gray-500 mb-5">Los recordatorios solo funcionan mientras tengas la app abierta en el navegador. En iPhone, agregá la app a tu pantalla de inicio para mejores resultados.</p>
+
+    <div class="space-y-4" id="reminders-list">
+      <!-- Populated by JS -->
+    </div>
+
+    <button onclick="addReminder()"
+      class="mt-4 w-full border border-dashed border-gray-600 hover:border-brand-500 text-gray-400 hover:text-brand-400 py-3 rounded-xl text-sm font-medium transition-colors flex items-center justify-center gap-2">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+      </svg>
+      Agregar recordatorio
+    </button>
+  </div>
+
+  <!-- Test -->
+  <div class="bg-gray-800 rounded-2xl p-5 border border-gray-700 mb-6">
+    <h2 class="font-semibold text-white mb-2">Probar notificación</h2>
+    <p class="text-sm text-gray-400 mb-4">Mandá una notificación de prueba ahora mismo para ver cómo se ve.</p>
+    <button onclick="testNotification()"
+      class="bg-gray-700 hover:bg-gray-600 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors">
+      Enviar prueba
+    </button>
+  </div>
+
+  <!-- Info sobre cómo funciona -->
+  <div class="bg-blue-900/20 border border-blue-800/40 rounded-2xl p-4">
+    <h3 class="text-sm font-semibold text-blue-300 mb-2">¿Cómo funcionan los recordatorios?</h3>
+    <ul class="text-xs text-blue-200/70 space-y-1.5 list-disc list-inside">
+      <li>Los horarios se guardan en tu dispositivo (localStorage)</li>
+      <li>Cada minuto se verifica si hay que enviar un recordatorio</li>
+      <li>Necesitás tener la app abierta o en segundo plano en el navegador</li>
+      <li>En iPhone/iPad: agregá la app a la pantalla de inicio para que funcione mejor</li>
+      <li>Los recordatorios se configuran por dispositivo — cada uno guarda su propia config</li>
+    </ul>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const DEFAULT_REMINDERS = [
+  { id: 1, time: '08:00', label: 'Desayuno', message: '¡Hora de registrar el desayuno!', enabled: true },
+  { id: 2, time: '13:00', label: 'Almuerzo', message: '¡No olvides registrar el almuerzo!', enabled: true },
+  { id: 3, time: '16:30', label: 'Merienda', message: 'Hora de la merienda — ¿la registraste?', enabled: true },
+  { id: 4, time: '21:00', label: 'Cena', message: '¿Ya cargaste la cena del día?', enabled: true },
+  { id: 5, time: '22:00', label: 'Puntaje del día', message: '¡Acordate de puntuar tu día!', enabled: true },
+];
+
+function loadReminders() {
+  const saved = localStorage.getItem('fittracker_reminders');
+  return saved ? JSON.parse(saved) : DEFAULT_REMINDERS;
+}
+
+function saveReminders(reminders) {
+  localStorage.setItem('fittracker_reminders', JSON.stringify(reminders));
+}
+
+function renderReminders() {
+  const reminders = loadReminders();
+  const container = document.getElementById('reminders-list');
+  container.innerHTML = '';
+  reminders.forEach(r => {
+    const div = document.createElement('div');
+    div.className = 'flex items-center gap-3 bg-gray-700/40 rounded-xl px-4 py-3';
+    div.innerHTML = `
+      <div class="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-2 items-center">
+        <input type="time" value="${r.time}" data-id="${r.id}"
+          class="reminder-time bg-gray-700 border border-gray-600 text-white text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:border-brand-500"
+          onchange="updateReminder(${r.id}, 'time', this.value)">
+        <input type="text" value="${r.label}" placeholder="Etiqueta"
+          class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:border-brand-500"
+          onchange="updateReminder(${r.id}, 'label', this.value)">
+        <input type="text" value="${r.message}" placeholder="Mensaje"
+          class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:border-brand-500 col-span-1 sm:col-span-1"
+          onchange="updateReminder(${r.id}, 'message', this.value)">
+      </div>
+      <label class="relative inline-flex items-center cursor-pointer flex-shrink-0">
+        <input type="checkbox" ${r.enabled ? 'checked' : ''} class="sr-only peer"
+          onchange="updateReminder(${r.id}, 'enabled', this.checked)">
+        <div class="w-10 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-500"></div>
+      </label>
+      <button onclick="deleteReminder(${r.id})"
+        class="text-gray-500 hover:text-red-400 transition-colors flex-shrink-0">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    `;
+    container.appendChild(div);
+  });
+}
+
+function updateReminder(id, field, value) {
+  const reminders = loadReminders();
+  const r = reminders.find(r => r.id === id);
+  if (r) { r[field] = value; saveReminders(reminders); }
+}
+
+function deleteReminder(id) {
+  const reminders = loadReminders().filter(r => r.id !== id);
+  saveReminders(reminders);
+  renderReminders();
+}
+
+function addReminder() {
+  const reminders = loadReminders();
+  const newId = Math.max(...reminders.map(r => r.id), 0) + 1;
+  reminders.push({ id: newId, time: '12:00', label: 'Recordatorio', message: '¡Acordate de registrar!', enabled: true });
+  saveReminders(reminders);
+  renderReminders();
+}
+
+// Notification permission
+function updateStatus() {
+  const badge = document.getElementById('notif-status-badge');
+  const text = document.getElementById('notif-status-text');
+  const permCard = document.getElementById('permission-card');
+  const deniedCard = document.getElementById('permission-denied');
+
+  if (!('Notification' in window)) {
+    badge.className = 'text-xs px-3 py-1.5 rounded-lg font-medium bg-gray-700 text-gray-400';
+    badge.textContent = 'No soportado';
+    text.textContent = 'Tu navegador no soporta notificaciones.';
+    return;
+  }
+
+  const perm = Notification.permission;
+  if (perm === 'granted') {
+    badge.className = 'text-xs px-3 py-1.5 rounded-lg font-medium bg-brand-900/50 text-brand-400 border border-brand-800/50';
+    badge.textContent = 'Activas ✓';
+    text.textContent = 'Las notificaciones están habilitadas.';
+    permCard.classList.add('hidden');
+    deniedCard.classList.add('hidden');
+  } else if (perm === 'denied') {
+    badge.className = 'text-xs px-3 py-1.5 rounded-lg font-medium bg-red-900/40 text-red-400 border border-red-800/50';
+    badge.textContent = 'Bloqueadas';
+    text.textContent = 'Las notificaciones están bloqueadas en este navegador.';
+    permCard.classList.add('hidden');
+    deniedCard.classList.remove('hidden');
+  } else {
+    badge.className = 'text-xs px-3 py-1.5 rounded-lg font-medium bg-yellow-900/40 text-yellow-400 border border-yellow-800/50';
+    badge.textContent = 'Sin activar';
+    text.textContent = 'Las notificaciones no están activadas aún.';
+    permCard.classList.remove('hidden');
+    deniedCard.classList.add('hidden');
+  }
+}
+
+async function requestPermission() {
+  const perm = await Notification.requestPermission();
+  updateStatus();
+  if (perm === 'granted') {
+    new Notification('FitTracker', { body: '¡Notificaciones activadas! Ya vas a recibir tus recordatorios.', icon: '/favicon.ico' });
+  }
+}
+
+function testNotification() {
+  if (Notification.permission !== 'granted') {
+    alert('Primero activá las notificaciones arriba.');
+    return;
+  }
+  new Notification('FitTracker – Prueba', {
+    body: '¡Funcionan! Vas a recibir recordatorios como este.',
+    icon: '/favicon.ico'
+  });
+}
+
+// Reminder checker — runs every minute
+function checkReminders() {
+  if (Notification.permission !== 'granted') return;
+  const now = new Date();
+  const hhmm = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+  const reminders = loadReminders();
+  const fired = JSON.parse(localStorage.getItem('fittracker_fired') || '{}');
+  const today = now.toISOString().slice(0, 10);
+
+  reminders.forEach(r => {
+    if (!r.enabled) return;
+    const key = `${today}_${r.id}`;
+    if (r.time === hhmm && !fired[key]) {
+      new Notification(`FitTracker – ${r.label}`, { body: r.message, icon: '/favicon.ico' });
+      fired[key] = true;
+      // Clean old keys (keep only today's)
+      Object.keys(fired).forEach(k => { if (!k.startsWith(today)) delete fired[k]; });
+      localStorage.setItem('fittracker_fired', JSON.stringify(fired));
+    }
+  });
+}
+
+// Init
+updateStatus();
+renderReminders();
+setInterval(checkReminders, 60000);
+checkReminders();
+</script>
+{% endblock %}
