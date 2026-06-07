@@ -2,8 +2,19 @@
 <html lang="es" class="dark">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>{% block title %}Fitness Tracker{% endblock %}</title>
+  <!-- viewport-fit=cover cubre el notch y la barra de inicio en iPhone -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>{% block title %}FitTracker{% endblock %}</title>
+
+  <!-- PWA / Add to Home Screen -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="FitTracker" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#111827" />
+  <meta name="description" content="Trackeá tus calorías, macros y entrenamiento" />
+  <link rel="manifest" href="/manifest.json" />
+
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
   <script>
@@ -13,16 +24,9 @@
         extend: {
           colors: {
             brand: {
-              50:  '#ecfdf5',
-              100: '#d1fae5',
-              200: '#a7f3d0',
-              300: '#6ee7b7',
-              400: '#34d399',
-              500: '#10b981',
-              600: '#059669',
-              700: '#047857',
-              800: '#065f46',
-              900: '#064e3b',
+              50:  '#ecfdf5', 100: '#d1fae5', 200: '#a7f3d0',
+              300: '#6ee7b7', 400: '#34d399', 500: '#10b981',
+              600: '#059669', 700: '#047857', 800: '#065f46', 900: '#064e3b',
             }
           }
         }
@@ -30,133 +34,159 @@
     }
   </script>
   <style>
-    /* Custom scrollbar */
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: #1f2937; }
-    ::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: #4b5563; }
+    /* Safe area para notch (iPhone X+) y barra de inicio */
+    :root {
+      --sat: env(safe-area-inset-top);
+      --sar: env(safe-area-inset-right);
+      --sab: env(safe-area-inset-bottom);
+      --sal: env(safe-area-inset-left);
+    }
+
+    /* Navbar ocupa el área del notch en iPhone en landscape */
+    .navbar-safe {
+      padding-top: env(safe-area-inset-top);
+      padding-left: env(safe-area-inset-left);
+      padding-right: env(safe-area-inset-right);
+    }
+
+    /* Bottom nav respeta la barra de inicio del iPhone */
+    .bottom-nav-safe {
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    /* El contenido principal no queda tapado por la bottom nav en mobile */
+    @media (max-width: 767px) {
+      main { padding-bottom: calc(4.5rem + env(safe-area-inset-bottom)); }
+    }
+
+    /* iOS Safari: evitar zoom en inputs (font-size mínimo 16px) */
+    input, select, textarea { font-size: 16px !important; }
 
     /* Progress bar transition */
     .progress-bar { transition: width 0.6s ease; }
 
-    /* Smooth page transitions */
-    body { opacity: 1; transition: opacity 0.15s ease; }
+    /* Card hover (solo en dispositivos con hover real) */
+    @media (hover: hover) {
+      .card-hover { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+      .card-hover:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.4); }
+    }
 
-    /* Active nav link */
-    .nav-active { color: #34d399 !important; border-bottom: 2px solid #34d399; }
+    /* Scrollbar (solo desktop) */
+    @media (min-width: 768px) {
+      ::-webkit-scrollbar { width: 6px; height: 6px; }
+      ::-webkit-scrollbar-track { background: #1f2937; }
+      ::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
+      ::-webkit-scrollbar-thumb:hover { background: #4b5563; }
+    }
 
-    /* Card hover */
-    .card-hover { transition: transform 0.2s ease, box-shadow 0.2s ease; }
-    .card-hover:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.4); }
-
-    /* Number input arrows hidden */
+    /* Número input sin flechas */
     input[type=number]::-webkit-inner-spin-button,
     input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
     input[type=number] { -moz-appearance: textfield; }
+
+    /* Touch targets mínimo 44x44 (Apple HIG) */
+    .touch-target {
+      min-height: 44px;
+      min-width: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Bottom nav activo */
+    .bn-active svg { color: #34d399; }
+    .bn-active span { color: #34d399; }
   </style>
 </head>
 <body class="bg-gray-900 text-gray-100 min-h-screen flex flex-col">
 
-  <!-- Navbar -->
-  <nav class="bg-gray-800 border-b border-gray-700 sticky top-0 z-50">
+  <!-- Navbar top (siempre visible) -->
+  <nav class="bg-gray-800/95 backdrop-blur border-b border-gray-700 sticky top-0 z-50 navbar-safe">
     <div class="max-w-6xl mx-auto px-4">
-      <div class="flex items-center justify-between h-16">
+      <div class="flex items-center justify-between h-14">
         <!-- Logo -->
-        <a href="/" class="flex items-center gap-2 text-xl font-bold text-brand-400">
-          <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+        <a href="/" class="flex items-center gap-2 text-lg font-bold text-brand-400">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
               d="M13 10V3L4 14h7v7l9-11h-7z"/>
           </svg>
           <span>FitTracker</span>
         </a>
 
-        <!-- Desktop nav -->
+        <!-- Desktop nav (oculto en mobile — se usa bottom nav) -->
         <div class="hidden md:flex items-center gap-1">
-          <a href="/" class="nav-link px-4 py-2 rounded-lg text-sm font-medium text-gray-300 hover:text-brand-400 hover:bg-gray-700 transition-colors">
-            Dashboard
-          </a>
-          <a href="/log" class="nav-link px-4 py-2 rounded-lg text-sm font-medium text-gray-300 hover:text-brand-400 hover:bg-gray-700 transition-colors">
-            Registrar
-          </a>
-          <a href="/history" class="nav-link px-4 py-2 rounded-lg text-sm font-medium text-gray-300 hover:text-brand-400 hover:bg-gray-700 transition-colors">
-            Historial
-          </a>
-          <a href="/profile" class="nav-link px-4 py-2 rounded-lg text-sm font-medium text-gray-300 hover:text-brand-400 hover:bg-gray-700 transition-colors">
-            Perfil
-          </a>
-          <a href="/reminders" class="nav-link px-4 py-2 rounded-lg text-sm font-medium text-gray-300 hover:text-brand-400 hover:bg-gray-700 transition-colors">
-            Recordatorios
-          </a>
+          <a href="/" class="nav-link px-3 py-2 rounded-lg text-sm font-medium text-gray-300 hover:text-brand-400 hover:bg-gray-700 transition-colors">Dashboard</a>
+          <a href="/log" class="nav-link px-3 py-2 rounded-lg text-sm font-medium text-gray-300 hover:text-brand-400 hover:bg-gray-700 transition-colors">Registrar</a>
+          <a href="/history" class="nav-link px-3 py-2 rounded-lg text-sm font-medium text-gray-300 hover:text-brand-400 hover:bg-gray-700 transition-colors">Historial</a>
+          <a href="/profile" class="nav-link px-3 py-2 rounded-lg text-sm font-medium text-gray-300 hover:text-brand-400 hover:bg-gray-700 transition-colors">Perfil</a>
+          <a href="/reminders" class="nav-link px-3 py-2 rounded-lg text-sm font-medium text-gray-300 hover:text-brand-400 hover:bg-gray-700 transition-colors">Recordatorios</a>
         </div>
-
-        <!-- Mobile hamburger -->
-        <button id="menu-btn" class="md:hidden p-2 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700 transition-colors">
-          <svg class="w-6 h-6" id="icon-open" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
-          </svg>
-          <svg class="w-6 h-6 hidden" id="icon-close" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-          </svg>
-        </button>
-      </div>
-    </div>
-
-    <!-- Mobile menu -->
-    <div id="mobile-menu" class="hidden md:hidden border-t border-gray-700 bg-gray-800">
-      <div class="px-4 py-3 space-y-1">
-        <a href="/" class="nav-link block px-3 py-2 rounded-lg text-sm font-medium text-gray-300 hover:text-brand-400 hover:bg-gray-700 transition-colors">
-          📊 Dashboard
-        </a>
-        <a href="/log" class="nav-link block px-3 py-2 rounded-lg text-sm font-medium text-gray-300 hover:text-brand-400 hover:bg-gray-700 transition-colors">
-          ➕ Registrar
-        </a>
-        <a href="/history" class="nav-link block px-3 py-2 rounded-lg text-sm font-medium text-gray-300 hover:text-brand-400 hover:bg-gray-700 transition-colors">
-          📅 Historial
-        </a>
-        <a href="/profile" class="nav-link block px-3 py-2 rounded-lg text-sm font-medium text-gray-300 hover:text-brand-400 hover:bg-gray-700 transition-colors">
-          👤 Perfil
-        </a>
-        <a href="/reminders" class="nav-link block px-3 py-2 rounded-lg text-sm font-medium text-gray-300 hover:text-brand-400 hover:bg-gray-700 transition-colors">
-          🔔 Recordatorios
-        </a>
       </div>
     </div>
   </nav>
 
   <!-- Main content -->
-  <main class="flex-1 max-w-6xl mx-auto w-full px-4 py-6">
+  <main class="flex-1 max-w-6xl mx-auto w-full px-4 py-5">
     {% block content %}{% endblock %}
   </main>
 
-  <!-- Footer -->
-  <footer class="bg-gray-800 border-t border-gray-700 mt-auto">
-    <div class="max-w-6xl mx-auto px-4 py-4 text-center text-sm text-gray-500">
+  <!-- Footer solo desktop -->
+  <footer class="hidden md:block bg-gray-800 border-t border-gray-700 mt-auto">
+    <div class="max-w-6xl mx-auto px-4 py-3 text-center text-xs text-gray-500">
       FitTracker &mdash; Tu compañero de entrenamiento
     </div>
   </footer>
 
+  <!-- Bottom Navigation Bar (solo mobile) -->
+  <nav class="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-gray-800/95 backdrop-blur border-t border-gray-700 bottom-nav-safe">
+    <div class="grid grid-cols-5 h-16">
+      <a href="/" class="bottom-nav-link flex flex-col items-center justify-center gap-0.5 text-gray-400 active:bg-gray-700 transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+        </svg>
+        <span class="text-xs font-medium">Inicio</span>
+      </a>
+      <a href="/log" class="bottom-nav-link flex flex-col items-center justify-center gap-0.5 text-gray-400 active:bg-gray-700 transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+        </svg>
+        <span class="text-xs font-medium">Registrar</span>
+      </a>
+      <a href="/history" class="bottom-nav-link flex flex-col items-center justify-center gap-0.5 text-gray-400 active:bg-gray-700 transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+        </svg>
+        <span class="text-xs font-medium">Historial</span>
+      </a>
+      <a href="/profile" class="bottom-nav-link flex flex-col items-center justify-center gap-0.5 text-gray-400 active:bg-gray-700 transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+        </svg>
+        <span class="text-xs font-medium">Perfil</span>
+      </a>
+      <a href="/reminders" class="bottom-nav-link flex flex-col items-center justify-center gap-0.5 text-gray-400 active:bg-gray-700 transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+        </svg>
+        <span class="text-xs font-medium">Avisos</span>
+      </a>
+    </div>
+  </nav>
+
   <script>
-    // Mobile menu toggle
-    const menuBtn = document.getElementById('menu-btn');
-    const mobileMenu = document.getElementById('mobile-menu');
-    const iconOpen = document.getElementById('icon-open');
-    const iconClose = document.getElementById('icon-close');
-
-    menuBtn.addEventListener('click', () => {
-      mobileMenu.classList.toggle('hidden');
-      iconOpen.classList.toggle('hidden');
-      iconClose.classList.toggle('hidden');
-    });
-
-    // Highlight active nav link
+    // Highlight active bottom nav + desktop nav
     const currentPath = window.location.pathname;
+    document.querySelectorAll('.bottom-nav-link').forEach(link => {
+      const href = link.getAttribute('href');
+      if (href === currentPath || (href !== '/' && currentPath.startsWith(href))) {
+        link.classList.add('bn-active');
+        link.querySelectorAll('svg, span').forEach(el => el.style.color = '#34d399');
+      }
+    });
     document.querySelectorAll('.nav-link').forEach(link => {
       const href = link.getAttribute('href');
       if (href === currentPath || (href !== '/' && currentPath.startsWith(href))) {
         link.classList.add('text-brand-400');
-        if (!link.classList.contains('block')) {
-          link.classList.add('nav-active');
-        }
       }
     });
   </script>
