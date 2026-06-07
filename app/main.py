@@ -7,8 +7,9 @@ from sqlalchemy import func
 from datetime import date, timedelta
 import os
 
-from app.database import get_db, init_db, FoodEntry, UserProfile, DayScore
+from app.database import get_db, init_db, FoodEntry, UserProfile, DayScore, ChatMessage
 from app.food_data import search_foods, get_food, FOOD_DATABASE
+from app.hevy import fetch_recent_workouts, format_workout_summary, get_workout_display_data
 
 
 def calculate_score(cal_pct: float, protein_pct: float, wellbeing: str) -> int:
@@ -336,6 +337,151 @@ def reminders_page(request: Request, db: Session = Depends(get_db)):
 
 
 # ─── Profile ────────────────────────────────────────────────────────────────
+
+# ─── Coach ──────────────────────────────────────────────────────────────────
+
+@app.get("/coach", response_class=HTMLResponse)
+def coach_page(request: Request, db: Session = Depends(get_db)):
+    profile = db.query(UserProfile).first()
+
+    # Last 20 chat messages
+    messages = (
+        db.query(ChatMessage)
+        .order_by(ChatMessage.created_at.asc())
+        .limit(20)
+        .all()
+    )
+
+    # Recent workouts from Hevy
+    hevy_error = None
+    recent_workouts_display = []
+    hevy_key = os.environ.get("HEVY_API_KEY", "")
+    if hevy_key:
+        try:
+            raw = fetch_recent_workouts(pages=1)
+            recent_workouts_display = [get_workout_display_data(w) for w in raw[:5]]
+        except Exception as e:
+            hevy_error = str(e)
+    else:
+        hevy_error = "HEVY_API_KEY no configurada"
+
+    anthropic_key = os.environ.get("ANTHROPIC_API_KEY", "")
+
+    return templates.TemplateResponse("coach.html", {
+        "request": request,
+        "profile": profile,
+        "messages": messages,
+        "recent_workouts": recent_workouts_display,
+        "hevy_error": hevy_error,
+        "anthropic_configured": bool(anthropic_key),
+    })
+
+
+@app.post("/coach/chat")
+async def coach_chat(
+    request: Request,
+    db: Session = Depends(get_db),
+    message: str = Form(...),
+):
+    import anthropic as anthropic_sdk
+
+    profile = db.query(UserProfile).first()
+    user_message = message.strip()
+    if not user_message:
+        return RedirectResponse(url="/coach", status_code=303)
+
+    anthropic_key = os.environ.get("ANTHROPIC_API_KEY", "")
+    if not anthropic_key:
+        # Save user message anyway, return error as assistant
+        db.add(ChatMessage(role="user", content=user_message))
+        db.add(ChatMessage(
+            role="assistant",
+            content="Error: ANTHROPIC_API_KEY no está configurada. Configurá la variable de entorno para usar el coach.",
+        ))
+        db.commit()
+        return RedirectResponse(url="/coach", status_code=303)
+
+    # Save user message
+    db.add(ChatMessage(role="user", content=user_message))
+    db.commit()
+
+    # Today's nutrition
+    today = date.today()
+    today_entries = db.query(FoodEntry).filter(FoodEntry.date == today).all()
+    today_calories = sum(e.calories for e in today_entries)
+    today_protein = sum(e.protein for e in today_entries)
+
+    # Recent workouts for context
+    workout_summaries = []
+    try:
+        raw_workouts = fetch_recent_workouts(pages=2)
+        workout_summaries = [format_workout_summary(w) for w in raw_workouts[:10]]
+    except Exception:
+        pass
+
+    system = f"""Sos un coach deportivo y nutricional personalizado.
+Trabajás con un atleta con este perfil:
+- Nombre: {profile.name}, {profile.age} años, {profile.weight_kg}kg, {profile.height_cm}cm
+- Objetivo: {profile.goal}
+- Nivel de actividad: {profile.activity_level}
+- Objetivos diarios: {profile.target_calories} kcal, {profile.target_protein}g proteína, {profile.target_carbs}g carbs, {profile.target_fat}g grasa
+
+Últimos entrenamientos (Hevy):
+{chr(10).join(workout_summaries) if workout_summaries else 'Sin datos de entrenamiento disponibles'}
+
+Nutrición de hoy: {today_calories:.0f} kcal / {profile.target_calories} kcal, proteína: {today_protein:.0f}g / {profile.target_protein}g
+
+Respondé siempre en español. Sé directo, práctico y conciso. No más de 3-4 párrafos por respuesta.
+Podés sugerir ajustes de nutrición, planificar entrenamientos, recomendar cargas, recetas, o responder dudas."""
+
+    # Build message history (last 10 for context)
+    history = (
+        db.query(ChatMessage)
+        .order_by(ChatMessage.created_at.desc())
+        .limit(11)
+        .all()
+    )
+    history.reverse()
+    # Exclude the very last one (user msg we just saved) - it's already in history
+    api_messages = [{"role": m.role, "content": m.content} for m in history]
+
+    try:
+        client = anthropic_sdk.Anthropic(api_key=anthropic_key)
+        response = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=600,
+            system=system,
+            messages=api_messages,
+        )
+        assistant_reply = response.content[0].text
+    except Exception as e:
+        assistant_reply = f"Error al contactar al coach: {str(e)}"
+
+    db.add(ChatMessage(role="assistant", content=assistant_reply))
+    db.commit()
+
+    return RedirectResponse(url="/coach", status_code=303)
+
+
+@app.post("/coach/clear")
+def coach_clear(db: Session = Depends(get_db)):
+    db.query(ChatMessage).delete()
+    db.commit()
+    return RedirectResponse(url="/coach", status_code=303)
+
+
+@app.get("/api/workouts/recent")
+def api_recent_workouts():
+    hevy_key = os.environ.get("HEVY_API_KEY", "")
+    if not hevy_key:
+        return JSONResponse(content={"error": "HEVY_API_KEY no configurada", "workouts": []})
+    try:
+        raw = fetch_recent_workouts(pages=1)
+        workouts = [get_workout_display_data(w) for w in raw[:10]]
+        return JSONResponse(content={"workouts": workouts})
+    except Exception as e:
+        return JSONResponse(content={"error": str(e), "workouts": []})
+
 
 @app.get("/profile", response_class=HTMLResponse)
 def profile_page(request: Request, db: Session = Depends(get_db)):
