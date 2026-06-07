@@ -7,19 +7,137 @@
   <!-- Header -->
   <div class="mb-6">
     <h1 class="text-2xl font-bold text-white">Registrar Comida</h1>
-    <p class="text-gray-400 text-sm mt-0.5">Buscá un alimento o ingresalo manualmente</p>
+    <p class="text-gray-400 text-sm mt-0.5">Buscá, describí o sacale una foto a tu plato</p>
   </div>
 
   <!-- Mode Tabs -->
   <div class="flex bg-gray-800 rounded-xl p-1 mb-6 border border-gray-700">
     <button id="tab-search" onclick="switchMode('search')"
-            class="flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors text-white bg-brand-600">
-      Buscar alimento
+            class="flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-colors text-white bg-brand-600">
+      🔍 Buscar
+    </button>
+    <button id="tab-ai" onclick="switchMode('ai')"
+            class="flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-colors text-gray-400 hover:text-white">
+      ✨ IA
     </button>
     <button id="tab-manual" onclick="switchMode('manual')"
-            class="flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors text-gray-400 hover:text-white">
-      Entrada manual
+            class="flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-colors text-gray-400 hover:text-white">
+      ✏️ Manual
     </button>
+  </div>
+
+  <!-- ─── AI Mode ─────────────────────────────────────────────── -->
+  <div id="mode-ai" class="hidden">
+
+    <div class="bg-gray-800 rounded-2xl p-5 border border-gray-700 mb-4">
+      <label class="block text-sm font-semibold text-gray-300 mb-3">Tipo de comida</label>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2" id="ai-meal-btns">
+        {% for value, label, icon in [("breakfast","Desayuno","☀️"),("lunch","Almuerzo","🌤️"),("dinner","Cena","🌙"),("snack","Snack","🍎")] %}
+        <button type="button" data-meal="{{ value }}"
+          onclick="selectAIMeal('{{ value }}')"
+          class="ai-meal-btn flex flex-col items-center justify-center gap-1 py-3 px-2 rounded-xl border-2 transition-all text-center
+            {% if loop.first %}border-brand-500 bg-brand-900/20 text-brand-400{% else %}border-gray-600 text-gray-400{% endif %}">
+          <span class="text-xl">{{ icon }}</span>
+          <span class="text-xs font-medium">{{ label }}</span>
+        </button>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="bg-gray-800 rounded-2xl p-5 border border-gray-700 mb-4">
+      <div class="flex items-center gap-2 mb-4">
+        <div class="bg-brand-500/20 p-2 rounded-lg">
+          <svg class="w-5 h-5 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+          </svg>
+        </div>
+        <div>
+          <h3 class="text-sm font-semibold text-white">Analizar con IA</h3>
+          <p class="text-xs text-gray-400">Describí el plato o sacale una foto</p>
+        </div>
+      </div>
+
+      <!-- Imagen -->
+      <div class="mb-4">
+        <label class="block text-xs font-medium text-gray-400 mb-2">Foto del plato (opcional)</label>
+        <div id="drop-zone"
+             class="border-2 border-dashed border-gray-600 rounded-xl p-5 text-center cursor-pointer hover:border-brand-500 transition-colors"
+             onclick="document.getElementById('food-image').click()">
+          <div id="drop-placeholder">
+            <svg class="w-7 h-7 text-gray-500 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+            <p class="text-sm text-gray-400">Tocá para sacar foto o elegir imagen</p>
+          </div>
+          <img id="image-preview" class="hidden max-h-40 mx-auto rounded-lg" />
+        </div>
+        <input type="file" id="food-image" accept="image/*" capture="environment" class="hidden">
+      </div>
+
+      <!-- Descripción texto -->
+      <div class="mb-4">
+        <label class="block text-xs font-medium text-gray-400 mb-2">O describí el plato</label>
+        <textarea id="food-description" rows="3"
+          placeholder="Ej: Plato de arroz con pollo grillado y ensalada. Porción mediana."
+          class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-brand-500 resize-none"></textarea>
+      </div>
+
+      <button type="button" onclick="analyzeFood()" id="analyze-btn"
+        class="w-full bg-brand-500 hover:bg-brand-600 text-white font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2">
+        <svg id="analyze-icon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+        </svg>
+        <span id="analyze-label">Analizar con IA</span>
+      </button>
+    </div>
+
+    <!-- Resultado IA -->
+    <div id="ai-result" class="hidden bg-gray-800 rounded-2xl p-5 border border-brand-600/50 mb-4">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-sm font-semibold text-white">Resultado del análisis</h3>
+        <span id="ai-confianza" class="text-xs px-2 py-1 rounded-lg font-medium"></span>
+      </div>
+      <form method="POST" action="/log" id="ai-save-form">
+        <input type="hidden" name="entry_mode" value="manual">
+        <input type="hidden" name="meal_type" id="ai-meal-type-input" value="breakfast">
+        <input type="hidden" name="quantity_g" value="100">
+        <div class="mb-3">
+          <label class="block text-xs font-medium text-gray-400 mb-1">Nombre del plato</label>
+          <input type="text" name="manual_name" id="ai-nombre"
+            class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brand-500">
+        </div>
+        <div class="grid grid-cols-2 gap-3 mb-3">
+          <div>
+            <label class="block text-xs font-medium text-gray-400 mb-1">Calorías (kcal)</label>
+            <input type="number" name="manual_calories" id="ai-calorias" step="1"
+              class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brand-500">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-400 mb-1">Proteínas (g)</label>
+            <input type="number" name="manual_protein" id="ai-proteinas" step="0.1"
+              class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brand-500">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3 mb-4">
+          <div>
+            <label class="block text-xs font-medium text-gray-400 mb-1">Carbohidratos (g)</label>
+            <input type="number" name="manual_carbs" id="ai-carbos" step="0.1"
+              class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brand-500">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-400 mb-1">Grasas (g)</label>
+            <input type="number" name="manual_fat" id="ai-grasas" step="0.1"
+              class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brand-500">
+          </div>
+        </div>
+        <p id="ai-nota" class="text-xs text-yellow-400 italic mb-4"></p>
+        <button type="submit"
+          class="w-full bg-brand-500 hover:bg-brand-600 text-white font-semibold py-3 rounded-xl transition-colors">
+          Guardar en el registro
+        </button>
+      </form>
+    </div>
   </div>
 
   <!-- ─── Search Mode ─────────────────────────────────────────── -->
@@ -202,11 +320,13 @@
 <script>
 // ─── Mode switching ───────────────────────────────────────────
 function switchMode(mode) {
-  const isSearch = mode === 'search';
-  document.getElementById('form-search').classList.toggle('hidden', !isSearch);
-  document.getElementById('form-manual').classList.toggle('hidden', isSearch);
-  document.getElementById('tab-search').className = `flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors ${isSearch ? 'text-white bg-brand-600' : 'text-gray-400 hover:text-white'}`;
-  document.getElementById('tab-manual').className = `flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors ${!isSearch ? 'text-white bg-brand-600' : 'text-gray-400 hover:text-white'}`;
+  document.getElementById('form-search').classList.toggle('hidden', mode !== 'search');
+  document.getElementById('form-manual').classList.toggle('hidden', mode !== 'manual');
+  document.getElementById('mode-ai').classList.toggle('hidden', mode !== 'ai');
+  const base = 'flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-colors';
+  document.getElementById('tab-search').className = `${base} ${mode === 'search' ? 'text-white bg-brand-600' : 'text-gray-400 hover:text-white'}`;
+  document.getElementById('tab-ai').className    = `${base} ${mode === 'ai'     ? 'text-white bg-brand-600' : 'text-gray-400 hover:text-white'}`;
+  document.getElementById('tab-manual').className= `${base} ${mode === 'manual' ? 'text-white bg-brand-600' : 'text-gray-400 hover:text-white'}`;
 }
 
 // ─── Meal type selection (shared logic for both forms) ─────────
@@ -327,5 +447,94 @@ document.addEventListener('click', e => {
     searchResults.classList.add('hidden');
   }
 });
+
+// ─── AI Mode ────────────────────────────────────────────────────
+
+let selectedAIMeal = 'breakfast';
+
+function selectAIMeal(val) {
+  selectedAIMeal = val;
+  document.querySelectorAll('.ai-meal-btn').forEach(btn => {
+    if (btn.dataset.meal === val) {
+      btn.classList.remove('border-gray-600', 'text-gray-400');
+      btn.classList.add('border-brand-500', 'bg-brand-900/20', 'text-brand-400');
+    } else {
+      btn.classList.remove('border-brand-500', 'bg-brand-900/20', 'text-brand-400');
+      btn.classList.add('border-gray-600', 'text-gray-400');
+    }
+  });
+  document.getElementById('ai-meal-type-input').value = val;
+}
+
+// Image preview
+document.getElementById('food-image').addEventListener('change', function() {
+  const file = this.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const preview = document.getElementById('image-preview');
+    preview.src = e.target.result;
+    preview.classList.remove('hidden');
+    document.getElementById('drop-placeholder').classList.add('hidden');
+  };
+  reader.readAsDataURL(file);
+});
+
+async function analyzeFood() {
+  const desc = document.getElementById('food-description').value.trim();
+  const fileInput = document.getElementById('food-image');
+  const file = fileInput.files[0];
+
+  if (!desc && !file) {
+    alert('Describí el plato o subí una foto primero.');
+    return;
+  }
+
+  const btn = document.getElementById('analyze-btn');
+  const label = document.getElementById('analyze-label');
+  btn.disabled = true;
+  label.textContent = 'Analizando...';
+
+  const formData = new FormData();
+  if (desc) formData.append('description', desc);
+  if (file) formData.append('file', file);
+
+  try {
+    const res = await fetch('/api/analyze-food', { method: 'POST', body: formData });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.detail || 'Error del servidor');
+    }
+    const data = await res.json();
+
+    // Rellenar formulario
+    document.getElementById('ai-nombre').value = data.nombre || '';
+    document.getElementById('ai-calorias').value = data.calorias || '';
+    document.getElementById('ai-proteinas').value = data.proteinas || '';
+    document.getElementById('ai-carbos').value = data.carbohidratos || '';
+    document.getElementById('ai-grasas').value = data.grasas || '';
+    document.getElementById('ai-meal-type-input').value = selectedAIMeal;
+
+    // Nota
+    const notaEl = document.getElementById('ai-nota');
+    notaEl.textContent = data.nota || '';
+
+    // Badge confianza
+    const badge = document.getElementById('ai-confianza');
+    const conf = data.confianza || 'media';
+    const confStyles = { alta: 'bg-brand-900/50 text-brand-400 border border-brand-700', media: 'bg-yellow-900/40 text-yellow-400 border border-yellow-800', baja: 'bg-red-900/40 text-red-400 border border-red-800' };
+    badge.className = 'text-xs px-2 py-1 rounded-lg font-medium ' + (confStyles[conf] || confStyles.media);
+    badge.textContent = 'Confianza: ' + conf;
+
+    document.getElementById('ai-result').classList.remove('hidden');
+    document.getElementById('ai-result').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+  } catch(e) {
+    alert('Error al analizar: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    label.textContent = 'Analizar con IA';
+  }
+}
 </script>
 {% endblock %}

@@ -161,6 +161,64 @@ def log_page(request: Request, db: Session = Depends(get_db)):
     })
 
 
+@app.post("/api/analyze-food")
+async def analyze_food(
+    description: str = Form(""),
+    file: UploadFile = File(None),
+):
+    """Analiza descripción de texto o imagen de comida con Claude y devuelve macros estimados."""
+    import anthropic as _anthropic
+    api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+    if not api_key:
+        raise HTTPException(status_code=503, detail="ANTHROPIC_API_KEY no configurada")
+
+    client = _anthropic.Anthropic(api_key=api_key)
+
+    system = """Sos un nutricionista experto. Analizás platos de comida y estimás sus macronutrientes.
+Devolvé SOLO un JSON con estas claves exactas (sin texto extra, solo el JSON):
+{
+  "nombre": "nombre descriptivo del plato",
+  "cantidad_g": número (porción estimada en gramos),
+  "calorias": número (kcal por la porción),
+  "proteinas": número (gramos por la porción),
+  "carbohidratos": número (gramos por la porción),
+  "grasas": número (gramos por la porción),
+  "confianza": "alta" | "media" | "baja",
+  "nota": "breve aclaración si es necesaria"
+}
+Sé conservador y realista. Si hay ingredientes inciertos, asumí preparación casera estándar argentina."""
+
+    if file and file.filename:
+        contents = await file.read()
+        img_b64 = base64.b64encode(contents).decode()
+        media_type = file.content_type or "image/jpeg"
+        messages = [{
+            "role": "user",
+            "content": [
+                {"type": "image", "source": {"type": "base64", "media_type": media_type, "data": img_b64}},
+                {"type": "text", "text": f"Analizá este plato y estimá los macronutrientes.{' Contexto adicional: ' + description if description else ''}"}
+            ]
+        }]
+    else:
+        messages = [{"role": "user", "content": f"Analizá este plato y estimá los macronutrientes: {description}"}]
+
+    try:
+        response = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=400,
+            system=system,
+            messages=messages,
+        )
+        raw = response.content[0].text.strip()
+        # Extraer JSON si viene con texto extra
+        start = raw.find("{")
+        end = raw.rfind("}") + 1
+        data = json.loads(raw[start:end])
+        return JSONResponse(content=data)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al analizar: {str(e)}")
+
+
 @app.post("/log")
 def add_food(
     request: Request,
