@@ -101,10 +101,14 @@ def get_workout_display_data(workout):
                 "detail": f"{len(sets)} series",
             })
 
+    raw_date = start[:10] if start else ""  # ISO date YYYY-MM-DD for sorting
+
     return {
         "title": title,
         "date": date_str,
+        "sort_date": raw_date,
         "time": time_str,
         "duration_mins": duration_mins,
         "exercises": exercises,
+        "start_time": start,
     }

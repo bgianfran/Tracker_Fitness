@@ -9,7 +9,7 @@ import os
 import base64
 import json
 
-from app.database import get_db, init_db, FoodEntry, UserProfile, DayScore, ChatMessage, BodyMeasurement
+from app.database import get_db, init_db, FoodEntry, UserProfile, DayScore, ChatMessage, BodyMeasurement, ManualWorkout
 from app.food_data import search_foods, get_food, FOOD_DATABASE
 from app.hevy import fetch_recent_workouts, format_workout_summary, get_workout_display_data
 
@@ -479,6 +479,13 @@ async def coach_chat(
     except Exception:
         pass
 
+    # Recent manual workouts for context
+    manual_workouts = db.query(ManualWorkout).order_by(ManualWorkout.date.desc()).limit(10).all()
+    manual_summaries = [
+        f"[{mw.date}] {mw.activity_type}{' (' + mw.custom_type + ')' if mw.custom_type else ''} ({mw.duration_min or '?'}min, {mw.intensity or 'sin intensidad'}, {mw.calories_burned or '?'} kcal)"
+        for mw in manual_workouts
+    ]
+
     system = f"""Sos un coach deportivo y nutricional personalizado.
 Trabajás con un atleta con este perfil:
 - Nombre: {profile.name}, {profile.age} años, {profile.weight_kg}kg, {profile.height_cm}cm
@@ -486,8 +493,11 @@ Trabajás con un atleta con este perfil:
 - Nivel de actividad: {profile.activity_level}
 - Objetivos diarios: {profile.target_calories} kcal, {profile.target_protein}g proteína, {profile.target_carbs}g carbs, {profile.target_fat}g grasa
 
-Últimos entrenamientos (Hevy):
-{chr(10).join(workout_summaries) if workout_summaries else 'Sin datos de entrenamiento disponibles'}
+Actividades recientes (Hevy - gimnasio):
+{chr(10).join(workout_summaries) if workout_summaries else 'Sin datos de Hevy disponibles'}
+
+Actividades recientes (manual - fútbol, MMA, cardio, etc.):
+{chr(10).join(manual_summaries) if manual_summaries else 'Sin actividades manuales registradas'}
 
 Nutrición de hoy: {today_calories:.0f} kcal / {profile.target_calories} kcal, proteína: {today_protein:.0f}g / {profile.target_protein}g
 
@@ -654,6 +664,178 @@ def delete_measurement(measurement_id: int, db: Session = Depends(get_db)):
     db.delete(m)
     db.commit()
     return JSONResponse(content={"success": True})
+
+
+@app.get("/workouts", response_class=HTMLResponse)
+def workouts_page(request: Request, db: Session = Depends(get_db)):
+    profile = db.query(UserProfile).first()
+    today = date.today()
+    week_start = today - timedelta(days=today.weekday())  # Monday of current week
+
+    # Hevy workouts
+    hevy_workouts = []
+    hevy_error = None
+    hevy_key = os.environ.get("HEVY_API_KEY", "")
+    if hevy_key:
+        try:
+            raw = fetch_recent_workouts(pages=3)
+            hevy_workouts = [get_workout_display_data(w) for w in raw]
+        except Exception as e:
+            hevy_error = str(e)
+    else:
+        hevy_error = "HEVY_API_KEY no configurada. Solo se muestran actividades manuales."
+
+    # Manual workouts
+    manual_workouts = db.query(ManualWorkout).order_by(ManualWorkout.date.desc()).all()
+
+    # Weekly stats (manual only for calories, both for sessions/minutes)
+    week_manual = [mw for mw in manual_workouts if mw.date >= week_start]
+    week_hevy = [hw for hw in hevy_workouts if hw.get("sort_date", "") >= str(week_start)]
+
+    week_sessions = len(week_manual) + len(week_hevy)
+    week_minutes = sum((mw.duration_min or 0) for mw in week_manual)
+    for hw in week_hevy:
+        dur = hw.get("duration_seconds", 0) or 0
+        week_minutes += dur // 60
+    week_kcal = sum((mw.calories_burned or 0) for mw in week_manual)
+
+    anthropic_key = os.environ.get("ANTHROPIC_API_KEY", "")
+
+    return templates.TemplateResponse("workouts.html", {
+        "request": request,
+        "profile": profile,
+        "hevy_workouts": hevy_workouts,
+        "manual_workouts": manual_workouts,
+        "hevy_error": hevy_error,
+        "week_sessions": week_sessions,
+        "week_minutes": week_minutes,
+        "week_kcal": week_kcal,
+        "today": today,
+        "anthropic_configured": bool(anthropic_key),
+    })
+
+
+@app.post("/workouts")
+async def save_manual_workout(
+    request: Request,
+    db: Session = Depends(get_db),
+    workout_date: str = Form(...),
+    activity_type: str = Form(...),
+    custom_type: str = Form(""),
+    duration_min: str = Form(""),
+    intensity: str = Form(""),
+    calories_burned: str = Form(""),
+    calories_source: str = Form("manual"),
+    heart_rate_avg: str = Form(""),
+    distance_km: str = Form(""),
+    notes: str = Form(""),
+):
+    def opt_int(v):
+        try:
+            return int(v) if v and v.strip() else None
+        except (ValueError, TypeError):
+            return None
+
+    def opt_float(v):
+        try:
+            return float(v) if v and v.strip() else None
+        except (ValueError, TypeError):
+            return None
+
+    workout = ManualWorkout(
+        date=date.fromisoformat(workout_date),
+        activity_type=activity_type,
+        custom_type=custom_type.strip() or None,
+        duration_min=opt_int(duration_min),
+        intensity=intensity or None,
+        calories_burned=opt_int(calories_burned),
+        calories_source=calories_source if calories_burned else None,
+        heart_rate_avg=opt_int(heart_rate_avg),
+        distance_km=opt_float(distance_km),
+        notes=notes.strip() or None,
+    )
+    db.add(workout)
+    db.commit()
+    return RedirectResponse(url="/workouts", status_code=303)
+
+
+@app.delete("/workouts/{workout_id}")
+def delete_manual_workout(workout_id: int, db: Session = Depends(get_db)):
+    workout = db.query(ManualWorkout).filter(ManualWorkout.id == workout_id).first()
+    if not workout:
+        raise HTTPException(status_code=404, detail="Actividad no encontrada")
+    db.delete(workout)
+    db.commit()
+    return JSONResponse(content={"success": True})
+
+
+@app.post("/api/workouts/estimate-calories")
+async def estimate_calories(
+    activity_type: str = Form(...),
+    duration_min: str = Form(""),
+    intensity: str = Form(""),
+    notes: str = Form(""),
+):
+    import anthropic as _anthropic
+    api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+    if not api_key:
+        raise HTTPException(status_code=503, detail="ANTHROPIC_API_KEY no configurada")
+
+    client = _anthropic.Anthropic(api_key=api_key)
+
+    system = """Sos un experto en fisiología del ejercicio. Estimá las calorías quemadas para un hombre de 26 años, 109kg, 1.84m, muy activo deportivamente. Devolvé SOLO un JSON: {"calories": número_entero, "explanation": "una línea explicando el cálculo"}. Sé conservador y realista."""
+
+    user_msg = f"Actividad: {activity_type}, Duración: {duration_min} minutos, Intensidad: {intensity}. {notes if notes else ''}"
+
+    try:
+        response = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=200,
+            system=system,
+            messages=[{"role": "user", "content": user_msg}],
+        )
+        raw = response.content[0].text.strip()
+        start = raw.find("{")
+        end = raw.rfind("}") + 1
+        data = json.loads(raw[start:end])
+        return JSONResponse(content=data)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al estimar: {str(e)}")
+
+
+@app.get("/api/workouts/all")
+def api_all_workouts(db: Session = Depends(get_db)):
+    today = date.today()
+    manual_workouts = db.query(ManualWorkout).order_by(ManualWorkout.date.desc()).limit(30).all()
+    manual_list = [
+        {
+            "source": "manual",
+            "id": mw.id,
+            "date": str(mw.date),
+            "activity_type": mw.activity_type,
+            "custom_type": mw.custom_type,
+            "duration_min": mw.duration_min,
+            "intensity": mw.intensity,
+            "calories_burned": mw.calories_burned,
+            "heart_rate_avg": mw.heart_rate_avg,
+            "distance_km": mw.distance_km,
+            "notes": mw.notes,
+        }
+        for mw in manual_workouts
+    ]
+
+    hevy_list = []
+    hevy_key = os.environ.get("HEVY_API_KEY", "")
+    if hevy_key:
+        try:
+            raw = fetch_recent_workouts(pages=2)
+            hevy_list = [{"source": "hevy", **get_workout_display_data(w)} for w in raw[:30]]
+        except Exception:
+            pass
+
+    all_workouts = (manual_list + hevy_list)
+    all_workouts.sort(key=lambda x: x.get("date", x.get("start_time", "")), reverse=True)
+    return JSONResponse(content={"workouts": all_workouts[:30]})
 
 
 @app.post("/measurements/import")

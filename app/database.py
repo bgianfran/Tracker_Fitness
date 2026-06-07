@@ -109,6 +109,22 @@ class BodyMeasurement(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
 
+class ManualWorkout(Base):
+    __tablename__ = "manual_workouts"
+    id = Column(Integer, primary_key=True)
+    date = Column(Date, nullable=False, default=date.today)
+    activity_type = Column(String, nullable=False)   # "Fútbol", "MMA", "Correr", etc.
+    custom_type = Column(String, nullable=True)       # if "Otro"
+    duration_min = Column(Integer, nullable=True)
+    intensity = Column(String, nullable=True)         # "baja" | "media" | "alta" | "maxima"
+    calories_burned = Column(Integer, nullable=True)  # manual or AI-estimated
+    calories_source = Column(String, nullable=True)   # "manual" | "ai"
+    heart_rate_avg = Column(Integer, nullable=True)
+    distance_km = Column(Float, nullable=True)
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
 def get_db():
     db = SessionLocal()
     try:
