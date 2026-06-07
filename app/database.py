@@ -125,6 +125,18 @@ class ManualWorkout(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
 
+class StravaToken(Base):
+    __tablename__ = "strava_tokens"
+
+    id = Column(Integer, primary_key=True)
+    athlete_id = Column(Integer, nullable=False)
+    access_token = Column(String, nullable=False)
+    refresh_token = Column(String, nullable=False)
+    expires_at = Column(Integer, nullable=False)  # Unix timestamp
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
 def get_db():
     db = SessionLocal()
     try:

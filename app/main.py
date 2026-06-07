@@ -9,9 +9,10 @@ import os
 import base64
 import json
 
-from app.database import get_db, init_db, FoodEntry, UserProfile, DayScore, ChatMessage, BodyMeasurement, ManualWorkout
+from app.database import get_db, init_db, FoodEntry, UserProfile, DayScore, ChatMessage, BodyMeasurement, ManualWorkout, StravaToken
 from app.food_data import search_foods, get_food, FOOD_DATABASE
 from app.hevy import fetch_recent_workouts, format_workout_summary, get_workout_display_data
+from app.strava_api import get_auth_url, exchange_code, get_valid_token, fetch_activities, format_activity
 
 
 def calculate_score(cal_pct: float, protein_pct: float, wellbeing: str) -> int:
@@ -666,6 +667,52 @@ def delete_measurement(measurement_id: int, db: Session = Depends(get_db)):
     return JSONResponse(content={"success": True})
 
 
+STRAVA_REDIRECT_URI = "https://trackerfitness-production.up.railway.app/strava/callback"
+
+
+@app.get("/strava/connect")
+def strava_connect():
+    url = get_auth_url(STRAVA_REDIRECT_URI)
+    return RedirectResponse(url=url)
+
+
+@app.get("/strava/callback")
+def strava_callback(
+    code: str = "",
+    error: str = "",
+    db: Session = Depends(get_db),
+):
+    if error or not code:
+        return RedirectResponse(url="/workouts?strava_error=denied", status_code=303)
+    try:
+        data = exchange_code(code, STRAVA_REDIRECT_URI)
+        athlete_id = data.get("athlete", {}).get("id", 0)
+        existing = db.query(StravaToken).first()
+        if existing:
+            existing.athlete_id = athlete_id
+            existing.access_token = data["access_token"]
+            existing.refresh_token = data["refresh_token"]
+            existing.expires_at = data["expires_at"]
+        else:
+            db.add(StravaToken(
+                athlete_id=athlete_id,
+                access_token=data["access_token"],
+                refresh_token=data["refresh_token"],
+                expires_at=data["expires_at"],
+            ))
+        db.commit()
+        return RedirectResponse(url="/workouts?strava_connected=1", status_code=303)
+    except Exception as e:
+        return RedirectResponse(url=f"/workouts?strava_error=1", status_code=303)
+
+
+@app.post("/strava/disconnect")
+def strava_disconnect(db: Session = Depends(get_db)):
+    db.query(StravaToken).delete()
+    db.commit()
+    return RedirectResponse(url="/workouts", status_code=303)
+
+
 @app.get("/workouts", response_class=HTMLResponse)
 def workouts_page(request: Request, db: Session = Depends(get_db)):
     profile = db.query(UserProfile).first()
@@ -699,19 +746,48 @@ def workouts_page(request: Request, db: Session = Depends(get_db)):
         week_minutes += dur // 60
     week_kcal = sum((mw.calories_burned or 0) for mw in week_manual)
 
+    # Strava workouts
+    strava_workouts = []
+    strava_error = None
+    strava_connected = bool(db.query(StravaToken).first())
+    if strava_connected:
+        try:
+            access_token = get_valid_token(db)
+            if access_token:
+                raw_strava = fetch_activities(access_token, per_page=30)
+                strava_workouts = [format_activity(a) for a in raw_strava]
+                # Add Strava calories to weekly kcal
+                week_strava = [a for a in strava_workouts if a.get("sort_date", "") >= str(week_start)]
+                week_kcal += sum((a.get("calories") or 0) for a in week_strava)
+                week_sessions += len(week_strava)
+                for a in week_strava:
+                    week_minutes += (a.get("duration_seconds") or 0) // 60
+            else:
+                strava_error = "Token de Strava inválido. Volvé a conectar."
+                strava_connected = False
+        except Exception as e:
+            strava_error = f"Error al cargar Strava: {str(e)}"
+
     anthropic_key = os.environ.get("ANTHROPIC_API_KEY", "")
+    strava_param = request.query_params.get("strava_connected")
+    strava_err_param = request.query_params.get("strava_error")
 
     return templates.TemplateResponse("workouts.html", {
         "request": request,
         "profile": profile,
         "hevy_workouts": hevy_workouts,
         "manual_workouts": manual_workouts,
+        "strava_workouts": strava_workouts,
+        "strava_connected": strava_connected,
+        "strava_error": strava_error,
         "hevy_error": hevy_error,
         "week_sessions": week_sessions,
         "week_minutes": week_minutes,
         "week_kcal": week_kcal,
         "today": today,
         "anthropic_configured": bool(anthropic_key),
+        "flash_strava_connected": strava_param == "1",
+        "flash_strava_error": strava_err_param,
     })
 
 

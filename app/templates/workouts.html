@@ -19,6 +19,44 @@
     </button>
   </div>
 
+  <!-- Flash: Strava connected -->
+  {% if flash_strava_connected %}
+  <div class="bg-orange-900/30 border border-orange-600/50 rounded-xl p-3 flex items-center gap-2 text-sm text-orange-300">
+    <span class="text-lg">🎉</span>
+    <span>¡Strava conectado! Tus actividades ya aparecen en el timeline.</span>
+  </div>
+  {% endif %}
+  {% if flash_strava_error %}
+  <div class="bg-red-900/30 border border-red-700/50 rounded-xl p-3 flex items-center gap-2 text-sm text-red-300">
+    <span>❌ Error al conectar Strava. Intentá de nuevo.</span>
+  </div>
+  {% endif %}
+
+  <!-- Strava + Hevy connection bar -->
+  <div class="flex flex-wrap gap-2">
+    {% if strava_connected %}
+    <div class="flex items-center gap-2 bg-orange-900/20 border border-orange-700/50 rounded-xl px-3 py-2 text-sm">
+      <span class="text-orange-400 font-medium">🟠 Strava conectado</span>
+      <form action="/strava/disconnect" method="post" class="inline">
+        <button type="submit" class="text-xs text-gray-500 hover:text-red-400 transition-colors ml-1">Desconectar</button>
+      </form>
+    </div>
+    {% else %}
+    <a href="/strava/connect"
+       class="flex items-center gap-2 bg-orange-600 hover:bg-orange-500 active:bg-orange-700 text-white font-semibold px-4 py-2 rounded-xl transition-colors text-sm">
+      <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+        <path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/>
+      </svg>
+      Conectar Strava
+    </a>
+    {% endif %}
+    {% if strava_error %}
+    <div class="flex items-center gap-1 text-xs text-yellow-400 bg-yellow-900/20 border border-yellow-700/50 rounded-xl px-3 py-2">
+      ⚠️ {{ strava_error }}
+    </div>
+    {% endif %}
+  </div>
+
   <!-- Hevy notice if no key -->
   {% if hevy_error %}
   <div class="bg-yellow-900/30 border border-yellow-700/50 rounded-xl p-3 flex items-start gap-2 text-sm text-yellow-300">
@@ -208,7 +246,7 @@
     {% set days_es = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"] %}
     {% set months_es = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"] %}
 
-    {# Build combined list: manual workouts + hevy workouts #}
+    {# Build combined list: manual + hevy + strava #}
     {% set ns = namespace(all_items=[]) %}
     {% for mw in manual_workouts %}
       {% set ns.all_items = ns.all_items + [{"type": "manual", "data": mw, "sort_date": mw.date.isoformat()}] %}
@@ -217,7 +255,9 @@
       {% set hw_date = hw.get("sort_date", hw.get("start_time", "")[:10]) %}
       {% set ns.all_items = ns.all_items + [{"type": "hevy", "data": hw, "sort_date": hw_date}] %}
     {% endfor %}
-    {# Sort descending by sort_date using selectattr (Jinja2 limitation: sort by key) #}
+    {% for sw in strava_workouts %}
+      {% set ns.all_items = ns.all_items + [{"type": "strava", "data": sw, "sort_date": sw.get("sort_date", "")}] %}
+    {% endfor %}
     {% set ns.all_items = ns.all_items | sort(attribute="sort_date", reverse=True) %}
 
     {% if ns.all_items %}
@@ -351,6 +391,62 @@
                 {% endif %}
               </div>
               {% endif %}
+            </div>
+          </div>
+        </div>
+        {% elif item.type == "strava" %}
+        {% set sw = item.data %}
+        <div class="bg-gray-800 border border-gray-700 border-l-4 border-orange-500 rounded-xl p-4">
+          <div class="flex items-start gap-3">
+            <div class="text-2xl flex-shrink-0">{{ sw.get("emoji", "🏅") }}</div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="font-semibold text-white">{{ sw.get("title", sw.get("sport_type", "Actividad")) }}</span>
+                <span class="text-xs px-2 py-0.5 rounded-full bg-orange-900/50 text-orange-300 font-medium">Strava</span>
+              </div>
+              <div class="text-xs text-gray-400 mt-0.5">{{ sw.get("sort_date", "") }}</div>
+              <div class="flex items-center gap-3 mt-2 flex-wrap text-sm text-gray-300">
+                {% if sw.get("duration_seconds") %}
+                <span class="flex items-center gap-1">
+                  <svg class="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                  {{ (sw.get("duration_seconds", 0) // 60) }} min
+                </span>
+                {% endif %}
+                {% if sw.get("distance_km") %}
+                <span class="flex items-center gap-1 text-blue-300">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                  </svg>
+                  {{ sw.get("distance_km") }} km
+                </span>
+                {% endif %}
+                {% if sw.get("calories") %}
+                <span class="flex items-center gap-1 text-orange-300">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"/>
+                  </svg>
+                  {{ sw.get("calories") }} kcal
+                </span>
+                {% endif %}
+                {% if sw.get("avg_heart_rate") %}
+                <span class="flex items-center gap-1 text-red-300">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                  </svg>
+                  {{ sw.get("avg_heart_rate") | round(0) | int }} bpm
+                </span>
+                {% endif %}
+                {% if sw.get("elevation_gain") %}
+                <span class="flex items-center gap-1 text-green-300">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
+                  </svg>
+                  {{ sw.get("elevation_gain") | round(0) | int }} m
+                </span>
+                {% endif %}
+              </div>
             </div>
           </div>
         </div>
