@@ -1,0 +1,288 @@
+{% extends "base.html" %}
+{% block title %}Medición {{ m.fecha_medicion.strftime('%d/%m/%Y') }} – FitTracker{% endblock %}
+
+{% block content %}
+
+<!-- Header -->
+<div class="flex items-center justify-between mb-6">
+  <div class="flex items-center gap-3">
+    <a href="/measurements" class="text-gray-400 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-gray-700">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+      </svg>
+    </a>
+    <div>
+      <h1 class="text-2xl font-bold text-white">{{ m.fecha_medicion.strftime('%d/%m/%Y') }}</h1>
+      <p class="text-gray-400 text-sm">Detalle de medición corporal</p>
+    </div>
+  </div>
+  <button onclick="deleteMeasurement({{ m.id }})"
+          class="flex items-center gap-1.5 text-red-400 hover:text-red-300 hover:bg-red-900/30 px-3 py-2 rounded-xl text-sm transition-colors">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+    </svg>
+    Eliminar
+  </button>
+</div>
+
+<!-- InBody Score hero -->
+{% if m.puntuacion_inbody %}
+<div class="bg-gray-800 rounded-2xl p-5 border border-gray-700 mb-5 flex items-center justify-between">
+  <div>
+    <p class="text-xs text-gray-400 uppercase tracking-wide font-medium mb-1">Puntuación InBody</p>
+    <p class="text-4xl font-black
+      {% if m.puntuacion_inbody >= 80 %}text-brand-400{% elif m.puntuacion_inbody >= 60 %}text-yellow-400{% else %}text-red-400{% endif %}">
+      {{ m.puntuacion_inbody }}<span class="text-xl text-gray-500">/100</span>
+    </p>
+  </div>
+  <!-- Score bar -->
+  <div class="flex-1 max-w-xs ml-6">
+    <div class="h-3 bg-gray-700 rounded-full overflow-hidden">
+      <div class="h-full rounded-full transition-all duration-700
+        {% if m.puntuacion_inbody >= 80 %}bg-brand-500{% elif m.puntuacion_inbody >= 60 %}bg-yellow-500{% else %}bg-red-500{% endif %}"
+           style="width: {{ m.puntuacion_inbody }}%"></div>
+    </div>
+    <div class="flex justify-between text-xs text-gray-500 mt-1">
+      <span>0</span><span>50</span><span>100</span>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- Key metrics grid -->
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+  {% if m.peso_kg %}
+  <div class="bg-gray-800 rounded-2xl p-4 border border-gray-700 text-center">
+    <p class="text-xs text-gray-400 uppercase tracking-wide font-medium mb-1">Peso</p>
+    <p class="text-2xl font-bold text-white">{{ "%.1f"|format(m.peso_kg) }}</p>
+    <p class="text-xs text-gray-500">kg</p>
+  </div>
+  {% endif %}
+  {% if m.masa_musculoesqueletica_kg %}
+  <div class="bg-gray-800 rounded-2xl p-4 border border-gray-700 text-center">
+    <p class="text-xs text-gray-400 uppercase tracking-wide font-medium mb-1">Músculo</p>
+    <p class="text-2xl font-bold text-brand-400">{{ "%.1f"|format(m.masa_musculoesqueletica_kg) }}</p>
+    <p class="text-xs text-gray-500">kg</p>
+  </div>
+  {% endif %}
+  {% if m.pgc %}
+  <div class="bg-gray-800 rounded-2xl p-4 border border-gray-700 text-center">
+    <p class="text-xs text-gray-400 uppercase tracking-wide font-medium mb-1">% Grasa</p>
+    <p class="text-2xl font-bold text-orange-400">{{ "%.1f"|format(m.pgc) }}</p>
+    <p class="text-xs text-gray-500">%</p>
+  </div>
+  {% endif %}
+  {% if m.imc %}
+  <div class="bg-gray-800 rounded-2xl p-4 border border-gray-700 text-center">
+    <p class="text-xs text-gray-400 uppercase tracking-wide font-medium mb-1">IMC</p>
+    <p class="text-2xl font-bold text-blue-400">{{ "%.1f"|format(m.imc) }}</p>
+    <p class="text-xs text-gray-500">kg/m²</p>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Composición Corporal -->
+{% if m.peso_kg or m.agua_corporal_l or m.proteinas_kg or m.minerales_kg or m.masa_grasa_corporal_kg %}
+<div class="bg-gray-800 rounded-2xl p-5 border border-gray-700 mb-5">
+  <h2 class="text-sm font-semibold text-blue-400 uppercase tracking-wide mb-4 flex items-center gap-2">
+    <span class="w-1 h-4 bg-blue-500 rounded-full inline-block"></span>
+    Composición Corporal
+  </h2>
+  <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+    {% if m.peso_kg %}
+    <div class="bg-gray-700/50 rounded-xl p-3 text-center">
+      <p class="text-xs text-gray-400 mb-1">Peso total</p>
+      <p class="text-lg font-bold text-white">{{ "%.1f"|format(m.peso_kg) }}<span class="text-xs text-gray-400 ml-0.5">kg</span></p>
+    </div>
+    {% endif %}
+    {% if m.agua_corporal_l %}
+    <div class="bg-gray-700/50 rounded-xl p-3 text-center">
+      <p class="text-xs text-gray-400 mb-1">Agua Corporal</p>
+      <p class="text-lg font-bold text-blue-300">{{ "%.1f"|format(m.agua_corporal_l) }}<span class="text-xs text-gray-400 ml-0.5">L</span></p>
+    </div>
+    {% endif %}
+    {% if m.proteinas_kg %}
+    <div class="bg-gray-700/50 rounded-xl p-3 text-center">
+      <p class="text-xs text-gray-400 mb-1">Proteínas</p>
+      <p class="text-lg font-bold text-brand-300">{{ "%.1f"|format(m.proteinas_kg) }}<span class="text-xs text-gray-400 ml-0.5">kg</span></p>
+    </div>
+    {% endif %}
+    {% if m.minerales_kg %}
+    <div class="bg-gray-700/50 rounded-xl p-3 text-center">
+      <p class="text-xs text-gray-400 mb-1">Minerales</p>
+      <p class="text-lg font-bold text-purple-300">{{ "%.2f"|format(m.minerales_kg) }}<span class="text-xs text-gray-400 ml-0.5">kg</span></p>
+    </div>
+    {% endif %}
+    {% if m.masa_grasa_corporal_kg %}
+    <div class="bg-gray-700/50 rounded-xl p-3 text-center">
+      <p class="text-xs text-gray-400 mb-1">Masa Grasa</p>
+      <p class="text-lg font-bold text-orange-400">{{ "%.1f"|format(m.masa_grasa_corporal_kg) }}<span class="text-xs text-gray-400 ml-0.5">kg</span></p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
+<!-- Control InBody -->
+{% if m.control_peso_kg is not none or m.control_grasa_kg is not none or m.control_musculo_kg is not none or m.relacion_cintura_cadera or m.nivel_grasa_visceral %}
+<div class="bg-gray-800 rounded-2xl p-5 border border-gray-700 mb-5">
+  <h2 class="text-sm font-semibold text-yellow-400 uppercase tracking-wide mb-4 flex items-center gap-2">
+    <span class="w-1 h-4 bg-yellow-500 rounded-full inline-block"></span>
+    Control InBody
+  </h2>
+  <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+    {% if m.control_peso_kg is not none %}
+    <div class="bg-gray-700/50 rounded-xl p-3 text-center">
+      <p class="text-xs text-gray-400 mb-1">Control Peso</p>
+      <p class="text-lg font-bold {% if m.control_peso_kg < 0 %}text-red-400{% elif m.control_peso_kg > 0 %}text-brand-400{% else %}text-gray-300{% endif %}">
+        {% if m.control_peso_kg > 0 %}+{% endif %}{{ "%.1f"|format(m.control_peso_kg) }}<span class="text-xs text-gray-400 ml-0.5">kg</span>
+      </p>
+    </div>
+    {% endif %}
+    {% if m.control_grasa_kg is not none %}
+    <div class="bg-gray-700/50 rounded-xl p-3 text-center">
+      <p class="text-xs text-gray-400 mb-1">Control Grasa</p>
+      <p class="text-lg font-bold {% if m.control_grasa_kg < 0 %}text-brand-400{% elif m.control_grasa_kg > 0 %}text-red-400{% else %}text-gray-300{% endif %}">
+        {% if m.control_grasa_kg > 0 %}+{% endif %}{{ "%.1f"|format(m.control_grasa_kg) }}<span class="text-xs text-gray-400 ml-0.5">kg</span>
+      </p>
+    </div>
+    {% endif %}
+    {% if m.control_musculo_kg is not none %}
+    <div class="bg-gray-700/50 rounded-xl p-3 text-center">
+      <p class="text-xs text-gray-400 mb-1">Control Músculo</p>
+      <p class="text-lg font-bold {% if m.control_musculo_kg > 0 %}text-brand-400{% elif m.control_musculo_kg < 0 %}text-red-400{% else %}text-gray-300{% endif %}">
+        {% if m.control_musculo_kg > 0 %}+{% endif %}{{ "%.1f"|format(m.control_musculo_kg) }}<span class="text-xs text-gray-400 ml-0.5">kg</span>
+      </p>
+    </div>
+    {% endif %}
+    {% if m.relacion_cintura_cadera %}
+    <div class="bg-gray-700/50 rounded-xl p-3 text-center">
+      <p class="text-xs text-gray-400 mb-1">Cintura/Cadera</p>
+      <p class="text-lg font-bold text-gray-200">{{ "%.2f"|format(m.relacion_cintura_cadera) }}</p>
+    </div>
+    {% endif %}
+    {% if m.nivel_grasa_visceral %}
+    <div class="bg-gray-700/50 rounded-xl p-3 text-center">
+      <p class="text-xs text-gray-400 mb-1">Grasa Visceral</p>
+      <p class="text-lg font-bold {% if m.nivel_grasa_visceral > 13 %}text-red-400{% elif m.nivel_grasa_visceral > 9 %}text-yellow-400{% else %}text-brand-400{% endif %}">
+        {{ m.nivel_grasa_visceral }}
+      </p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
+<!-- Segmental Magro & Grasa -->
+{% set has_magro = m.magro_brazo_derecho_kg or m.magro_brazo_izquierdo_kg or m.magro_tronco_kg or m.magro_pierna_derecha_kg or m.magro_pierna_izquierda_kg %}
+{% set has_grasa = m.grasa_brazo_derecho_kg or m.grasa_brazo_izquierdo_kg or m.grasa_tronco_kg or m.grasa_pierna_derecha_kg or m.grasa_pierna_izquierda_kg %}
+{% if has_magro or has_grasa %}
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
+  {% if has_magro %}
+  <div class="bg-gray-800 rounded-2xl p-5 border border-gray-700">
+    <h2 class="text-sm font-semibold text-brand-400 uppercase tracking-wide mb-4 flex items-center gap-2">
+      <span class="w-1 h-4 bg-brand-500 rounded-full inline-block"></span>
+      Masa Magra Segmental (kg)
+    </h2>
+    <div class="space-y-2">
+      {% for label, val in [('Brazo Derecho', m.magro_brazo_derecho_kg), ('Brazo Izquierdo', m.magro_brazo_izquierdo_kg), ('Tronco', m.magro_tronco_kg), ('Pierna Derecha', m.magro_pierna_derecha_kg), ('Pierna Izquierda', m.magro_pierna_izquierda_kg)] %}
+      {% if val %}
+      <div class="flex items-center justify-between py-1.5 border-b border-gray-700/50">
+        <span class="text-sm text-gray-300">{{ label }}</span>
+        <span class="text-sm font-semibold text-brand-400">{{ "%.2f"|format(val) }} kg</span>
+      </div>
+      {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+  {% if has_grasa %}
+  <div class="bg-gray-800 rounded-2xl p-5 border border-gray-700">
+    <h2 class="text-sm font-semibold text-orange-400 uppercase tracking-wide mb-4 flex items-center gap-2">
+      <span class="w-1 h-4 bg-orange-500 rounded-full inline-block"></span>
+      Grasa Segmental (kg)
+    </h2>
+    <div class="space-y-2">
+      {% for label, val in [('Brazo Derecho', m.grasa_brazo_derecho_kg), ('Brazo Izquierdo', m.grasa_brazo_izquierdo_kg), ('Tronco', m.grasa_tronco_kg), ('Pierna Derecha', m.grasa_pierna_derecha_kg), ('Pierna Izquierda', m.grasa_pierna_izquierda_kg)] %}
+      {% if val %}
+      <div class="flex items-center justify-between py-1.5 border-b border-gray-700/50">
+        <span class="text-sm text-gray-300">{{ label }}</span>
+        <span class="text-sm font-semibold text-orange-400">{{ "%.2f"|format(val) }} kg</span>
+      </div>
+      {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endif %}
+
+<!-- Pliegues Cutáneos -->
+{% set has_pliegues = m.pliegue_triceps_mm or m.pliegue_subescapular_mm or m.pliegue_suprailiaco_mm or m.pliegue_abdominal_mm or m.pliegue_muslo_mm %}
+{% if has_pliegues %}
+<div class="bg-gray-800 rounded-2xl p-5 border border-gray-700 mb-5">
+  <h2 class="text-sm font-semibold text-pink-400 uppercase tracking-wide mb-4 flex items-center gap-2">
+    <span class="w-1 h-4 bg-pink-500 rounded-full inline-block"></span>
+    Pliegues Cutáneos (mm)
+  </h2>
+  <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+    {% if m.pliegue_triceps_mm %}
+    <div class="bg-gray-700/50 rounded-xl p-3 text-center">
+      <p class="text-xs text-gray-400 mb-1">Tríceps</p>
+      <p class="text-lg font-bold text-pink-300">{{ "%.1f"|format(m.pliegue_triceps_mm) }}<span class="text-xs text-gray-400 ml-0.5">mm</span></p>
+    </div>
+    {% endif %}
+    {% if m.pliegue_subescapular_mm %}
+    <div class="bg-gray-700/50 rounded-xl p-3 text-center">
+      <p class="text-xs text-gray-400 mb-1">Subescapular</p>
+      <p class="text-lg font-bold text-pink-300">{{ "%.1f"|format(m.pliegue_subescapular_mm) }}<span class="text-xs text-gray-400 ml-0.5">mm</span></p>
+    </div>
+    {% endif %}
+    {% if m.pliegue_suprailiaco_mm %}
+    <div class="bg-gray-700/50 rounded-xl p-3 text-center">
+      <p class="text-xs text-gray-400 mb-1">Suprailíaco</p>
+      <p class="text-lg font-bold text-pink-300">{{ "%.1f"|format(m.pliegue_suprailiaco_mm) }}<span class="text-xs text-gray-400 ml-0.5">mm</span></p>
+    </div>
+    {% endif %}
+    {% if m.pliegue_abdominal_mm %}
+    <div class="bg-gray-700/50 rounded-xl p-3 text-center">
+      <p class="text-xs text-gray-400 mb-1">Abdominal</p>
+      <p class="text-lg font-bold text-pink-300">{{ "%.1f"|format(m.pliegue_abdominal_mm) }}<span class="text-xs text-gray-400 ml-0.5">mm</span></p>
+    </div>
+    {% endif %}
+    {% if m.pliegue_muslo_mm %}
+    <div class="bg-gray-700/50 rounded-xl p-3 text-center">
+      <p class="text-xs text-gray-400 mb-1">Muslo</p>
+      <p class="text-lg font-bold text-pink-300">{{ "%.1f"|format(m.pliegue_muslo_mm) }}<span class="text-xs text-gray-400 ml-0.5">mm</span></p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
+<!-- Notas -->
+{% if m.notas %}
+<div class="bg-gray-800 rounded-2xl p-5 border border-gray-700 mb-5">
+  <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-2">Notas</h2>
+  <p class="text-gray-300 text-sm leading-relaxed">{{ m.notas }}</p>
+</div>
+{% endif %}
+
+<!-- Meta -->
+<div class="text-center text-xs text-gray-600 pb-2">
+  Registrado el {{ m.created_at.strftime('%d/%m/%Y a las %H:%M') if m.created_at else '' }}
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function deleteMeasurement(id) {
+  if (!confirm('¿Eliminar esta medición? Esta acción no se puede deshacer.')) return;
+  const resp = await fetch('/measurements/' + id, { method: 'DELETE' });
+  if (resp.ok) window.location.href = '/measurements';
+  else alert('Error al eliminar la medición');
+}
+</script>
+{% endblock %}

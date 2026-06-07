@@ -1,0 +1,679 @@
+{% extends "base.html" %}
+{% block title %}Mediciones Corporales – FitTracker{% endblock %}
+
+{% block content %}
+
+<!-- Header -->
+<div class="flex items-center justify-between mb-6">
+  <div>
+    <h1 class="text-2xl font-bold text-white">Mediciones Corporales</h1>
+    <p class="text-gray-400 text-sm mt-0.5">Seguimiento InBody y pliegues cutáneos</p>
+  </div>
+  <button onclick="document.getElementById('formSection').scrollIntoView({behavior:'smooth'})"
+          class="flex items-center gap-2 bg-brand-600 hover:bg-brand-500 text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+    </svg>
+    Nueva medición
+  </button>
+</div>
+
+<!-- ── Progress delta cards (solo si >= 2 mediciones) ─────────────────── -->
+{% if measurements|length >= 2 %}
+{% set last = measurements[0] %}
+{% set prev = measurements[1] %}
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+
+  <!-- Peso -->
+  {% set delta_peso = (last.peso_kg or 0) - (prev.peso_kg or 0) if (last.peso_kg and prev.peso_kg) else none %}
+  <div class="bg-gray-800 rounded-2xl p-4 border border-gray-700">
+    <p class="text-xs text-gray-400 uppercase tracking-wide font-medium mb-1">Peso</p>
+    <p class="text-xl font-bold text-white">{{ last.peso_kg if last.peso_kg else '—' }}{% if last.peso_kg %} kg{% endif %}</p>
+    {% if delta_peso is not none %}
+    <p class="text-sm font-semibold mt-1 flex items-center gap-1
+       {% if delta_peso < 0 %}text-brand-400{% elif delta_peso > 0 %}text-red-400{% else %}text-gray-400{% endif %}">
+      {% if delta_peso < 0 %}▼{% elif delta_peso > 0 %}▲{% else %}—{% endif %}
+      {{ "%.1f"|format(delta_peso|abs) }} kg
+    </p>
+    {% endif %}
+  </div>
+
+  <!-- Masa Muscular -->
+  {% set delta_mm = (last.masa_musculoesqueletica_kg or 0) - (prev.masa_musculoesqueletica_kg or 0) if (last.masa_musculoesqueletica_kg and prev.masa_musculoesqueletica_kg) else none %}
+  <div class="bg-gray-800 rounded-2xl p-4 border border-gray-700">
+    <p class="text-xs text-gray-400 uppercase tracking-wide font-medium mb-1">Masa Muscular</p>
+    <p class="text-xl font-bold text-white">{{ last.masa_musculoesqueletica_kg if last.masa_musculoesqueletica_kg else '—' }}{% if last.masa_musculoesqueletica_kg %} kg{% endif %}</p>
+    {% if delta_mm is not none %}
+    <p class="text-sm font-semibold mt-1 flex items-center gap-1
+       {% if delta_mm > 0 %}text-brand-400{% elif delta_mm < 0 %}text-red-400{% else %}text-gray-400{% endif %}">
+      {% if delta_mm > 0 %}▲{% elif delta_mm < 0 %}▼{% else %}—{% endif %}
+      {{ "%.1f"|format(delta_mm|abs) }} kg
+    </p>
+    {% endif %}
+  </div>
+
+  <!-- % Grasa -->
+  {% set delta_pgc = (last.pgc or 0) - (prev.pgc or 0) if (last.pgc and prev.pgc) else none %}
+  <div class="bg-gray-800 rounded-2xl p-4 border border-gray-700">
+    <p class="text-xs text-gray-400 uppercase tracking-wide font-medium mb-1">% Grasa</p>
+    <p class="text-xl font-bold text-white">{{ last.pgc if last.pgc else '—' }}{% if last.pgc %}%{% endif %}</p>
+    {% if delta_pgc is not none %}
+    <p class="text-sm font-semibold mt-1 flex items-center gap-1
+       {% if delta_pgc < 0 %}text-brand-400{% elif delta_pgc > 0 %}text-red-400{% else %}text-gray-400{% endif %}">
+      {% if delta_pgc < 0 %}▼{% elif delta_pgc > 0 %}▲{% else %}—{% endif %}
+      {{ "%.1f"|format(delta_pgc|abs) }}%
+    </p>
+    {% endif %}
+  </div>
+
+  <!-- InBody Score -->
+  {% set delta_ib = (last.puntuacion_inbody or 0) - (prev.puntuacion_inbody or 0) if (last.puntuacion_inbody and prev.puntuacion_inbody) else none %}
+  <div class="bg-gray-800 rounded-2xl p-4 border border-gray-700">
+    <p class="text-xs text-gray-400 uppercase tracking-wide font-medium mb-1">InBody Score</p>
+    <p class="text-xl font-bold text-white">{{ last.puntuacion_inbody if last.puntuacion_inbody else '—' }}{% if last.puntuacion_inbody %}/100{% endif %}</p>
+    {% if delta_ib is not none %}
+    <p class="text-sm font-semibold mt-1 flex items-center gap-1
+       {% if delta_ib > 0 %}text-brand-400{% elif delta_ib < 0 %}text-red-400{% else %}text-gray-400{% endif %}">
+      {% if delta_ib > 0 %}▲{% elif delta_ib < 0 %}▼{% else %}—{% endif %}
+      {{ delta_ib|abs }} pts
+    </p>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
+<!-- ── Evolution charts (solo si >= 2 mediciones) ─────────────────────── -->
+{% if measurements|length >= 2 %}
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+  <div class="bg-gray-800 rounded-2xl p-5 border border-gray-700">
+    <h2 class="text-base font-semibold text-white mb-4">Peso vs Masa Muscular</h2>
+    <div class="relative h-52">
+      <canvas id="chartPesoMusculo"></canvas>
+    </div>
+  </div>
+  <div class="bg-gray-800 rounded-2xl p-5 border border-gray-700">
+    <h2 class="text-base font-semibold text-white mb-4">Evolución % Grasa</h2>
+    <div class="relative h-52">
+      <canvas id="chartGrasa"></canvas>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- ── Import section ─────────────────────────────────────────────────── -->
+<div class="bg-gray-800 rounded-2xl p-5 border border-gray-700 mb-5">
+  <h2 class="text-base font-semibold text-white mb-1 flex items-center gap-2">
+    <svg class="w-5 h-5 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+    </svg>
+    Importar desde InBody
+  </h2>
+  <p class="text-xs text-gray-400 mb-4">Subí una foto de tu resultado InBody y se extraerán los valores automáticamente.</p>
+
+  <div id="dropZone"
+       class="border-2 border-dashed border-gray-600 rounded-xl p-8 text-center cursor-pointer hover:border-brand-500 transition-colors mb-4"
+       onclick="document.getElementById('importFile').click()"
+       ondragover="event.preventDefault(); this.classList.add('border-brand-400')"
+       ondragleave="this.classList.remove('border-brand-400')"
+       ondrop="handleDrop(event)">
+    <svg class="w-10 h-10 text-gray-500 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+        d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+    </svg>
+    <p class="text-sm text-gray-400">Arrastrá una imagen o <span class="text-brand-400 font-medium">seleccioná archivo</span></p>
+    <p class="text-xs text-gray-500 mt-1">JPG, PNG</p>
+  </div>
+  <input type="file" id="importFile" accept="image/*" class="hidden" onchange="handleFileSelect(this.files[0])">
+
+  <div id="importPreview" class="hidden mb-4">
+    <img id="previewImg" src="" class="max-h-32 rounded-lg mx-auto border border-gray-600 mb-3">
+    <p id="importFileName" class="text-xs text-center text-gray-400 mb-3"></p>
+    <button onclick="analyzeImage()"
+            class="w-full bg-brand-600 hover:bg-brand-500 text-white py-2.5 rounded-xl text-sm font-medium transition-colors flex items-center justify-center gap-2">
+      <svg id="analyzeIcon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+      </svg>
+      <span id="analyzeText">Analizar imagen</span>
+    </button>
+  </div>
+
+  <div id="importError" class="hidden bg-red-900/40 border border-red-700 rounded-xl p-3 text-sm text-red-300 mb-3"></div>
+  <div id="importSuccess" class="hidden bg-brand-900/30 border border-brand-700 rounded-xl p-3 text-sm text-brand-300 mb-3">
+    Valores extraídos correctamente. Revisá el formulario y guardá la medición.
+  </div>
+</div>
+
+<!-- ── Manual entry form ───────────────────────────────────────────────── -->
+<div id="formSection" class="bg-gray-800 rounded-2xl border border-gray-700 mb-5 overflow-hidden">
+  <!-- Collapsible header -->
+  <button onclick="toggleForm()" class="w-full flex items-center justify-between p-5 text-left hover:bg-gray-750 transition-colors">
+    <h2 class="text-base font-semibold text-white flex items-center gap-2">
+      <svg class="w-5 h-5 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+      </svg>
+      Registrar medición manualmente
+    </h2>
+    <svg id="formChevron" class="w-5 h-5 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+    </svg>
+  </button>
+
+  <div id="formBody" class="px-5 pb-5">
+    <form method="POST" action="/measurements" id="measurementForm">
+
+      <!-- 1. Fecha + Score + Notas -->
+      <div class="mb-5 pl-3 border-l-2 border-brand-500">
+        <h3 class="text-sm font-semibold text-brand-400 uppercase tracking-wide mb-3">General</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">Fecha <span class="text-red-400">*</span></label>
+            <input type="date" name="fecha_medicion" id="f_fecha_medicion" required
+                   class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brand-500 transition-colors">
+          </div>
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">Puntuación InBody (/100)</label>
+            <input type="number" name="puntuacion_inbody" id="f_puntuacion_inbody"
+                   min="0" max="100" step="1" placeholder="ej: 85"
+                   class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brand-500 transition-colors">
+          </div>
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">Notas</label>
+            <input type="text" name="notas" id="f_notas" placeholder="Observaciones opcionales"
+                   class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brand-500 transition-colors">
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. Composición Corporal -->
+      <div class="mb-5 pl-3 border-l-2 border-blue-500">
+        <h3 class="text-sm font-semibold text-blue-400 uppercase tracking-wide mb-3">Composición Corporal</h3>
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">Peso (kg)</label>
+            <input type="number" name="peso_kg" id="f_peso_kg" step="0.1" placeholder="ej: 85.0"
+                   class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brand-500 transition-colors">
+          </div>
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">Agua Corporal (L)</label>
+            <input type="number" name="agua_corporal_l" id="f_agua_corporal_l" step="0.1" placeholder="ej: 45.2"
+                   class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brand-500 transition-colors">
+          </div>
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">Proteínas (kg)</label>
+            <input type="number" name="proteinas_kg" id="f_proteinas_kg" step="0.1" placeholder="ej: 16.3"
+                   class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brand-500 transition-colors">
+          </div>
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">Minerales (kg)</label>
+            <input type="number" name="minerales_kg" id="f_minerales_kg" step="0.01" placeholder="ej: 4.2"
+                   class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brand-500 transition-colors">
+          </div>
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">Masa Grasa (kg)</label>
+            <input type="number" name="masa_grasa_corporal_kg" id="f_masa_grasa_corporal_kg" step="0.1" placeholder="ej: 22.0"
+                   class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brand-500 transition-colors">
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Músculo-Grasa -->
+      <div class="mb-5 pl-3 border-l-2 border-purple-500">
+        <h3 class="text-sm font-semibold text-purple-400 uppercase tracking-wide mb-3">Músculo – Grasa</h3>
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">Masa Músculo-Esquelética (kg)</label>
+            <input type="number" name="masa_musculoesqueletica_kg" id="f_masa_musculoesqueletica_kg" step="0.1" placeholder="ej: 40.5"
+                   class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brand-500 transition-colors">
+          </div>
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">IMC</label>
+            <input type="number" name="imc" id="f_imc" step="0.1" placeholder="ej: 25.1"
+                   class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brand-500 transition-colors">
+          </div>
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">% Grasa Corporal</label>
+            <input type="number" name="pgc" id="f_pgc" step="0.1" placeholder="ej: 22.5"
+                   class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brand-500 transition-colors">
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. Control -->
+      <div class="mb-5 pl-3 border-l-2 border-yellow-500">
+        <h3 class="text-sm font-semibold text-yellow-400 uppercase tracking-wide mb-3">Control InBody</h3>
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">Control Peso (kg)</label>
+            <input type="number" name="control_peso_kg" id="f_control_peso_kg" step="0.1" placeholder="ej: -3.0"
+                   class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brand-500 transition-colors">
+          </div>
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">Control Grasa (kg)</label>
+            <input type="number" name="control_grasa_kg" id="f_control_grasa_kg" step="0.1" placeholder="ej: -4.5"
+                   class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brand-500 transition-colors">
+          </div>
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">Control Músculo (kg)</label>
+            <input type="number" name="control_musculo_kg" id="f_control_musculo_kg" step="0.1" placeholder="ej: 1.5"
+                   class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brand-500 transition-colors">
+          </div>
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">Relación Cintura/Cadera</label>
+            <input type="number" name="relacion_cintura_cadera" id="f_relacion_cintura_cadera" step="0.01" placeholder="ej: 0.95"
+                   class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brand-500 transition-colors">
+          </div>
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">Grasa Visceral (nivel)</label>
+            <input type="number" name="nivel_grasa_visceral" id="f_nivel_grasa_visceral" step="1" placeholder="ej: 10"
+                   class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brand-500 transition-colors">
+          </div>
+        </div>
+      </div>
+
+      <!-- 5. Segmental Magro -->
+      <div class="mb-5 pl-3 border-l-2 border-brand-500">
+        <h3 class="text-sm font-semibold text-brand-400 uppercase tracking-wide mb-3">Análisis Segmental – Masa Magra (kg)</h3>
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">Brazo Derecho</label>
+            <input type="number" name="magro_brazo_derecho_kg" id="f_magro_brazo_derecho_kg" step="0.01"
+                   class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brand-500 transition-colors">
+          </div>
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">Brazo Izquierdo</label>
+            <input type="number" name="magro_brazo_izquierdo_kg" id="f_magro_brazo_izquierdo_kg" step="0.01"
+                   class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brand-500 transition-colors">
+          </div>
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">Tronco</label>
+            <input type="number" name="magro_tronco_kg" id="f_magro_tronco_kg" step="0.01"
+                   class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brand-500 transition-colors">
+          </div>
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">Pierna Derecha</label>
+            <input type="number" name="magro_pierna_derecha_kg" id="f_magro_pierna_derecha_kg" step="0.01"
+                   class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brand-500 transition-colors">
+          </div>
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">Pierna Izquierda</label>
+            <input type="number" name="magro_pierna_izquierda_kg" id="f_magro_pierna_izquierda_kg" step="0.01"
+                   class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brand-500 transition-colors">
+          </div>
+        </div>
+      </div>
+
+      <!-- 6. Segmental Grasa -->
+      <div class="mb-5 pl-3 border-l-2 border-orange-500">
+        <h3 class="text-sm font-semibold text-orange-400 uppercase tracking-wide mb-3">Análisis Segmental – Grasa (kg)</h3>
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">Brazo Derecho</label>
+            <input type="number" name="grasa_brazo_derecho_kg" id="f_grasa_brazo_derecho_kg" step="0.01"
+                   class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brand-500 transition-colors">
+          </div>
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">Brazo Izquierdo</label>
+            <input type="number" name="grasa_brazo_izquierdo_kg" id="f_grasa_brazo_izquierdo_kg" step="0.01"
+                   class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brand-500 transition-colors">
+          </div>
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">Tronco</label>
+            <input type="number" name="grasa_tronco_kg" id="f_grasa_tronco_kg" step="0.01"
+                   class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brand-500 transition-colors">
+          </div>
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">Pierna Derecha</label>
+            <input type="number" name="grasa_pierna_derecha_kg" id="f_grasa_pierna_derecha_kg" step="0.01"
+                   class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brand-500 transition-colors">
+          </div>
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">Pierna Izquierda</label>
+            <input type="number" name="grasa_pierna_izquierda_kg" id="f_grasa_pierna_izquierda_kg" step="0.01"
+                   class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brand-500 transition-colors">
+          </div>
+        </div>
+      </div>
+
+      <!-- 7. Pliegues Cutáneos -->
+      <div class="mb-6 pl-3 border-l-2 border-pink-500">
+        <h3 class="text-sm font-semibold text-pink-400 uppercase tracking-wide mb-3">Pliegues Cutáneos (mm)</h3>
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">Tríceps</label>
+            <input type="number" name="pliegue_triceps_mm" id="f_pliegue_triceps_mm" step="0.1"
+                   class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brand-500 transition-colors">
+          </div>
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">Subescapular</label>
+            <input type="number" name="pliegue_subescapular_mm" id="f_pliegue_subescapular_mm" step="0.1"
+                   class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brand-500 transition-colors">
+          </div>
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">Suprailíaco</label>
+            <input type="number" name="pliegue_suprailiaco_mm" id="f_pliegue_suprailiaco_mm" step="0.1"
+                   class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brand-500 transition-colors">
+          </div>
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">Abdominal</label>
+            <input type="number" name="pliegue_abdominal_mm" id="f_pliegue_abdominal_mm" step="0.1"
+                   class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brand-500 transition-colors">
+          </div>
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">Muslo</label>
+            <input type="number" name="pliegue_muslo_mm" id="f_pliegue_muslo_mm" step="0.1"
+                   class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brand-500 transition-colors">
+          </div>
+        </div>
+      </div>
+
+      <button type="submit"
+              class="w-full bg-brand-600 hover:bg-brand-500 text-white py-3 rounded-xl text-sm font-semibold transition-colors">
+        Guardar medición
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- ── History ──────────────────────────────────────────────────────────── -->
+{% if measurements %}
+<div class="bg-gray-800 rounded-2xl border border-gray-700 overflow-hidden">
+  <div class="p-5 border-b border-gray-700">
+    <h2 class="text-base font-semibold text-white">Historial de mediciones</h2>
+    <p class="text-xs text-gray-400 mt-0.5">{{ measurements|length }} registro{{ 's' if measurements|length != 1 }}</p>
+  </div>
+
+  <!-- Desktop table -->
+  <div class="hidden md:block overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="border-b border-gray-700 text-xs text-gray-400 uppercase tracking-wide">
+          <th class="text-left px-5 py-3">Fecha</th>
+          <th class="text-right px-4 py-3">Peso</th>
+          <th class="text-right px-4 py-3">Músculo</th>
+          <th class="text-right px-4 py-3">% Grasa</th>
+          <th class="text-right px-4 py-3">InBody</th>
+          <th class="px-4 py-3"></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for m in measurements %}
+        <tr class="border-b border-gray-700/50 hover:bg-gray-750 cursor-pointer transition-colors"
+            onclick="window.location='/measurements/{{ m.id }}'">
+          <td class="px-5 py-3 font-medium text-white">{{ m.fecha_medicion.strftime('%d/%m/%Y') }}</td>
+          <td class="px-4 py-3 text-right text-gray-300">{{ "%.1f kg"|format(m.peso_kg) if m.peso_kg else '—' }}</td>
+          <td class="px-4 py-3 text-right text-gray-300">{{ "%.1f kg"|format(m.masa_musculoesqueletica_kg) if m.masa_musculoesqueletica_kg else '—' }}</td>
+          <td class="px-4 py-3 text-right text-gray-300">{{ "%.1f%%"|format(m.pgc) if m.pgc else '—' }}</td>
+          <td class="px-4 py-3 text-right">
+            {% if m.puntuacion_inbody %}
+            <span class="font-semibold
+              {% if m.puntuacion_inbody >= 80 %}text-brand-400{% elif m.puntuacion_inbody >= 60 %}text-yellow-400{% else %}text-red-400{% endif %}">
+              {{ m.puntuacion_inbody }}
+            </span>
+            {% else %}—{% endif %}
+          </td>
+          <td class="px-4 py-3 text-right" onclick="event.stopPropagation()">
+            <button onclick="deleteMeasurement({{ m.id }})"
+                    class="text-red-400 hover:text-red-300 hover:bg-red-900/30 px-2 py-1 rounded-lg text-xs transition-colors">
+              Eliminar
+            </button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Mobile cards -->
+  <div class="md:hidden divide-y divide-gray-700">
+    {% for m in measurements %}
+    <div class="p-4">
+      <div class="flex items-center justify-between mb-2">
+        <a href="/measurements/{{ m.id }}" class="font-semibold text-white">{{ m.fecha_medicion.strftime('%d/%m/%Y') }}</a>
+        {% if m.puntuacion_inbody %}
+        <span class="text-sm font-bold px-2.5 py-0.5 rounded-full bg-brand-900/50 border border-brand-700
+          {% if m.puntuacion_inbody >= 80 %}text-brand-400{% elif m.puntuacion_inbody >= 60 %}text-yellow-400{% else %}text-red-400{% endif %}">
+          {{ m.puntuacion_inbody }}/100
+        </span>
+        {% endif %}
+      </div>
+      <div class="grid grid-cols-3 gap-2 text-xs text-center mb-3">
+        <div class="bg-gray-700/50 rounded-lg p-2">
+          <div class="text-gray-400">Peso</div>
+          <div class="font-semibold text-white">{{ "%.1f"|format(m.peso_kg) if m.peso_kg else '—' }} {% if m.peso_kg %}kg{% endif %}</div>
+        </div>
+        <div class="bg-gray-700/50 rounded-lg p-2">
+          <div class="text-gray-400">Músculo</div>
+          <div class="font-semibold text-brand-400">{{ "%.1f"|format(m.masa_musculoesqueletica_kg) if m.masa_musculoesqueletica_kg else '—' }} {% if m.masa_musculoesqueletica_kg %}kg{% endif %}</div>
+        </div>
+        <div class="bg-gray-700/50 rounded-lg p-2">
+          <div class="text-gray-400">Grasa</div>
+          <div class="font-semibold text-orange-400">{{ "%.1f"|format(m.pgc) if m.pgc else '—' }}{% if m.pgc %}%{% endif %}</div>
+        </div>
+      </div>
+      <div class="flex items-center justify-between">
+        <a href="/measurements/{{ m.id }}" class="text-xs text-brand-400 hover:underline">Ver detalle →</a>
+        <button onclick="deleteMeasurement({{ m.id }})"
+                class="text-xs text-red-400 hover:text-red-300 hover:bg-red-900/30 px-2 py-1 rounded-lg transition-colors">
+          Eliminar
+        </button>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% else %}
+<div class="bg-gray-800 rounded-2xl border border-gray-700 p-12 text-center">
+  <svg class="w-14 h-14 text-gray-600 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+      d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+  </svg>
+  <p class="text-gray-400 font-medium">Sin mediciones todavía</p>
+  <p class="text-gray-500 text-sm mt-1">Registrá tu primera medición o importá desde InBody.</p>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+// ── Form collapse/expand ────────────────────────────────────────────────────
+function toggleForm() {
+  const body = document.getElementById('formBody');
+  const chevron = document.getElementById('formChevron');
+  const hidden = body.style.display === 'none';
+  body.style.display = hidden ? 'block' : 'none';
+  chevron.style.transform = hidden ? '' : 'rotate(-90deg)';
+}
+
+// Set today as default date
+const dateInput = document.getElementById('f_fecha_medicion');
+if (dateInput && !dateInput.value) {
+  dateInput.value = new Date().toISOString().split('T')[0];
+}
+
+// ── Import logic ────────────────────────────────────────────────────────────
+let selectedFile = null;
+
+function handleFileSelect(file) {
+  if (!file) return;
+  selectedFile = file;
+  const preview = document.getElementById('importPreview');
+  const img = document.getElementById('previewImg');
+  const fname = document.getElementById('importFileName');
+  img.src = URL.createObjectURL(file);
+  fname.textContent = file.name;
+  preview.classList.remove('hidden');
+  document.getElementById('importError').classList.add('hidden');
+  document.getElementById('importSuccess').classList.add('hidden');
+}
+
+function handleDrop(event) {
+  event.preventDefault();
+  document.getElementById('dropZone').classList.remove('border-brand-400');
+  const file = event.dataTransfer.files[0];
+  if (file) handleFileSelect(file);
+}
+
+async function analyzeImage() {
+  if (!selectedFile) return;
+  const btn = document.querySelector('#importPreview button');
+  const icon = document.getElementById('analyzeIcon');
+  const text = document.getElementById('analyzeText');
+
+  btn.disabled = true;
+  text.textContent = 'Analizando…';
+  icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>';
+
+  document.getElementById('importError').classList.add('hidden');
+  document.getElementById('importSuccess').classList.add('hidden');
+
+  const formData = new FormData();
+  formData.append('file', selectedFile);
+
+  try {
+    const resp = await fetch('/measurements/import', { method: 'POST', body: formData });
+    const json = await resp.json();
+
+    if (!resp.ok || json.error) {
+      document.getElementById('importError').textContent = json.error || 'Error al analizar la imagen.';
+      document.getElementById('importError').classList.remove('hidden');
+    } else {
+      fillForm(json.data);
+      document.getElementById('importSuccess').classList.remove('hidden');
+      document.getElementById('formSection').scrollIntoView({ behavior: 'smooth' });
+      // Expand form if collapsed
+      const body = document.getElementById('formBody');
+      if (body.style.display === 'none') toggleForm();
+    }
+  } catch (e) {
+    document.getElementById('importError').textContent = 'Error de red: ' + e.message;
+    document.getElementById('importError').classList.remove('hidden');
+  } finally {
+    btn.disabled = false;
+    text.textContent = 'Analizar imagen';
+    icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>';
+  }
+}
+
+function fillForm(data) {
+  const fields = [
+    'peso_kg','agua_corporal_l','proteinas_kg','minerales_kg','masa_grasa_corporal_kg',
+    'masa_musculoesqueletica_kg','imc','pgc',
+    'magro_brazo_derecho_kg','magro_brazo_izquierdo_kg','magro_tronco_kg',
+    'magro_pierna_derecha_kg','magro_pierna_izquierda_kg',
+    'grasa_brazo_derecho_kg','grasa_brazo_izquierdo_kg','grasa_tronco_kg',
+    'grasa_pierna_derecha_kg','grasa_pierna_izquierda_kg',
+    'control_peso_kg','control_grasa_kg','control_musculo_kg',
+    'relacion_cintura_cadera','nivel_grasa_visceral','puntuacion_inbody'
+  ];
+  fields.forEach(f => {
+    const el = document.getElementById('f_' + f);
+    if (el && data[f] !== null && data[f] !== undefined) {
+      el.value = data[f];
+      el.classList.add('border-brand-400');
+      setTimeout(() => el.classList.remove('border-brand-400'), 2000);
+    }
+  });
+}
+
+// ── Delete measurement ──────────────────────────────────────────────────────
+async function deleteMeasurement(id) {
+  if (!confirm('¿Eliminar esta medición?')) return;
+  const resp = await fetch('/measurements/' + id, { method: 'DELETE' });
+  if (resp.ok) window.location.reload();
+  else alert('Error al eliminar');
+}
+
+// ── Charts ──────────────────────────────────────────────────────────────────
+{% if measurements|length >= 2 %}
+const chartLabels = {{ measurements|map(attribute='fecha_medicion')|list|map('string')|list|tojson }};
+chartLabels.reverse();
+
+const pesoData = {{ measurements|map(attribute='peso_kg')|list|tojson }};
+pesoData.reverse();
+const musculoData = {{ measurements|map(attribute='masa_musculoesqueletica_kg')|list|tojson }};
+musculoData.reverse();
+const grasaData = {{ measurements|map(attribute='pgc')|list|tojson }};
+grasaData.reverse();
+
+const tooltipDefaults = {
+  backgroundColor: '#1f2937',
+  borderColor: '#374151',
+  borderWidth: 1,
+  titleColor: '#f9fafb',
+  bodyColor: '#9ca3af',
+};
+const scaleDefaults = {
+  x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#6b7280', font: { size: 11 } } },
+  y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#6b7280', font: { size: 11 } }, beginAtZero: false }
+};
+
+new Chart(document.getElementById('chartPesoMusculo'), {
+  type: 'line',
+  data: {
+    labels: chartLabels,
+    datasets: [
+      {
+        label: 'Peso (kg)',
+        data: pesoData,
+        borderColor: '#60a5fa',
+        backgroundColor: 'rgba(96,165,250,0.1)',
+        tension: 0.3,
+        pointRadius: 4,
+        pointBackgroundColor: '#60a5fa',
+        fill: false,
+      },
+      {
+        label: 'Músculo (kg)',
+        data: musculoData,
+        borderColor: '#34d399',
+        backgroundColor: 'rgba(52,211,153,0.1)',
+        tension: 0.3,
+        pointRadius: 4,
+        pointBackgroundColor: '#34d399',
+        fill: false,
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: true, labels: { color: '#9ca3af', font: { size: 11 }, boxWidth: 12 } },
+      tooltip: tooltipDefaults
+    },
+    scales: scaleDefaults
+  }
+});
+
+new Chart(document.getElementById('chartGrasa'), {
+  type: 'line',
+  data: {
+    labels: chartLabels,
+    datasets: [{
+      label: '% Grasa',
+      data: grasaData,
+      borderColor: '#fb923c',
+      backgroundColor: 'rgba(251,146,60,0.1)',
+      tension: 0.3,
+      pointRadius: 4,
+      pointBackgroundColor: '#fb923c',
+      fill: true,
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: { ...tooltipDefaults, callbacks: { label: ctx => ` ${ctx.parsed.y}%` } }
+    },
+    scales: scaleDefaults
+  }
+});
+{% endif %}
+</script>
+{% endblock %}

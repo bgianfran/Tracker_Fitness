@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, Depends, Form, HTTPException
+from fastapi import FastAPI, Request, Depends, Form, HTTPException, UploadFile, File
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
@@ -6,8 +6,10 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 from datetime import date, timedelta
 import os
+import base64
+import json
 
-from app.database import get_db, init_db, FoodEntry, UserProfile, DayScore, ChatMessage
+from app.database import get_db, init_db, FoodEntry, UserProfile, DayScore, ChatMessage, BodyMeasurement
 from app.food_data import search_foods, get_food, FOOD_DATABASE
 from app.hevy import fetch_recent_workouts, format_workout_summary, get_workout_display_data
 
@@ -500,3 +502,159 @@ def profile_page(request: Request, db: Session = Depends(get_db)):
         "bmr": bmr,
         "tdee": tdee,
     })
+
+
+# ─── Body Measurements ──────────────────────────────────────────────────────
+
+_MEASUREMENT_FLOAT_FIELDS = [
+    "peso_kg", "agua_corporal_l", "proteinas_kg", "minerales_kg",
+    "masa_grasa_corporal_kg", "masa_musculoesqueletica_kg", "imc", "pgc",
+    "magro_brazo_derecho_kg", "magro_brazo_izquierdo_kg", "magro_tronco_kg",
+    "magro_pierna_derecha_kg", "magro_pierna_izquierda_kg",
+    "grasa_brazo_derecho_kg", "grasa_brazo_izquierdo_kg", "grasa_tronco_kg",
+    "grasa_pierna_derecha_kg", "grasa_pierna_izquierda_kg",
+    "control_peso_kg", "control_grasa_kg", "control_musculo_kg",
+    "relacion_cintura_cadera",
+    "pliegue_triceps_mm", "pliegue_subescapular_mm", "pliegue_suprailiaco_mm",
+    "pliegue_abdominal_mm", "pliegue_muslo_mm",
+]
+_MEASUREMENT_INT_FIELDS = ["nivel_grasa_visceral", "puntuacion_inbody"]
+
+
+def _parse_optional_float(v: str):
+    try:
+        return float(v) if v and v.strip() else None
+    except (ValueError, TypeError):
+        return None
+
+
+def _parse_optional_int(v: str):
+    try:
+        return int(v) if v and v.strip() else None
+    except (ValueError, TypeError):
+        return None
+
+
+@app.get("/measurements", response_class=HTMLResponse)
+def measurements_page(request: Request, db: Session = Depends(get_db)):
+    profile = db.query(UserProfile).first()
+    measurements = (
+        db.query(BodyMeasurement)
+        .order_by(BodyMeasurement.fecha_medicion.desc())
+        .all()
+    )
+    return templates.TemplateResponse("measurements.html", {
+        "request": request,
+        "profile": profile,
+        "measurements": measurements,
+    })
+
+
+@app.post("/measurements")
+async def save_measurement(
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    form = await request.form()
+
+    fecha_str = form.get("fecha_medicion", "")
+    if not fecha_str:
+        raise HTTPException(status_code=400, detail="fecha_medicion es requerida")
+    fecha = date.fromisoformat(fecha_str)
+
+    kwargs = {"fecha_medicion": fecha, "notas": form.get("notas", "") or None}
+    for field in _MEASUREMENT_FLOAT_FIELDS:
+        kwargs[field] = _parse_optional_float(form.get(field, ""))
+    for field in _MEASUREMENT_INT_FIELDS:
+        kwargs[field] = _parse_optional_int(form.get(field, ""))
+
+    m = BodyMeasurement(**kwargs)
+    db.add(m)
+    db.commit()
+    return RedirectResponse(url="/measurements", status_code=303)
+
+
+@app.get("/measurements/{measurement_id}", response_class=HTMLResponse)
+def measurement_detail(measurement_id: int, request: Request, db: Session = Depends(get_db)):
+    profile = db.query(UserProfile).first()
+    m = db.query(BodyMeasurement).filter(BodyMeasurement.id == measurement_id).first()
+    if not m:
+        raise HTTPException(status_code=404, detail="Medición no encontrada")
+    return templates.TemplateResponse("measurement_detail.html", {
+        "request": request,
+        "profile": profile,
+        "m": m,
+    })
+
+
+@app.delete("/measurements/{measurement_id}")
+def delete_measurement(measurement_id: int, db: Session = Depends(get_db)):
+    m = db.query(BodyMeasurement).filter(BodyMeasurement.id == measurement_id).first()
+    if not m:
+        raise HTTPException(status_code=404, detail="Medición no encontrada")
+    db.delete(m)
+    db.commit()
+    return JSONResponse(content={"success": True})
+
+
+@app.post("/measurements/import")
+async def import_measurement(file: UploadFile = File(...)):
+    import anthropic as anthropic_sdk
+
+    api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+    if not api_key:
+        return JSONResponse(status_code=400, content={"error": "ANTHROPIC_API_KEY no configurada"})
+
+    contents = await file.read()
+    b64 = base64.standard_b64encode(contents).decode("utf-8")
+
+    media_type = file.content_type or "image/jpeg"
+    if media_type not in ("image/jpeg", "image/png", "image/gif", "image/webp"):
+        media_type = "image/jpeg"
+
+    prompt = (
+        "Este es un resultado de InBody. "
+        "Extraé los valores numéricos y devolvé SOLO un JSON con estas claves exactas "
+        "(usa null si no encontrás el valor): "
+        "peso_kg, agua_corporal_l, proteinas_kg, minerales_kg, masa_grasa_corporal_kg, "
+        "masa_musculoesqueletica_kg, imc, pgc, "
+        "magro_brazo_derecho_kg, magro_brazo_izquierdo_kg, magro_tronco_kg, "
+        "magro_pierna_derecha_kg, magro_pierna_izquierda_kg, "
+        "grasa_brazo_derecho_kg, grasa_brazo_izquierdo_kg, grasa_tronco_kg, "
+        "grasa_pierna_derecha_kg, grasa_pierna_izquierda_kg, "
+        "control_peso_kg, control_grasa_kg, control_musculo_kg, "
+        "relacion_cintura_cadera, nivel_grasa_visceral, puntuacion_inbody"
+    )
+
+    try:
+        client = anthropic_sdk.Anthropic(api_key=api_key)
+        response = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=1024,
+            messages=[{
+                "role": "user",
+                "content": [
+                    {
+                        "type": "image",
+                        "source": {
+                            "type": "base64",
+                            "media_type": media_type,
+                            "data": b64,
+                        },
+                    },
+                    {"type": "text", "text": prompt},
+                ],
+            }],
+        )
+        raw_text = response.content[0].text
+        # Extract JSON from the response
+        start = raw_text.find("{")
+        end = raw_text.rfind("}") + 1
+        if start == -1 or end == 0:
+            return JSONResponse(status_code=422, content={"error": "No se pudo extraer JSON de la respuesta", "raw": raw_text})
+        data = json.loads(raw_text[start:end])
+        return JSONResponse(content={"success": True, "data": data})
+    except json.JSONDecodeError as e:
+        return JSONResponse(status_code=422, content={"error": f"JSON inválido: {e}", "raw": raw_text})
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})

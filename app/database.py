@@ -64,6 +64,51 @@ class ChatMessage(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
 
+class BodyMeasurement(Base):
+    __tablename__ = "body_measurements"
+    id = Column(Integer, primary_key=True)
+    fecha_medicion = Column(Date, nullable=False)
+    # Composición
+    peso_kg = Column(Float)
+    agua_corporal_l = Column(Float)
+    proteinas_kg = Column(Float)
+    minerales_kg = Column(Float)
+    masa_grasa_corporal_kg = Column(Float)
+    # Músculo-Grasa
+    masa_musculoesqueletica_kg = Column(Float)
+    imc = Column(Float)
+    pgc = Column(Float)
+    # Segmental magro
+    magro_brazo_derecho_kg = Column(Float)
+    magro_brazo_izquierdo_kg = Column(Float)
+    magro_tronco_kg = Column(Float)
+    magro_pierna_derecha_kg = Column(Float)
+    magro_pierna_izquierda_kg = Column(Float)
+    # Segmental grasa
+    grasa_brazo_derecho_kg = Column(Float)
+    grasa_brazo_izquierdo_kg = Column(Float)
+    grasa_tronco_kg = Column(Float)
+    grasa_pierna_derecha_kg = Column(Float)
+    grasa_pierna_izquierda_kg = Column(Float)
+    # Control
+    control_peso_kg = Column(Float)
+    control_grasa_kg = Column(Float)
+    control_musculo_kg = Column(Float)
+    # Extra InBody
+    relacion_cintura_cadera = Column(Float)
+    nivel_grasa_visceral = Column(Integer)
+    puntuacion_inbody = Column(Integer)
+    # Pliegues cutáneos
+    pliegue_triceps_mm = Column(Float)
+    pliegue_subescapular_mm = Column(Float)
+    pliegue_suprailiaco_mm = Column(Float)
+    pliegue_abdominal_mm = Column(Float)
+    pliegue_muslo_mm = Column(Float)
+    # Meta
+    notas = Column(Text)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
 def get_db():
     db = SessionLocal()
     try:
