@@ -10,6 +10,35 @@ import os
 from app.database import get_db, init_db, FoodEntry, UserProfile, DayScore
 from app.food_data import search_foods, get_food, FOOD_DATABASE
 
+
+def calculate_score(cal_pct: float, protein_pct: float, wellbeing: str) -> int:
+    """Calcula puntaje 1-5 según cumplimiento de objetivos y bienestar."""
+    # Base por calorías
+    if cal_pct > 130:
+        base = 1
+    elif cal_pct > 115:
+        base = 2
+    elif cal_pct > 105 or cal_pct < 70:
+        base = 3
+    elif cal_pct > 100 or cal_pct < 80:
+        base = 4
+    else:  # 80-100% → zona ideal de déficit
+        base = 5
+
+    # Ajuste por proteínas
+    if protein_pct < 70:
+        base -= 1
+    elif protein_pct < 85:
+        base -= 0
+
+    # Ajuste por bienestar
+    if wellbeing == "overate":
+        base -= 1
+    elif wellbeing == "good":
+        base += 0.5
+
+    return max(1, min(5, round(base)))
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
 
@@ -244,22 +273,47 @@ def history(request: Request, db: Session = Depends(get_db)):
 @app.post("/score")
 def save_score(
     db: Session = Depends(get_db),
-    score: int = Form(...),
+    wellbeing: str = Form("good"),
     notes: str = Form(""),
     score_date: str = Form(""),
 ):
     target_date = date.fromisoformat(score_date) if score_date else date.today()
-    if not (1 <= score <= 5):
-        raise HTTPException(status_code=400, detail="Puntaje debe ser entre 1 y 5")
+    profile = db.query(UserProfile).first()
+
+    # Calcular % cumplimiento del día
+    entries = db.query(FoodEntry).filter(FoodEntry.date == target_date).all()
+    total_cal = sum(e.calories for e in entries)
+    total_protein = sum(e.protein for e in entries)
+    cal_pct = round((total_cal / profile.target_calories) * 100, 1) if profile.target_calories else 0
+    protein_pct = round((total_protein / profile.target_protein) * 100, 1) if profile.target_protein else 0
+
+    score = calculate_score(cal_pct, protein_pct, wellbeing)
 
     existing = db.query(DayScore).filter(DayScore.date == target_date).first()
     if existing:
         existing.score = score
+        existing.cal_pct = cal_pct
+        existing.protein_pct = protein_pct
+        existing.wellbeing = wellbeing
         existing.notes = notes
     else:
-        db.add(DayScore(date=target_date, score=score, notes=notes))
+        db.add(DayScore(date=target_date, score=score, cal_pct=cal_pct,
+                        protein_pct=protein_pct, wellbeing=wellbeing, notes=notes))
     db.commit()
     return RedirectResponse(url="/", status_code=303)
+
+
+@app.get("/api/score/preview")
+def api_score_preview(db: Session = Depends(get_db), wellbeing: str = "good"):
+    today = date.today()
+    profile = db.query(UserProfile).first()
+    entries = db.query(FoodEntry).filter(FoodEntry.date == today).all()
+    total_cal = sum(e.calories for e in entries)
+    total_protein = sum(e.protein for e in entries)
+    cal_pct = round((total_cal / profile.target_calories) * 100, 1) if profile.target_calories else 0
+    protein_pct = round((total_protein / profile.target_protein) * 100, 1) if profile.target_protein else 0
+    score = calculate_score(cal_pct, protein_pct, wellbeing)
+    return JSONResponse(content={"score": score, "cal_pct": cal_pct, "protein_pct": protein_pct})
 
 
 @app.get("/api/scores/week")

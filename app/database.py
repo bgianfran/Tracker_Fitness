@@ -46,7 +46,10 @@ class DayScore(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     date = Column(Date, nullable=False, unique=True)
-    score = Column(Integer, nullable=False)  # 1-5
+    score = Column(Integer, nullable=False)       # 1-5 calculado automáticamente
+    cal_pct = Column(Float, nullable=True)        # % calorías vs objetivo
+    protein_pct = Column(Float, nullable=True)    # % proteína vs objetivo
+    wellbeing = Column(String, nullable=True)     # 'hungry' | 'good' | 'overate'
     notes = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

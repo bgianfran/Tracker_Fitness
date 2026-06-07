@@ -118,7 +118,7 @@
 
   <!-- Puntaje del día -->
   <div class="bg-gray-800 rounded-2xl p-5 border border-gray-700">
-    <div class="flex items-center justify-between mb-4">
+    <div class="flex items-center justify-between mb-3">
       <h2 class="text-base font-semibold text-white">Puntaje del día</h2>
       {% if today_score %}
       <span class="text-xs bg-brand-900/50 text-brand-400 px-2 py-1 rounded-lg font-medium border border-brand-800/50">
@@ -126,27 +126,70 @@
       </span>
       {% endif %}
     </div>
-    <form method="post" action="/score" id="score-form">
-      <input type="hidden" name="score_date" value="{{ today }}">
-      <div class="flex items-center gap-1 mb-4" id="star-container">
+
+    <!-- Score preview (auto-calculado) -->
+    <div class="flex items-center gap-3 mb-4 bg-gray-700/40 rounded-xl px-4 py-3">
+      <div id="preview-stars" class="flex gap-0.5 text-3xl">
+        {% set s = today_score.score if today_score else 0 %}
+        {% set star_colors = {1: '#ef4444', 2: '#f97316', 3: '#f59e0b', 4: '#84cc16', 5: '#34d399'} %}
         {% for i in range(1, 6) %}
-        <button type="button"
-          data-val="{{ i }}"
-          onclick="selectScore({{ i }})"
-          class="star-btn text-4xl transition-transform hover:scale-110 focus:outline-none"
-          style="color: {% if today_score and today_score.score >= i %}#f59e0b{% else %}#374151{% endif %};">
-          ★
-        </button>
+        <span style="color: {% if s > 0 and i <= s %}{{ star_colors[s] }}{% else %}#374151{% endif %}">★</span>
         {% endfor %}
       </div>
-      <input type="hidden" name="score" id="score-input" value="{{ today_score.score if today_score else '' }}">
-      <textarea name="notes" placeholder="Nota opcional (ej: entrené bien, comí limpio...)"
-        class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-brand-500 resize-none mb-3"
+      <div>
+        <div id="preview-label" class="text-sm font-semibold text-white">
+          {% if today_score %}
+            {% set labels = {1: 'Mal día', 2: 'Regular', 3: 'Ok', 4: 'Bien', 5: '¡Perfecto!'} %}
+            {{ labels[today_score.score] }}
+          {% elif totals.calories == 0 %}
+            Sin registros aún
+          {% else %}
+            Calculando...
+          {% endif %}
+        </div>
+        <div id="preview-detail" class="text-xs text-gray-400">
+          {% if today_score %}
+            Calorías: {{ today_score.cal_pct }}% · Proteína: {{ today_score.protein_pct }}%
+          {% elif totals.calories > 0 %}
+            Calorías: {{ progress.calories }}% · Proteína: {{ progress.protein }}%
+          {% else %}
+            Registrá comidas para ver tu puntaje
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <form method="post" action="/score" id="score-form">
+      <input type="hidden" name="score_date" value="{{ today }}">
+
+      <!-- Selector de bienestar -->
+      <p class="text-xs text-gray-400 mb-2 font-medium">¿Cómo te sentiste hoy?</p>
+      <div class="grid grid-cols-3 gap-2 mb-3" id="wellbeing-btns">
+        {% set cur_wb = today_score.wellbeing if today_score else '' %}
+        <button type="button" data-val="hungry" onclick="selectWellbeing('hungry')"
+          class="wellbeing-btn flex flex-col items-center gap-1 py-2.5 px-1 rounded-xl border transition-all text-xs font-medium
+            {% if cur_wb == 'hungry' %}border-blue-500 bg-blue-900/30 text-blue-300{% else %}border-gray-600 bg-gray-700/40 text-gray-400{% endif %}">
+          <span class="text-xl">😤</span>Tuve hambre
+        </button>
+        <button type="button" data-val="good" onclick="selectWellbeing('good')"
+          class="wellbeing-btn flex flex-col items-center gap-1 py-2.5 px-1 rounded-xl border transition-all text-xs font-medium
+            {% if cur_wb == 'good' or cur_wb == '' %}border-brand-500 bg-brand-900/30 text-brand-300{% else %}border-gray-600 bg-gray-700/40 text-gray-400{% endif %}">
+          <span class="text-xl">😊</span>Me sentí bien
+        </button>
+        <button type="button" data-val="overate" onclick="selectWellbeing('overate')"
+          class="wellbeing-btn flex flex-col items-center gap-1 py-2.5 px-1 rounded-xl border transition-all text-xs font-medium
+            {% if cur_wb == 'overate' %}border-red-500 bg-red-900/30 text-red-300{% else %}border-gray-600 bg-gray-700/40 text-gray-400{% endif %}">
+          <span class="text-xl">😩</span>Comí de más
+        </button>
+      </div>
+      <input type="hidden" name="wellbeing" id="wellbeing-input" value="{{ today_score.wellbeing if today_score else 'good' }}">
+
+      <textarea name="notes" placeholder="Nota opcional (ej: entrené bien, día estresante...)"
+        class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-gray-200 placeholder-gray-500 focus:outline-none focus:border-brand-500 resize-none mb-3"
         rows="2">{{ today_score.notes if today_score else '' }}</textarea>
-      <button type="submit" id="score-save-btn"
-        class="w-full bg-brand-500 hover:bg-brand-600 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold py-2 rounded-xl transition-colors text-sm"
-        {% if not today_score %}disabled{% endif %}>
-        {{ 'Actualizar puntaje' if today_score else 'Guardar puntaje' }}
+      <button type="submit"
+        class="w-full bg-brand-500 hover:bg-brand-600 text-white font-semibold py-2.5 rounded-xl transition-colors text-sm">
+        {{ 'Actualizar puntaje' if today_score else 'Guardar puntaje del día' }}
       </button>
     </form>
   </div>
@@ -291,34 +334,49 @@
 
 {% block scripts %}
 <script>
-// Star rating
-function selectScore(val) {
-  document.getElementById('score-input').value = val;
-  document.getElementById('score-save-btn').disabled = false;
-  document.getElementById('score-save-btn').textContent = 'Guardar puntaje';
-  const colors = { 1: '#ef4444', 2: '#f97316', 3: '#f59e0b', 4: '#84cc16', 5: '#34d399' };
-  document.querySelectorAll('.star-btn').forEach(btn => {
-    const v = parseInt(btn.dataset.val);
-    btn.style.color = v <= val ? colors[val] : '#374151';
+// Wellbeing selector
+const STAR_COLORS = { 1: '#ef4444', 2: '#f97316', 3: '#f59e0b', 4: '#84cc16', 5: '#34d399' };
+const SCORE_LABELS = { 1: 'Mal día', 2: 'Regular', 3: 'Ok', 4: 'Bien', 5: '¡Perfecto!' };
+const WB_STYLES = {
+  hungry:  { border: 'border-blue-500',  bg: 'bg-blue-900/30',  text: 'text-blue-300' },
+  good:    { border: 'border-brand-500', bg: 'bg-brand-900/30', text: 'text-brand-300' },
+  overate: { border: 'border-red-500',   bg: 'bg-red-900/30',   text: 'text-red-300' },
+};
+
+function selectWellbeing(val) {
+  document.getElementById('wellbeing-input').value = val;
+  document.querySelectorAll('.wellbeing-btn').forEach(btn => {
+    const s = WB_STYLES[btn.dataset.val];
+    if (btn.dataset.val === val) {
+      btn.className = btn.className.replace(/border-\S+|bg-\S+|text-\S+/g, '').trim();
+      btn.classList.add(s.border, s.bg, s.text);
+    } else {
+      btn.className = btn.className.replace(/border-\S+|bg-\S+|text-\S+/g, '').trim();
+      btn.classList.add('border-gray-600', 'bg-gray-700/40', 'text-gray-400');
+    }
   });
+  refreshPreview();
 }
-document.querySelectorAll('.star-btn').forEach(btn => {
-  btn.addEventListener('mouseenter', () => {
-    const val = parseInt(btn.dataset.val);
-    const colors = { 1: '#ef4444', 2: '#f97316', 3: '#f59e0b', 4: '#84cc16', 5: '#34d399' };
-    document.querySelectorAll('.star-btn').forEach(b => {
-      b.style.color = parseInt(b.dataset.val) <= val ? colors[val] : '#374151';
+
+async function refreshPreview() {
+  const wb = document.getElementById('wellbeing-input').value || 'good';
+  try {
+    const res = await fetch(`/api/score/preview?wellbeing=${wb}`);
+    const data = await res.json();
+    const stars = document.querySelectorAll('#preview-stars span');
+    stars.forEach((s, i) => {
+      s.style.color = i < data.score ? STAR_COLORS[data.score] : '#374151';
     });
-  });
-  btn.addEventListener('mouseleave', () => {
-    const current = parseInt(document.getElementById('score-input').value) || 0;
-    const colors = { 1: '#ef4444', 2: '#f97316', 3: '#f59e0b', 4: '#84cc16', 5: '#34d399' };
-    document.querySelectorAll('.star-btn').forEach(b => {
-      const v = parseInt(b.dataset.val);
-      b.style.color = current > 0 && v <= current ? colors[current] : '#374151';
-    });
-  });
-});
+    document.getElementById('preview-label').textContent = SCORE_LABELS[data.score] || '';
+    document.getElementById('preview-detail').textContent =
+      `Calorías: ${data.cal_pct}% · Proteína: ${data.protein_pct}%`;
+  } catch(e) {}
+}
+
+// Init preview si hay datos
+{% if totals.calories > 0 and not today_score %}
+refreshPreview();
+{% endif %}
 
 {% if totals.calories > 0 %}
 const ctx = document.getElementById('macroChart').getContext('2d');
