@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+{% block title %}Historial – FitTracker{% endblock %}
+
+{% block content %}
+
+<!-- Header -->
+<div class="mb-6">
+  <h1 class="text-2xl font-bold text-white">Historial</h1>
+  <p class="text-gray-400 text-sm mt-0.5">Últimos 7 días de seguimiento</p>
+</div>
+
+<!-- Summary cards -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 mb-6">
+  {% for d in days_data %}
+  <div class="card-hover bg-gray-800 rounded-2xl p-4 border {% if d.is_today %}border-brand-600{% else %}border-gray-700{% endif %} relative overflow-hidden">
+    {% if d.is_today %}
+    <span class="absolute top-2 right-2 text-xs bg-brand-600 text-white px-2 py-0.5 rounded-full font-medium">Hoy</span>
+    {% endif %}
+
+    <div class="mb-3">
+      <p class="text-xs text-gray-400 uppercase tracking-wide font-medium">{{ d.label }}</p>
+    </div>
+
+    {% if d.calories > 0 %}
+    <!-- Calories row -->
+    <div class="mb-2">
+      <div class="flex justify-between text-xs mb-1">
+        <span class="text-gray-400">Calorías</span>
+        <span class="font-semibold {% if d.cal_pct <= 90 %}text-brand-400{% elif d.cal_pct <= 105 %}text-yellow-400{% else %}text-red-400{% endif %}">
+          {{ d.calories }} / {{ profile.target_calories }}
+        </span>
+      </div>
+      <div class="h-1.5 bg-gray-700 rounded-full overflow-hidden">
+        <div class="h-full rounded-full {% if d.cal_pct <= 90 %}bg-brand-400{% elif d.cal_pct <= 105 %}bg-yellow-400{% else %}bg-red-400{% endif %}"
+             style="width: {{ [d.cal_pct, 100]|min }}%"></div>
+      </div>
+    </div>
+
+    <!-- Protein row -->
+    <div class="mb-3">
+      <div class="flex justify-between text-xs mb-1">
+        <span class="text-gray-400">Proteína</span>
+        <span class="font-semibold {% if d.protein_pct <= 90 %}text-brand-400{% elif d.protein_pct <= 105 %}text-yellow-400{% else %}text-red-400{% endif %}">
+          {{ d.protein }}g / {{ profile.target_protein }}g
+        </span>
+      </div>
+      <div class="h-1.5 bg-gray-700 rounded-full overflow-hidden">
+        <div class="h-full rounded-full {% if d.protein_pct <= 90 %}bg-brand-400{% elif d.protein_pct <= 105 %}bg-yellow-400{% else %}bg-red-400{% endif %}"
+             style="width: {{ [d.protein_pct, 100]|min }}%"></div>
+      </div>
+    </div>
+
+    <!-- Macro summary -->
+    <div class="grid grid-cols-3 gap-1 text-center text-xs border-t border-gray-700 pt-2 mt-2">
+      <div>
+        <div class="text-gray-500">Prot.</div>
+        <div class="font-semibold text-brand-400">{{ d.protein }}g</div>
+      </div>
+      <div>
+        <div class="text-gray-500">Carbs</div>
+        <div class="font-semibold text-blue-400">{{ d.carbs }}g</div>
+      </div>
+      <div>
+        <div class="text-gray-500">Grasas</div>
+        <div class="font-semibold text-yellow-400">{{ d.fat }}g</div>
+      </div>
+    </div>
+
+    {% else %}
+    <div class="flex flex-col items-center justify-center py-4 text-center">
+      <svg class="w-8 h-8 text-gray-600 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+      </svg>
+      <p class="text-xs text-gray-600">Sin registros</p>
+    </div>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Charts -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
+  <!-- Calories bar chart -->
+  <div class="bg-gray-800 rounded-2xl p-5 border border-gray-700">
+    <h2 class="text-base font-semibold text-white mb-4">Calorías por día</h2>
+    <div class="relative h-56">
+      <canvas id="calChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Protein bar chart -->
+  <div class="bg-gray-800 rounded-2xl p-5 border border-gray-700">
+    <h2 class="text-base font-semibold text-white mb-4">Proteínas por día</h2>
+    <div class="relative h-56">
+      <canvas id="protChart"></canvas>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+const labels = {{ chart_labels | tojson }};
+const calData = {{ chart_calories | tojson }};
+const protData = {{ chart_protein | tojson }};
+const targetCal = {{ profile.target_calories }};
+const targetProt = {{ profile.target_protein }};
+
+const chartDefaults = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: { display: false },
+    tooltip: {
+      backgroundColor: '#1f2937',
+      borderColor: '#374151',
+      borderWidth: 1,
+      titleColor: '#f9fafb',
+      bodyColor: '#9ca3af',
+    }
+  },
+  scales: {
+    x: {
+      grid: { color: 'rgba(255,255,255,0.05)' },
+      ticks: { color: '#6b7280', font: { size: 11 } }
+    },
+    y: {
+      grid: { color: 'rgba(255,255,255,0.05)' },
+      ticks: { color: '#6b7280', font: { size: 11 } },
+      beginAtZero: true
+    }
+  }
+};
+
+// Calories chart
+new Chart(document.getElementById('calChart'), {
+  type: 'bar',
+  data: {
+    labels,
+    datasets: [
+      {
+        label: 'Calorías',
+        data: calData,
+        backgroundColor: calData.map(v => v >= targetCal ? 'rgba(239,68,68,0.7)' : 'rgba(52,211,153,0.7)'),
+        borderColor: calData.map(v => v >= targetCal ? '#ef4444' : '#34d399'),
+        borderWidth: 1,
+        borderRadius: 6,
+      },
+      {
+        label: 'Objetivo',
+        data: Array(labels.length).fill(targetCal),
+        type: 'line',
+        borderColor: '#6b7280',
+        borderWidth: 1.5,
+        borderDash: [4, 4],
+        pointRadius: 0,
+        fill: false,
+      }
+    ]
+  },
+  options: {
+    ...chartDefaults,
+    plugins: {
+      ...chartDefaults.plugins,
+      tooltip: {
+        ...chartDefaults.plugins.tooltip,
+        callbacks: {
+          label: ctx => ctx.dataset.label === 'Objetivo'
+            ? ` Objetivo: ${ctx.parsed.y} kcal`
+            : ` ${ctx.parsed.y} kcal`
+        }
+      }
+    }
+  }
+});
+
+// Protein chart
+new Chart(document.getElementById('protChart'), {
+  type: 'bar',
+  data: {
+    labels,
+    datasets: [
+      {
+        label: 'Proteínas',
+        data: protData,
+        backgroundColor: protData.map(v => v >= targetProt ? 'rgba(96,165,250,0.7)' : 'rgba(52,211,153,0.7)'),
+        borderColor: protData.map(v => v >= targetProt ? '#60a5fa' : '#34d399'),
+        borderWidth: 1,
+        borderRadius: 6,
+      },
+      {
+        label: 'Objetivo',
+        data: Array(labels.length).fill(targetProt),
+        type: 'line',
+        borderColor: '#6b7280',
+        borderWidth: 1.5,
+        borderDash: [4, 4],
+        pointRadius: 0,
+        fill: false,
+      }
+    ]
+  },
+  options: {
+    ...chartDefaults,
+    plugins: {
+      ...chartDefaults.plugins,
+      tooltip: {
+        ...chartDefaults.plugins.tooltip,
+        callbacks: {
+          label: ctx => ctx.dataset.label === 'Objetivo'
+            ? ` Objetivo: ${ctx.parsed.y}g`
+            : ` ${ctx.parsed.y}g`
+        }
+      }
+    }
+  }
+});
+</script>
+{% endblock %}
