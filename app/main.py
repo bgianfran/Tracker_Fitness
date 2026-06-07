@@ -4,7 +4,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 import os
 import base64
 import json
@@ -605,6 +605,7 @@ def measurements_page(request: Request, db: Session = Depends(get_db)):
         "request": request,
         "profile": profile,
         "measurements": measurements,
+        "now": datetime.today,
     })
 
 
