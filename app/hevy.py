@@ -5,18 +5,19 @@ from datetime import datetime
 HEVY_BASE = "https://api.hevyapp.com/v1"
 
 
-def get_headers():
-    return {"api-key": os.environ.get("HEVY_API_KEY", "")}
+def get_headers(api_key: str = None):
+    key = api_key or os.environ.get("HEVY_API_KEY", "")
+    return {"api-key": key}
 
 
-def fetch_recent_workouts(pages=3):
+def fetch_recent_workouts(pages=3, api_key: str = None):
     """Fetch last ~pages*10 workouts. Returns list of workout dicts."""
     workouts = []
     try:
         for page in range(1, pages + 1):
             r = httpx.get(
                 f"{HEVY_BASE}/workouts",
-                headers=get_headers(),
+                headers=get_headers(api_key),
                 params={"page": page, "pageSize": 10},
                 timeout=10,
             )

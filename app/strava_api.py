@@ -56,9 +56,12 @@ def _refresh_access_token(refresh_tok: str) -> dict:
     return resp.json()
 
 
-def get_valid_token(db) -> str | None:
+def get_valid_token(db, user_id: int = None) -> str | None:
     from app.database import StravaToken
-    token = db.query(StravaToken).first()
+    q = db.query(StravaToken)
+    if user_id is not None:
+        q = q.filter(StravaToken.user_id == user_id)
+    token = q.first()
     if not token:
         return None
     if token.expires_at < int(time.time()) + 300:
