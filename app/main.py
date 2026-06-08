@@ -175,6 +175,47 @@ def logout():
 
 # ─── API ────────────────────────────────────────────────────────────────────
 
+@app.post("/api/profile/estimate-targets")
+async def estimate_targets(request: Request, db: Session = Depends(get_db)):
+    current_user, _ = get_user_from_request(request, db)
+    if not current_user:
+        return JSONResponse(status_code=401, content={"error": "No autenticado"})
+
+    import anthropic as _anthropic
+    api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+    if not api_key:
+        return JSONResponse(status_code=503, content={"error": "ANTHROPIC_API_KEY no configurada"})
+
+    body = await request.json()
+    age = body.get("age", "?")
+    weight = body.get("weight_kg", "?")
+    height = body.get("height_cm", "?")
+    activity = body.get("activity_level", "?")
+    goal = body.get("goal", "?")
+    extra = body.get("extra", "")
+
+    prompt = (
+        f"Atleta: {age} años, {weight}kg, {height}cm, actividad: {activity}, objetivo: {goal}."
+        + (f" Info extra: {extra}" if extra else "")
+        + " Calculá los objetivos nutricionales diarios óptimos. "
+        "Devolvé SOLO un JSON con estas claves exactas (sin texto extra): "
+        '{"calories": número_entero, "protein": número_entero, "carbs": número_entero, "fat": número_entero, '
+        '"explanation": "2-3 oraciones explicando el razonamiento en español"}'
+    )
+
+    try:
+        client = _anthropic.Anthropic(api_key=api_key)
+        response = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=400,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        raw = response.content[0].text.strip()
+        start, end = raw.find("{"), raw.rfind("}") + 1
+        return JSONResponse(content=json.loads(raw[start:end]))
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
 @app.get("/api/search")
 def api_search(q: str = ""):
     return JSONResponse(content=search_foods(q))

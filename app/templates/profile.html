@@ -82,26 +82,51 @@
 
     <!-- Daily targets -->
     <div class="bg-gray-800 border border-gray-700 rounded-2xl p-5 space-y-4">
-      <h2 class="font-semibold text-white">Objetivos diarios</h2>
+      <div class="flex items-center justify-between">
+        <h2 class="font-semibold text-white">Objetivos diarios</h2>
+        <button type="button" onclick="openAITargets()"
+          class="flex items-center gap-1.5 text-xs bg-brand-900/40 hover:bg-brand-800/60 border border-brand-700/50 text-brand-400 px-3 py-1.5 rounded-lg transition-colors">
+          ✨ Calcular con IA
+        </button>
+      </div>
+
+      <!-- AI targets modal -->
+      <div id="ai-targets-modal" class="hidden bg-gray-700/60 border border-brand-700/40 rounded-xl p-4 space-y-3">
+        <p class="text-xs text-gray-300">La IA va a estimar tus objetivos según los datos que cargaste arriba. Podés darle más contexto si querés.</p>
+        <textarea id="ai-targets-context" rows="2" placeholder="Opcional: agregá info extra (ej: quiero bajar 5kg, entreno fuerza 4x semana, como poco en el desayuno...)"
+          class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-white placeholder-gray-500 text-sm focus:outline-none focus:border-brand-400 resize-none"></textarea>
+        <div class="flex gap-2">
+          <button type="button" onclick="estimateTargets()" id="ai-targets-btn"
+            class="flex-1 bg-brand-500 hover:bg-brand-600 text-white text-sm font-semibold py-2 rounded-xl transition-colors">
+            Estimar objetivos
+          </button>
+          <button type="button" onclick="closeAITargets()"
+            class="px-4 py-2 text-sm text-gray-400 hover:text-white bg-gray-700 rounded-xl transition-colors">
+            Cancelar
+          </button>
+        </div>
+        <div id="ai-targets-result" class="hidden text-xs text-gray-300 bg-gray-800 rounded-lg p-3 leading-relaxed"></div>
+      </div>
+
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div>
           <label class="block text-xs font-medium text-gray-400 mb-1.5">Calorías (kcal)</label>
-          <input type="number" name="target_calories" value="{{ profile.target_calories if profile else 2500 }}" min="500" max="10000" required
+          <input type="number" name="target_calories" id="target_calories" value="{{ profile.target_calories if profile else 2500 }}" min="500" max="10000" required
             class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-brand-400 focus:ring-1 focus:ring-brand-400"/>
         </div>
         <div>
           <label class="block text-xs font-medium text-gray-400 mb-1.5">Proteínas (g)</label>
-          <input type="number" name="target_protein" value="{{ profile.target_protein if profile else 150 }}" min="0" max="1000" required
+          <input type="number" name="target_protein" id="target_protein" value="{{ profile.target_protein if profile else 150 }}" min="0" max="1000" required
             class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-brand-400 focus:ring-1 focus:ring-brand-400"/>
         </div>
         <div>
           <label class="block text-xs font-medium text-gray-400 mb-1.5">Carbos (g)</label>
-          <input type="number" name="target_carbs" value="{{ profile.target_carbs if profile else 300 }}" min="0" max="2000" required
+          <input type="number" name="target_carbs" id="target_carbs" value="{{ profile.target_carbs if profile else 300 }}" min="0" max="2000" required
             class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-brand-400 focus:ring-1 focus:ring-brand-400"/>
         </div>
         <div>
           <label class="block text-xs font-medium text-gray-400 mb-1.5">Grasas (g)</label>
-          <input type="number" name="target_fat" value="{{ profile.target_fat if profile else 80 }}" min="0" max="500" required
+          <input type="number" name="target_fat" id="target_fat" value="{{ profile.target_fat if profile else 80 }}" min="0" max="500" required
             class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-brand-400 focus:ring-1 focus:ring-brand-400"/>
         </div>
       </div>
@@ -167,4 +192,55 @@
   </form>
 
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function openAITargets() {
+  document.getElementById('ai-targets-modal').classList.remove('hidden');
+  document.getElementById('ai-targets-context').focus();
+}
+function closeAITargets() {
+  document.getElementById('ai-targets-modal').classList.add('hidden');
+  document.getElementById('ai-targets-result').classList.add('hidden');
+  document.getElementById('ai-targets-result').textContent = '';
+}
+
+async function estimateTargets() {
+  const btn = document.getElementById('ai-targets-btn');
+  btn.disabled = true;
+  btn.textContent = 'Calculando...';
+
+  const age = document.querySelector('input[name=age]').value;
+  const weight = document.querySelector('input[name=weight_kg]').value;
+  const height = document.querySelector('input[name=height_cm]').value;
+  const activity = document.querySelector('select[name=activity_level]').value;
+  const goal = document.querySelector('input[name=goal]').value;
+  const extra = document.getElementById('ai-targets-context').value.trim();
+
+  try {
+    const res = await fetch('/api/profile/estimate-targets', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ age, weight_kg: weight, height_cm: height, activity_level: activity, goal, extra })
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    document.getElementById('target_calories').value = data.calories;
+    document.getElementById('target_protein').value = data.protein;
+    document.getElementById('target_carbs').value = data.carbs;
+    document.getElementById('target_fat').value = data.fat;
+
+    const resultEl = document.getElementById('ai-targets-result');
+    resultEl.textContent = data.explanation;
+    resultEl.classList.remove('hidden');
+    btn.textContent = '✓ Valores aplicados — guardá el perfil para confirmar';
+  } catch(e) {
+    alert('Error: ' + e.message);
+    btn.disabled = false;
+    btn.textContent = 'Estimar objetivos';
+  }
+}
+</script>
 {% endblock %}
