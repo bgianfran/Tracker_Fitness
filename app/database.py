@@ -1,11 +1,15 @@
+import os
 from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, Date, Text, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from datetime import datetime, date
 
-DATABASE_URL = "sqlite:///./tracker.db"
+_raw_url = os.environ.get("DATABASE_URL", "sqlite:///./tracker.db")
+# Railway gives postgres:// but SQLAlchemy needs postgresql://
+DATABASE_URL = _raw_url.replace("postgres://", "postgresql://", 1)
 
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+_kwargs = {} if DATABASE_URL.startswith("postgresql") else {"connect_args": {"check_same_thread": False}}
+engine = create_engine(DATABASE_URL, **_kwargs)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
@@ -159,28 +163,3 @@ def get_db():
 
 def init_db():
     Base.metadata.create_all(bind=engine)
-    # Run any needed column migrations for existing DBs
-    _migrate_add_columns()
-
-
-def _migrate_add_columns():
-    """Add new columns to existing tables without dropping data."""
-    from sqlalchemy import inspect, text
-    inspector = inspect(engine)
-    with engine.connect() as conn:
-        for table, col, col_def in [
-            ("food_entries", "user_id", "INTEGER REFERENCES users(id)"),
-            ("user_profiles", "user_id", "INTEGER REFERENCES users(id)"),
-            ("day_scores", "user_id", "INTEGER REFERENCES users(id)"),
-            ("chat_messages", "user_id", "INTEGER REFERENCES users(id)"),
-            ("body_measurements", "user_id", "INTEGER REFERENCES users(id)"),
-            ("manual_workouts", "user_id", "INTEGER REFERENCES users(id)"),
-            ("strava_tokens", "user_id", "INTEGER REFERENCES users(id)"),
-        ]:
-            try:
-                existing = [c["name"] for c in inspector.get_columns(table)]
-                if col not in existing:
-                    conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {col} {col_def}"))
-            except Exception:
-                pass
-        conn.commit()
