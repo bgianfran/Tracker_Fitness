@@ -15,6 +15,7 @@ from app.database import (
     BodyMeasurement, ManualWorkout, StravaToken,
 )
 from app.food_data import search_foods, get_food, FOOD_DATABASE
+from app.openfoodfacts import search_openfoodfacts, get_by_barcode
 from app.hevy import fetch_recent_workouts, format_workout_summary, get_workout_display_data
 from app.strava_api import get_auth_url, exchange_code, get_valid_token, fetch_activities, format_activity
 from app.auth import (
@@ -176,6 +177,23 @@ def api_food(name: str):
     data = get_food(name)
     if not data:
         raise HTTPException(status_code=404, detail="Alimento no encontrado")
+    return JSONResponse(content=data)
+
+
+@app.get("/api/search/off")
+def api_search_off(q: str = ""):
+    """Search Open Food Facts — called when local results are insufficient."""
+    if len(q.strip()) < 2:
+        return JSONResponse(content=[])
+    results = search_openfoodfacts(q.strip(), limit=12)
+    return JSONResponse(content=results)
+
+
+@app.get("/api/food/barcode/{barcode}")
+def api_food_barcode(barcode: str):
+    data = get_by_barcode(barcode)
+    if not data:
+        raise HTTPException(status_code=404, detail="Producto no encontrado")
     return JSONResponse(content=data)
 
 

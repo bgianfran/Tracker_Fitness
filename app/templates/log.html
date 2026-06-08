@@ -374,37 +374,86 @@ async function doSearch() {
     searchResults.innerHTML = '';
     return;
   }
+
+  searchResults.innerHTML = `<p class="text-xs text-gray-500 px-2 py-2 animate-pulse">Buscando...</p>`;
+  searchResults.classList.remove('hidden');
+
   try {
-    const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
-    const data = await res.json();
-    renderResults(data);
+    const [localRes, offRes] = await Promise.all([
+      fetch(`/api/search?q=${encodeURIComponent(q)}`).then(r => r.json()).catch(() => []),
+      fetch(`/api/search/off?q=${encodeURIComponent(q)}&limit=8`).then(r => r.json()).catch(() => [])
+    ]);
+    renderResults(localRes, offRes);
   } catch(e) {
     console.error(e);
   }
 }
 
-function renderResults(items) {
-  if (!items.length) {
+function renderResults(localItems, offItems = []) {
+  const sections = [];
+
+  if (localItems.length) {
+    sections.push(localItems.map(item => renderFoodBtn(item)).join(''));
+  }
+
+  if (offItems.length) {
+    const divider = localItems.length
+      ? `<p class="text-xs text-gray-500 px-2 pt-2 pb-1 font-medium">Open Food Facts 🌍</p>`
+      : '';
+    sections.push(divider + offItems.map(item => renderFoodBtn(item, true)).join(''));
+  }
+
+  if (!sections.length) {
     searchResults.innerHTML = `<p class="text-xs text-gray-500 px-2 py-2">Sin resultados para esa búsqueda</p>`;
     searchResults.classList.remove('hidden');
     return;
   }
-  searchResults.innerHTML = items.map(item => `
+
+  searchResults.innerHTML = sections.join('');
+  searchResults.classList.remove('hidden');
+}
+
+function renderFoodBtn(item, isOff = false) {
+  const flag = isOff && item.is_ar ? ' 🇦🇷' : '';
+  const badge = isOff ? `<span class="text-xs text-gray-500 flex-shrink-0 ml-1">OFF</span>` : '';
+  return `
     <button type="button" onclick='selectFood(${JSON.stringify(item)})'
-            class="w-full text-left px-3 py-2.5 rounded-xl bg-gray-700 hover:bg-gray-600 transition-colors group">
+            class="w-full text-left px-3 py-2.5 rounded-xl bg-gray-700 hover:bg-gray-600 transition-colors">
       <div class="flex items-center justify-between gap-2">
-        <span class="text-sm font-medium text-white truncate">${item.name}</span>
-        <span class="text-xs text-brand-400 flex-shrink-0">${item.calories} kcal</span>
+        <span class="text-sm font-medium text-white truncate">${item.name}${flag}</span>
+        <div class="flex items-center gap-1 flex-shrink-0">
+          ${badge}
+          <span class="text-xs text-brand-400">${item.calories} kcal</span>
+        </div>
       </div>
       <div class="text-xs text-gray-500 mt-0.5">
         P: ${item.protein}g &bull; C: ${item.carbs}g &bull; G: ${item.fat}g <span class="text-gray-600">/ 100g</span>
       </div>
     </button>
-  `).join('');
-  searchResults.classList.remove('hidden');
+  `;
 }
 
 function selectFood(item) {
+  // OFF items → pre-fill manual form and switch to it
+  if (item.source === 'openfoodfacts') {
+    const mealType = document.querySelector('#form-search input[name=meal_type]:checked')?.value || 'breakfast';
+    const manualForm = document.getElementById('form-manual');
+    manualForm.querySelector('input[name=manual_name]').value = item.name;
+    manualForm.querySelector('input[name=manual_calories]').value = item.calories;
+    manualForm.querySelector('input[name=manual_protein]').value = item.protein;
+    manualForm.querySelector('input[name=manual_carbs]').value = item.carbs;
+    manualForm.querySelector('input[name=manual_fat]').value = item.fat;
+    // Match meal type
+    const radio = manualForm.querySelector(`input[name=meal_type][value="${mealType}"]`);
+    if (radio) { radio.checked = true; radio.dispatchEvent(new Event('change')); }
+    searchResults.classList.add('hidden');
+    searchResults.innerHTML = '';
+    searchInput.value = '';
+    switchMode('manual');
+    manualForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    return;
+  }
+
   selectedFood = item;
   foodNameInput.value = item.name;
   selectedName.textContent = item.name;
