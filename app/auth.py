@@ -1,30 +1,33 @@
 import os
-from passlib.context import CryptContext
+import bcrypt
 from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 from fastapi import Request
 from fastapi.responses import RedirectResponse
 
-_pwd_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def hash_password(password: str) -> str:
-    return _pwd_ctx.hash(password)
+    return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+
 
 def verify_password(password: str, hashed: str) -> bool:
-    return _pwd_ctx.verify(password, hashed)
+    return bcrypt.checkpw(password.encode(), hashed.encode())
+
 
 def _serializer() -> URLSafeTimedSerializer:
     secret = os.environ.get("SECRET_KEY", "dev-secret-change-in-production")
     return URLSafeTimedSerializer(secret)
 
+
 def create_session_token(user_id: int) -> str:
     return _serializer().dumps(user_id, salt="session")
 
+
 def decode_session_token(token: str) -> int | None:
     try:
-        # Token valid for 30 days
         return _serializer().loads(token, salt="session", max_age=60 * 60 * 24 * 30)
     except (BadSignature, SignatureExpired):
         return None
+
 
 def get_user_from_request(request: Request, db):
     """Returns (user, None) or (None, RedirectResponse to /login)."""
