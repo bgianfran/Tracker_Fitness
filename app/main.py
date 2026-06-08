@@ -67,12 +67,16 @@ def on_startup():
 # ─── Auth ───────────────────────────────────────────────────────────────────
 
 @app.get("/login", response_class=HTMLResponse)
-def login_page(request: Request):
-    # Already logged in → go to dashboard
+def login_page(request: Request, db: Session = Depends(get_db)):
     token = request.cookies.get("session")
-    if token and decode_session_token(token):
-        return RedirectResponse(url="/", status_code=303)
-    return templates.TemplateResponse("login.html", {"request": request, "error": None})
+    if token:
+        user_id = decode_session_token(token)
+        if user_id and db.query(User).filter(User.id == user_id).first():
+            return RedirectResponse(url="/", status_code=303)
+    response = templates.TemplateResponse("login.html", {"request": request, "error": None})
+    if token:
+        response.delete_cookie("session")
+    return response
 
 
 @app.post("/login")
@@ -95,11 +99,16 @@ def login(
 
 
 @app.get("/register", response_class=HTMLResponse)
-def register_page(request: Request):
+def register_page(request: Request, db: Session = Depends(get_db)):
     token = request.cookies.get("session")
-    if token and decode_session_token(token):
-        return RedirectResponse(url="/", status_code=303)
-    return templates.TemplateResponse("register.html", {"request": request, "error": None})
+    if token:
+        user_id = decode_session_token(token)
+        if user_id and db.query(User).filter(User.id == user_id).first():
+            return RedirectResponse(url="/", status_code=303)
+    response = templates.TemplateResponse("register.html", {"request": request, "error": None})
+    if token:
+        response.delete_cookie("session")
+    return response
 
 
 @app.post("/register")
