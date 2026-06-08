@@ -8,20 +8,8 @@ _FIELDS = "product_name,brands,nutriments,quantity,image_front_small_url,countri
 
 
 def search_openfoodfacts(query: str, limit: int = 10) -> list[dict]:
-    """Search Open Food Facts, prioritizing Argentine products."""
-    results = []
-
-    ar_results = _search(query, country="ar", limit=limit)
-    results.extend(ar_results)
-
-    if len(results) < limit:
-        world_results = _search(query, country=None, limit=limit - len(results))
-        seen_codes = {r["barcode"] for r in results}
-        for r in world_results:
-            if r["barcode"] not in seen_codes:
-                results.append(r)
-
-    return results[:limit]
+    """Search Open Food Facts, Argentina only."""
+    return _search(query, country="ar", limit=limit)
 
 
 def _search(query: str, country: Optional[str], limit: int) -> list[dict]:
