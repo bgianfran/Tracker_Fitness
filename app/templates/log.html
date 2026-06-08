@@ -374,37 +374,69 @@ async function doSearch() {
     searchResults.innerHTML = '';
     return;
   }
+
+  searchResults.innerHTML = `<p class="text-xs text-gray-500 px-2 py-2 animate-pulse">Buscando...</p>`;
+  searchResults.classList.remove('hidden');
+
   try {
-    const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
-    const data = await res.json();
-    renderResults(data);
+    const [local, off] = await Promise.all([
+      fetch(`/api/search?q=${encodeURIComponent(q)}`).then(r => r.json()).catch(() => []),
+      fetch(`/api/search/off?q=${encodeURIComponent(q)}`).then(r => r.json()).catch(() => []),
+    ]);
+    renderResults(local, off);
   } catch(e) {
     console.error(e);
   }
 }
 
-function renderResults(items) {
-  if (!items.length) {
-    searchResults.innerHTML = `<p class="text-xs text-gray-500 px-2 py-2">Sin resultados para esa búsqueda</p>`;
-    searchResults.classList.remove('hidden');
-    return;
-  }
-  searchResults.innerHTML = items.map(item => `
+function renderFoodBtn(item) {
+  const flag = item.is_ar ? ' 🇦🇷' : '';
+  const badge = item.source === 'openfoodfacts'
+    ? `<span class="text-xs text-gray-500 flex-shrink-0">OFF</span>` : '';
+  return `
     <button type="button" onclick='selectFood(${JSON.stringify(item)})'
-            class="w-full text-left px-3 py-2.5 rounded-xl bg-gray-700 hover:bg-gray-600 transition-colors group">
+            class="w-full text-left px-3 py-2.5 rounded-xl bg-gray-700 hover:bg-gray-600 transition-colors">
       <div class="flex items-center justify-between gap-2">
-        <span class="text-sm font-medium text-white truncate">${item.name}</span>
-        <span class="text-xs text-brand-400 flex-shrink-0">${item.calories} kcal</span>
+        <span class="text-sm font-medium text-white truncate">${item.name}${flag}</span>
+        <div class="flex items-center gap-1.5 flex-shrink-0">${badge}<span class="text-xs text-brand-400">${item.calories} kcal</span></div>
       </div>
-      <div class="text-xs text-gray-500 mt-0.5">
-        P: ${item.protein}g &bull; C: ${item.carbs}g &bull; G: ${item.fat}g <span class="text-gray-600">/ 100g</span>
-      </div>
-    </button>
-  `).join('');
+      <div class="text-xs text-gray-500 mt-0.5">P: ${item.protein}g &bull; C: ${item.carbs}g &bull; G: ${item.fat}g <span class="text-gray-600">/ 100g</span></div>
+    </button>`;
+}
+
+function renderResults(local, off) {
+  let html = '';
+  if (local.length) html += local.map(renderFoodBtn).join('');
+  if (off.length) {
+    if (local.length) html += `<p class="text-xs text-gray-500 px-2 pt-2 pb-1">Open Food Facts 🌍</p>`;
+    html += off.map(renderFoodBtn).join('');
+  }
+  if (!html) {
+    searchResults.innerHTML = `<p class="text-xs text-gray-500 px-2 py-2">Sin resultados para esa búsqueda</p>`;
+  } else {
+    searchResults.innerHTML = html;
+  }
   searchResults.classList.remove('hidden');
 }
 
 function selectFood(item) {
+  // Productos de Open Food Facts → pre-llenar formulario manual
+  if (item.source === 'openfoodfacts') {
+    const mealType = document.querySelector('#form-search input[name=meal_type]:checked')?.value || 'breakfast';
+    const mf = document.getElementById('form-manual');
+    mf.querySelector('input[name=manual_name]').value = item.name;
+    mf.querySelector('input[name=manual_calories]').value = item.calories;
+    mf.querySelector('input[name=manual_protein]').value = item.protein;
+    mf.querySelector('input[name=manual_carbs]').value = item.carbs;
+    mf.querySelector('input[name=manual_fat]').value = item.fat;
+    const radio = mf.querySelector(`input[name=meal_type][value="${mealType}"]`);
+    if (radio) { radio.checked = true; radio.dispatchEvent(new Event('change')); }
+    searchResults.classList.add('hidden');
+    searchInput.value = '';
+    switchMode('manual');
+    return;
+  }
+
   selectedFood = item;
   foodNameInput.value = item.name;
   selectedName.textContent = item.name;
