@@ -1,0 +1,3176 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <!-- <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> -->
+  <title>Empresas-Rubros</title>
+</head>
+<style>
+  table,
+  th,
+  td {
+    border: 1px solid black;
+    border-collapse: collapse;
+  }
+</style>
+
+<body>
+  <table>
+    <tr class="table-primary">
+      <th scope="col">RNPA</th>
+      <th scope="col">ESTADO</th>
+      <th scope="col">DENOMINACIÓN</th>
+      <th scope="col">MARCA</th>
+      <th scope="col">NOMBRE DE FANTASIA</th>
+      <th scope="col">CATEGORIA DE PRODUCTO</th>
+      <th scope="col">INGREDIENTE</th>
+      <th scope="col">VALOR ENERGETICO (kcal)</th>
+      <th scope="col">Unidad</th>
+      <th scope="col">Porcion</th>
+
+      <th scope="col">CARBOHIDRATOS</th>
+      <th scope="col">AZUCAR</th>
+
+      <th scope="col">PROTEINAS</th>
+      <th scope="col">GRASAS TOTALES</th>
+      <th scope="col">GRASAS SATURADAS</th>
+      <th scope="col">GRASAS TRANS</th>
+      <th scope="col">FIBRA ALIMENTARIA</th>
+      <th scope="col">SODIO (mg)</th>
+
+    </tr>
+    
+            <tr>
+              <td >09-001511</td>
+              <td >VIGENTE</td>
+              <td >HARINA DE MAIZ PRE COCIDA</td>
+              <td >EL SAUZAALITO</td>
+              <td >EL SAUZALITO</td>
+              <td> HARINAS / SÉMOLAS / ALMIDONES</td>
+              <td ></td>
+              <td >360</td>
+              <td >g</td>
+              <td >100</td>
+              <td >75</td>
+              <td >0.0</td>
+              <td >8.0</td>
+              <td >0.0</td>
+              <td >0.0</td>
+              <td >0.0</td>
+              <td >3.0</td>
+              <td >0.0</td>
+            </tr>
+        
+            <tr>
+              <td >09-001510</td>
+              <td >VIGENTE</td>
+              <td >HARINA DE MAIZ AMARILLO PRECOCIDA </td>
+              <td >EL ZAUSALITO</td>
+              <td >DOñA CHINA</td>
+              <td> HARINAS / SÉMOLAS / ALMIDONES</td>
+              <td ></td>
+              <td >360</td>
+              <td >g</td>
+              <td >100</td>
+              <td >75</td>
+              <td >0,0</td>
+              <td >8.0</td>
+              <td >0,0</td>
+              <td >0,0</td>
+              <td >0,0</td>
+              <td >3.0</td>
+              <td >0,0</td>
+            </tr>
+        
+            <tr>
+              <td >09-001509</td>
+              <td >VIGENTE</td>
+              <td >CHORIZO FRESCO</td>
+              <td >CHOCHI</td>
+              <td >CHORIZO PARRILLERO</td>
+              <td> CHACINADOS EMBUTIDOS FRESCOS</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td >50</td>
+              <td >0.42</td>
+              <td >0.0</td>
+              <td >9.3</td>
+              <td >13.7</td>
+              <td >6.1</td>
+              <td >0.04</td>
+              <td >0.9</td>
+              <td >154</td>
+            </tr>
+        
+            <tr>
+              <td >09-001508</td>
+              <td >VIGENTE</td>
+              <td >HIELO EN ROLITOS</td>
+              <td >GOTAS DEL ROCIO S.A.</td>
+              <td >GOTAS DEL ROCIO</td>
+              <td> HIELO</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001507</td>
+              <td >VIGENTE</td>
+              <td >AGUA DE MESA ENVASADA SIN GAS</td>
+              <td >GOTAS DEL ROCIO S.A.</td>
+              <td >GOTAS DEL ROCIO</td>
+              <td> Aguas y aguas gasificadas</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001506</td>
+              <td >VIGENTE</td>
+              <td >ARROZ TIPO  LARGO FINO CALIDAD OOOOO</td>
+              <td >BELLA VICTORIA</td>
+              <td ></td>
+              <td> CEREALES</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td >50 </td>
+              <td >40</td>
+              <td >-</td>
+              <td >3.8</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >0.6</td>
+              <td >2</td>
+            </tr>
+        
+            <tr>
+              <td >09-001505</td>
+              <td >VIGENTE</td>
+              <td >ARROZ TIPO  LARGO  FINO CALIDAD  OOOO</td>
+              <td >BELLA VICTORIA</td>
+              <td ></td>
+              <td> CEREALES</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td >50</td>
+              <td >40</td>
+              <td >-</td>
+              <td >3.8</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >0.6</td>
+              <td >2</td>
+            </tr>
+        
+            <tr>
+              <td >09-001504</td>
+              <td >VIGENTE</td>
+              <td >CONGELADO</td>
+              <td >L Y D</td>
+              <td >SOPA PARAGUAYA</td>
+              <td> COMIDAS PREPARADAS CON TRATAMIENTO TÉRMICO QUE RECIBAN UN PROCESO DE MANIPULACIÓN POSTERIOR</td>
+              <td >Cebolla, leche, huevo, puede contener deribado de trigo, cebada, centeno y soja </td>
+              <td >-</td>
+              <td >g</td>
+              <td >150</td>
+              <td >42</td>
+              <td >4.0</td>
+              <td >12</td>
+              <td >17</td>
+              <td >6.5</td>
+              <td >0.0</td>
+              <td >3.0</td>
+              <td >925</td>
+            </tr>
+        
+            <tr>
+              <td >09-001503</td>
+              <td >VIGENTE</td>
+              <td >SALSA A BASE DE TOMATE</td>
+              <td >NUTRIFOR</td>
+              <td >SALSA LISTA TOMATE CONGELADA</td>
+              <td> VEGETALES PROCESADOS</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001502</td>
+              <td >VIGENTE</td>
+              <td >EXTRACTO DE YERBA MATE EN POLVO</td>
+              <td >UNITAN-ESPECIALIDADES NATURALES</td>
+              <td >TESIL IP</td>
+              <td> COADYUVANTES DE TECNOLOGÍA PARA LA INDUSTRIA ALIMENTICIA</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001501</td>
+              <td >VIGENTE</td>
+              <td >EXTRACTO DE HIBISCUS EN POLVO</td>
+              <td >UNITAN_ESPECIALIDADES NATURALES  </td>
+              <td >TESIL HIB</td>
+              <td> COADYUVANTES DE TECNOLOGÍA PARA LA INDUSTRIA ALIMENTICIA</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001500</td>
+              <td >VIGENTE</td>
+              <td >EXTRACTO DE ALCACHOFA EN POLVO</td>
+              <td >UITAN-ESPECIALIDADES NATURALES</td>
+              <td >TESIL ALC</td>
+              <td> COADYUVANTES DE TECNOLOGÍA PARA LA INDUSTRIA ALIMENTICIA</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001445</td>
+              <td >VIGENTE</td>
+              <td >TARTA DE ACELGA CONGELADA</td>
+              <td >SABORES DEL NORTE</td>
+              <td >TARTA DE ACELGA</td>
+              <td> COMIDAS PREPARADAS CON TRATAMIENTO TÉRMICO QUE RECIBAN UN PROCESO DE MANIPULACIÓN POSTERIOR</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001437</td>
+              <td >VIGENTE</td>
+              <td >PAN DULCE SIN FRUTAS</td>
+              <td >EL PAJARITO SA</td>
+              <td >EL PAJARITO</td>
+              <td> PAN Y PRODUCTOS DE PANADERÍA</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001436</td>
+              <td >NO VIGENTE</td>
+              <td >PAN DULCE CON FRUTAS</td>
+              <td >EL PAJARITO SA</td>
+              <td >EL PAJARITO</td>
+              <td> PAN Y PRODUCTOS DE PANADERÍA</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001435</td>
+              <td >NO VIGENTE</td>
+              <td >PAN DULCE CON FRUTAS</td>
+              <td >EL PAJARITO SA</td>
+              <td >DON JUAN</td>
+              <td> PAN Y PRODUCTOS DE PANADERÍA</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001431</td>
+              <td >VIGENTE</td>
+              <td >HARINA DE ALGARROBA</td>
+              <td >NUTRIFOR</td>
+              <td >HARINA DE ALGARROBA</td>
+              <td> HARINAS / SÉMOLAS / ALMIDONES</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001430</td>
+              <td >VIGENTE</td>
+              <td >PIZZA CONGELADA SABOR CALABRESA</td>
+              <td >LYD</td>
+              <td >PIZZA CALABRESA</td>
+              <td> PAN Y PRODUCTOS DE PANADERÍA</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001429</td>
+              <td >VIGENTE</td>
+              <td >PRE PIZZA</td>
+              <td >LYD</td>
+              <td >PRE PIZZA</td>
+              <td> PAN Y PRODUCTOS DE PANADERÍA</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001428</td>
+              <td >VIGENTE</td>
+              <td >PIZZA CONGELADA SABOR MUZZARELLA</td>
+              <td >LYD</td>
+              <td >PIZZA MUSSARELLA</td>
+              <td> PAN Y PRODUCTOS DE PANADERÍA</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001427</td>
+              <td >VIGENTE</td>
+              <td >TARTA DE ESPINACA CONGELADA</td>
+              <td >SABORES DEL NORTE</td>
+              <td >TARTA DE ESPINACA</td>
+              <td> COMIDAS PREPARADAS CON TRATAMIENTO TÉRMICO QUE RECIBAN UN PROCESO DE MANIPULACIÓN POSTERIOR</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001426</td>
+              <td >VIGENTE</td>
+              <td >TARTA DE CHOCLO CONGELADA</td>
+              <td >SABORES DEL NORTE</td>
+              <td >TARTA DE CHOCLO</td>
+              <td> COMIDAS PREPARADAS CON TRATAMIENTO TÉRMICO QUE RECIBAN UN PROCESO DE MANIPULACIÓN POSTERIOR</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001425</td>
+              <td >VIGENTE</td>
+              <td >MILANESA DE POLLO CONGELADA</td>
+              <td >SABORES DEL NORTE</td>
+              <td >MILANESA DE POLLO</td>
+              <td> COMIDAS PREPARADAS CON TRATAMIENTO TÉRMICO QUE RECIBAN UN PROCESO DE MANIPULACIÓN POSTERIOR</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001420</td>
+              <td >VIGENTE</td>
+              <td >TARTA DE YACARE CONGELADA</td>
+              <td >SABORES DEL NORTE</td>
+              <td >TARTA DE YACARE</td>
+              <td> COMIDAS PREPARADAS CON TRATAMIENTO TÉRMICO QUE RECIBAN UN PROCESO DE MANIPULACIÓN POSTERIOR</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001419</td>
+              <td >VIGENTE</td>
+              <td >TARTA DE POLLO CONGELADA</td>
+              <td >SABORES DEL NORTE</td>
+              <td >TARTA DE POLLO</td>
+              <td> COMIDAS PREPARADAS CON TRATAMIENTO TÉRMICO QUE RECIBAN UN PROCESO DE MANIPULACIÓN POSTERIOR</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001418</td>
+              <td >VIGENTE</td>
+              <td >TARTA DE SURUBI CONGELADA</td>
+              <td >SABORES DEL NORTE</td>
+              <td >TARTA DE SURUBI</td>
+              <td> COMIDAS PREPARADAS CON TRATAMIENTO TÉRMICO QUE RECIBAN UN PROCESO DE MANIPULACIÓN POSTERIOR</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001417</td>
+              <td >VIGENTE</td>
+              <td >LECHE CHOCOLATADA ENTERA EN POLVO INSTANTANEA</td>
+              <td >NUTRIFOR</td>
+              <td >LECHE CHOCOLATADA INSTANTANEA</td>
+              <td> LECHES EN POLVOS</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001416</td>
+              <td >VIGENTE</td>
+              <td >MEZCLA DE YERBA MATE  SOLUBLE CON LECHE ENTERA EN POLVO Y AZUCAR </td>
+              <td >NUTRIFOR</td>
+              <td >MATE COCIDO CON LECHE </td>
+              <td> SUBPRODUCTOS LACTEOS</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001414</td>
+              <td >VIGENTE</td>
+              <td >TARTA DE JAMON Y QUESO CONGELADA</td>
+              <td >SABORES DEL NORTE</td>
+              <td >TARTA DE JAMON Y QUESO</td>
+              <td> COMIDAS PREPARADAS CON TRATAMIENTO TÉRMICO QUE RECIBAN UN PROCESO DE MANIPULACIÓN POSTERIOR</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001413</td>
+              <td >VIGENTE</td>
+              <td >CHIPITAS CONGELADAS</td>
+              <td >SABORES DEL NORTE</td>
+              <td >CHIPITA</td>
+              <td> COMIDAS PREPARADAS CON TRATAMIENTO TÉRMICO QUE RECIBAN UN PROCESO DE MANIPULACIÓN POSTERIOR</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001397</td>
+              <td >VIGENTE</td>
+              <td >PULPA DE POMELO</td>
+              <td >FORMOSA ALIMENTOS SA</td>
+              <td >PULPA DE POMELO</td>
+              <td> JUGOS VEGETALES</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001396</td>
+              <td >VIGENTE</td>
+              <td >MERMELADA DE NARANJA</td>
+              <td >NUTRIFOR</td>
+              <td >MERMELADA DE NARANJA</td>
+              <td> CONFITURAS ( COMPOTAS; DULCES; EN ALMIBAR ; MERMELADAS; DULCES ; JALEAS )</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001386</td>
+              <td >VIGENTE</td>
+              <td >MEZCLA DE PUERRO CEBOLLITA DE VERDO Y PEREJIL CONGELADO </td>
+              <td >NUTRIFOR</td>
+              <td >MIX DE PUERROS CEBOLLITA DE VERDEO Y PEREJIL CONGELADO</td>
+              <td> VEGETALES PROCESADOS</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001385</td>
+              <td >VIGENTE</td>
+              <td >MEZCLA DE TOMATES AJI MORRON Y CEBOLLA CONGELADA LIBRE DE GLUTEN </td>
+              <td >NUTRIFOR</td>
+              <td >MIX PARA SALSAS Y TUCOS DE VEGETALES CONGELADOS</td>
+              <td> VEGETALES PROCESADOS</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001384</td>
+              <td >VIGENTE</td>
+              <td >MEZCLA DE CHOCLO CEBOLLA ZAPALLO ZAPALLITO ZANAHORIA CEBOLLA DE VERDEO Y PEREJIL CONGELADO LIBRE DE GLUTEN SIN TACC</td>
+              <td >NUTRIFOR</td>
+              <td >MIX SOPERO DE VEGETALES CONGELADOS</td>
+              <td> VEGETALES PROCESADOS</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001372</td>
+              <td >VIGENTE</td>
+              <td >PAPAS CONGELADAS LIBBRES DE GLUTEN SIN TACC</td>
+              <td >NUTRIFOR</td>
+              <td >PAPAS CONGELADAS</td>
+              <td> VEGETALES PROCESADOS</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001371</td>
+              <td >VIGENTE</td>
+              <td >REMOLACHA CONGELADA LIBRE DE GLUTEN SIN TACC</td>
+              <td >NUTRIFOR</td>
+              <td >REMOLACHA CONGELADA</td>
+              <td> VEGETALES PROCESADOS</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001370</td>
+              <td >VIGENTE</td>
+              <td >MEZCLA DE REMOLACHA Y ZANAHORIA CONGELADAS LIBRE DE GLUTEN SIN TACC</td>
+              <td >NUTRIFOR</td>
+              <td >MIX DE REMOLACHA Y ZANAHORIA CONGELADA</td>
+              <td> VEGETALES PROCESADOS</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001369</td>
+              <td >VIGENTE</td>
+              <td >FECULA DE MANDIOCA</td>
+              <td >MERCADITO LA RIOJA</td>
+              <td >FECULA DE MANDIOCA</td>
+              <td> HARINAS / SÉMOLAS / ALMIDONES</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001353</td>
+              <td >VIGENTE</td>
+              <td >CEBOLLA DE VERDEO CONGELADA LIBRE DE GLUTEN SIN TACC</td>
+              <td >NUTRIFOR</td>
+              <td >CEBOLLA DE VERDEO CONGELADA</td>
+              <td> VEGETALES PROCESADOS</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001352</td>
+              <td >VIGENTE</td>
+              <td >PEREJIL CONGELADO LIBRE DE GLUTEN SIN TACC</td>
+              <td >NUTRIFOR</td>
+              <td >PEREJIL CONGELADO </td>
+              <td> VEGETALES PROCESADOS</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001351</td>
+              <td >VIGENTE</td>
+              <td >ZAPALLITO CONGELADO LIBRE DE GLUTEN SIN TACC</td>
+              <td >NUTRIFOR</td>
+              <td >ZAPALLITO CONGELADO</td>
+              <td> VEGETALES PROCESADOS</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001350</td>
+              <td >VIGENTE</td>
+              <td >MANDIOCA CONGELADA LIBRE DE GLUTEN SIN TACC</td>
+              <td >NUTRIFOR</td>
+              <td >MANDIOCA CONGELADA</td>
+              <td> VEGETALES PROCESADOS</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001349</td>
+              <td >VIGENTE</td>
+              <td >MEZCLA DE CEBOLLA ZAPALLITO ZANAHORIA Y MORRON CONGELADO LIBRE DE GLUTEN SIN TACC</td>
+              <td >NUTRIFOR</td>
+              <td >MIX DE VEGETALES CONGELADOS</td>
+              <td> VEGETALES PROCESADOS</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001348</td>
+              <td >VIGENTE</td>
+              <td >TOMATE CONGELADO LIBRE DE GLUTEN SIN TACC</td>
+              <td >NUTRIFOR</td>
+              <td >TOMATE CONGELADO</td>
+              <td> VEGETALES PROCESADOS</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001347</td>
+              <td >VIGENTE</td>
+              <td >BATATA CONGELADA LIBRE DE GLUTEN SIN TACC</td>
+              <td >NUTRIFOR</td>
+              <td >BATATA CONGELADA</td>
+              <td> VEGETALES PROCESADOS</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001346</td>
+              <td >VIGENTE</td>
+              <td >MORRON CONGALADO LIBRE DE GLUTEN SIN TACC</td>
+              <td >NUTRIFOR</td>
+              <td >MORRON CONGALADO </td>
+              <td> VEGETALES PROCESADOS</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001345</td>
+              <td >VIGENTE</td>
+              <td >ZANAHORIA CONGELADA LIBRE DE GLUTEN  SIN TACC</td>
+              <td >NUTRIFOR</td>
+              <td >ZANAHORIA CONGELADA</td>
+              <td> VEGETALES PROCESADOS</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001344</td>
+              <td >VIGENTE</td>
+              <td >ZAPALLO CONGELADO LIBRE DE GLUTEN SIN TACC</td>
+              <td >NUTRIFOR</td>
+              <td >ZAPALLO COGELADO</td>
+              <td> VEGETALES PROCESADOS</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001343</td>
+              <td >VIGENTE</td>
+              <td >CEBOLLA CONGELADA</td>
+              <td >NUTRIFOR</td>
+              <td >CEBOLLA CONGELADA</td>
+              <td> VEGETALES PROCESADOS</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001303</td>
+              <td >VIGENTE</td>
+              <td >PRE MEZCLA CON HARINA DE ALGARRROBA PARA PREPARAR PRODUCTO DE PASTELERIA</td>
+              <td >NUTRIFOR</td>
+              <td >PRE MEZCLA CON HARINA DE ALGARRROBA PARA PREPARAR PRODUCTO DE PASTELERIA</td>
+              <td> MEZCLAS</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001302</td>
+              <td >VIGENTE</td>
+              <td >POLVO PARA PREPARAR BEBIDA A BASE DE HARINA DE ALGARROBA Y LECHE</td>
+              <td >NUTRIFOR</td>
+              <td >LECHE CON ALGARROBA AL 25%</td>
+              <td> SUBPRODUCTOS LACTEOS</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001299</td>
+              <td >VIGENTE</td>
+              <td >MEZCLA DE MANGO BANANA Y FRUTILLA LIOFILIZADA LIBRE DE GLUTEN SIN TACC</td>
+              <td >NUTRIFOR</td>
+              <td >SNACK MIX TROPICALES DE FRUTAS LIOFILIZADAS</td>
+              <td> VEGETALES PROCESADOS</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001298</td>
+              <td >VIGENTE</td>
+              <td >MEZCLA DE MANGO BANANA Y MAMON LIOFILIZADO LIBRE DE GLUTEN SIN TACC</td>
+              <td >NUTRIFOR</td>
+              <td >SNACKS MIX REGIONAL DE FRUTAS LIOFILIZADAS </td>
+              <td> VEGETALES PROCESADOS</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001262</td>
+              <td >VIGENTE</td>
+              <td >POLVO PARA PREPARAR BEBIDA SIN ALCOHOL A BASE DE LECHE EN POLVO  Y YERBA MATE FOTIFICADO CON VIT A Y D</td>
+              <td >NUTRIFOR</td>
+              <td >MATE COCIDO CON LECHE DESCREMADA INSTANTANEA FORTIFICADA CON VIT A Y D</td>
+              <td> SUBPRODUCTOS LACTEOS</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001252</td>
+              <td >VIGENTE</td>
+              <td >BEBIDA SIN ALCOHOL DIETETICA CON SABOR A POMELO</td>
+              <td >FANTA</td>
+              <td >POMELO</td>
+              <td> BEBIDAS ANALCOHÓLICAS Y PRODUCTOS PARA PREPARARLAS</td>
+              <td >AGUA CARBONATADA, ARO, ACI 330, EDU ASPARTAMO (24 mg/ml) - ACESULFAME K (16 mg/ml), CONS BENZOATO DE SODIO, SEC 452i, COL TARTRAZINA - 129</td>
+              <td >0,0</td>
+              <td >ml</td>
+              <td >200</td>
+              <td >0,0</td>
+              <td >0,0</td>
+              <td >0,0</td>
+              <td >0,0</td>
+              <td >0,0</td>
+              <td >0,0</td>
+              <td >0,0</td>
+              <td >18</td>
+            </tr>
+        
+            <tr>
+              <td >09-001251</td>
+              <td >VIGENTE</td>
+              <td >POLVO PARA PREPARAR BEBIDA SIN ALCOHOL A BASE DE LECHE EN POLVO Y YERBA MATE</td>
+              <td >NUTRIFOR</td>
+              <td >MATE COCIDO CON LECHE ENTERA INSTANTANEA</td>
+              <td> LECHES EN POLVOS</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001237</td>
+              <td >VIGENTE</td>
+              <td >AZUCAR COMUN TIPO A</td>
+              <td >MONTE VIRGEN</td>
+              <td >AZUCAR COMUN TIPO A</td>
+              <td> AZÚCARES</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001200</td>
+              <td >NO VIGENTE</td>
+              <td >PAN DE MIGA INTEGRAL</td>
+              <td >PANAVI</td>
+              <td >PAN DE MIGA DE SALVADO</td>
+              <td> PAN Y PRODUCTOS DE PANADERÍA</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001199</td>
+              <td >NO VIGENTE</td>
+              <td >PIZZETA</td>
+              <td >PANAVI</td>
+              <td >PIZZETA</td>
+              <td> PAN Y PRODUCTOS DE PANADERÍA</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001198</td>
+              <td >NO VIGENTE</td>
+              <td >PAN DE LECHE</td>
+              <td >PANAVI</td>
+              <td >PAN DE LECHE</td>
+              <td> PAN Y PRODUCTOS DE PANADERÍA</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001197</td>
+              <td >NO VIGENTE</td>
+              <td >PAN MILONGUITA CON ANIS</td>
+              <td >PANAVI</td>
+              <td >PAN MILONGUITA CON ANIS</td>
+              <td> PAN Y PRODUCTOS DE PANADERÍA</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001196</td>
+              <td >NO VIGENTE</td>
+              <td >PAN MILONGUITA</td>
+              <td >PANAVI</td>
+              <td >PAN MILONGUITA</td>
+              <td> PAN Y PRODUCTOS DE PANADERÍA</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001195</td>
+              <td >VIGENTE</td>
+              <td >PAN DE MIGA MIGUITA</td>
+              <td >PANAVI</td>
+              <td >PAN DE MIGA</td>
+              <td> PAN Y PRODUCTOS DE PANADERÍA</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td >50</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001194</td>
+              <td >VIGENTE</td>
+              <td >PREPIZZA TRADICIONAL</td>
+              <td >PANAVI</td>
+              <td >PREPIZZA TRADICIONAL</td>
+              <td> PAN Y PRODUCTOS DE PANADERÍA</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td >100 GRS</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001170</td>
+              <td >NO VIGENTE</td>
+              <td >GRISINES CON MIX DE HIERBAS</td>
+              <td >PANAVI</td>
+              <td >GRISINES CON MIX DE HIERBAS</td>
+              <td> PAN Y PRODUCTOS DE PANADERÍA</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001169</td>
+              <td >NO VIGENTE</td>
+              <td >GRISINES CON ANIS</td>
+              <td >PANAVI</td>
+              <td >GRISINES CON ANIS</td>
+              <td> PAN Y PRODUCTOS DE PANADERÍA</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001168</td>
+              <td >NO VIGENTE</td>
+              <td >GRISINES DE SALVADO</td>
+              <td >PANAVI</td>
+              <td >GRISINES DE SALVADO</td>
+              <td> PAN Y PRODUCTOS DE PANADERÍA</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001167</td>
+              <td >NO VIGENTE</td>
+              <td >GRISINES</td>
+              <td >PANAVI</td>
+              <td >GRISINES</td>
+              <td> PAN Y PRODUCTOS DE PANADERÍA</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001166</td>
+              <td >NO VIGENTE</td>
+              <td >BOCADITOS CON ANIS</td>
+              <td >PANAVI</td>
+              <td >BOCADITOS CON ANIS</td>
+              <td> PAN Y PRODUCTOS DE PANADERÍA</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001165</td>
+              <td >NO VIGENTE</td>
+              <td >BOCADITOS HOJALDRADOS</td>
+              <td >PANAVI</td>
+              <td >BOCADITOS HOJALDRADOS</td>
+              <td> PAN Y PRODUCTOS DE PANADERÍA</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001164</td>
+              <td >NO VIGENTE</td>
+              <td >BOCADITO DE SALVADO</td>
+              <td >PANAVI</td>
+              <td >BOCADITO CON SALVADO</td>
+              <td> PAN Y PRODUCTOS DE PANADERÍA</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001163</td>
+              <td >NO VIGENTE</td>
+              <td >BOCADITO</td>
+              <td >PANAVI</td>
+              <td >BOCADITO</td>
+              <td> PAN Y PRODUCTOS DE PANADERÍA</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001162</td>
+              <td >NO VIGENTE</td>
+              <td >PAN DE VIENA</td>
+              <td >PANAVI</td>
+              <td >PAN DE VIENA</td>
+              <td> PAN Y PRODUCTOS DE PANADERÍA</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001161</td>
+              <td >NO VIGENTE</td>
+              <td >PAN PARA LOMITO</td>
+              <td >PANAVI</td>
+              <td >PAN PARA LOMITO CLASICO</td>
+              <td> PAN Y PRODUCTOS DE PANADERÍA</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001160</td>
+              <td >NO VIGENTE</td>
+              <td >PAN PARA HAMBURGUESA CLASICO</td>
+              <td >PANAVI</td>
+              <td >PAN PARA HAMBURGUESA CLASICO</td>
+              <td> PAN Y PRODUCTOS DE PANADERÍA</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001159</td>
+              <td >VIGENTE</td>
+              <td >PAN LACTAL DE SALVADO CON MIX DE SEMILLAS</td>
+              <td >PANAVI</td>
+              <td >PAN LACTAL DE SALVADO CON MIX DE SEMILLAS</td>
+              <td> PAN Y PRODUCTOS DE PANADERÍA</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td >50</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001158</td>
+              <td >VIGENTE</td>
+              <td >PAN LACTAL TRADICIONAL</td>
+              <td >PANAVI</td>
+              <td >PAN LACTAL TRADICIONAL</td>
+              <td> PAN Y PRODUCTOS DE PANADERÍA</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td >50</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001148</td>
+              <td >VIGENTE</td>
+              <td >MANDIOCA CONGELADA</td>
+              <td >SABORES DEL NORTE</td>
+              <td >MANDIOCA CONGELADA</td>
+              <td> VEGETALES SEMI PROCESADOS</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001147</td>
+              <td >VIGENTE</td>
+              <td >EMPANADA DE POLLO</td>
+              <td >SABORES DEL NORTE</td>
+              <td >EMPANADA DE POLLO</td>
+              <td> COMIDAS PREPARADAS CON TRATAMIENTO TÉRMICO QUE RECIBAN UN PROCESO DE MANIPULACIÓN POSTERIOR</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001146</td>
+              <td >VIGENTE</td>
+              <td >EMPANADA DE CARNE CONGELADA</td>
+              <td >SABORES DEL NORTE</td>
+              <td >EMPANADA DE CARNE</td>
+              <td> COMIDAS PREPARADAS CON TRATAMIENTO TÉRMICO QUE RECIBAN UN PROCESO DE MANIPULACIÓN POSTERIOR</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001145</td>
+              <td >VIGENTE</td>
+              <td >EMPANADA DE SURUBI CONGELADA</td>
+              <td >SABORES DEL NORTE</td>
+              <td >EMPANADA DE SURUBI</td>
+              <td> COMIDAS PREPARADAS CON TRATAMIENTO TÉRMICO QUE RECIBAN UN PROCESO DE MANIPULACIÓN POSTERIOR</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001144</td>
+              <td >VIGENTE</td>
+              <td >POLVO PARA PREPARAR BEBIDA SIN ALCOHOL A BASE DE LECHE EN POLVO , AZUCAR, ALMIDON DE MAIZ HARINA DE ALGARROBA Y CACAO FORTIFICADO CON VIT C. B12 ZINC</td>
+              <td >NUTRIFOR</td>
+              <td >POLVO PARA PREPARAR BEBIDA SIN ALCOHOL A BASE DE LECHE EN POLVO , AZUCAR, ALMIDON DE MAIZ HARINA DE ALGARROBA Y CACAO FORTIFICADO CON VIT C. B12 ZINC</td>
+              <td> LECHES EN POLVOS</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001143</td>
+              <td >VIGENTE</td>
+              <td >POLVO PARA PREPARAR BEBIDA A BASE DE HARINA DE ALGARROBA Y LECHE</td>
+              <td >NUTRIFOR</td>
+              <td >LECHE CON ALGARROBA AL 50%</td>
+              <td> SUBPRODUCTOS LACTEOS</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001142</td>
+              <td >VIGENTE</td>
+              <td >POLVO PARA PREPARAR BEBIDA LACTEA CON ALGARROBA FORTIFICADO CON VIT Y ZINC</td>
+              <td >NUTRIFOR</td>
+              <td >LECHE CON ALGARROBA, FORTIFICADA CON ZINZ Y VIT C Y B12</td>
+              <td> SUBPRODUCTOS LACTEOS</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001132</td>
+              <td >VIGENTE</td>
+              <td >FRUTILLAS LIOFILIZADAS</td>
+              <td >NUTRIFOR</td>
+              <td >SNACKS 10 MINUTOS FRUTILLAS LIOFILIZADA</td>
+              <td> VEGETALES PROCESADOS</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001124</td>
+              <td >VIGENTE</td>
+              <td >SALSA A BASE DE TOMATE, BOLOGNESA LIOFILIZADO BAJA EN SODIO</td>
+              <td >NUTRIFOR</td>
+              <td >SALSA BOLOGNESA LIOFILIZADA</td>
+              <td> COMIDAS PREPARADAS CON TRATAMIENTO TÉRMICO QUE RECIBAN UN PROCESO DE MANIPULACIÓN POSTERIOR</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001123</td>
+              <td >VIGENTE</td>
+              <td >ESTOFADO CON SALSA LIOFILIZADO MUY BAJO EN SODIO</td>
+              <td >NUTRIFOR</td>
+              <td >ESTOFADO DE CARNE LIOFILIZADO</td>
+              <td> COMIDAS PREPARADAS CON TRATAMIENTO TÉRMICO QUE RECIBAN UN PROCESO DE MANIPULACIÓN POSTERIOR</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001122</td>
+              <td >NO VIGENTE</td>
+              <td >HIELO</td>
+              <td >HIELO AUSTRAL</td>
+              <td >HIELO AUSTRAL</td>
+              <td> HIELO</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001121</td>
+              <td >VIGENTE</td>
+              <td >LECHE ENTERA EN POLVO FORTIFICADA CON  ZINC, VIT C Y VIT B12</td>
+              <td >NUTRIFOR</td>
+              <td >LECHE ENTERA EN POLVO FORTIFICADA CON  ZINC, VIT C Y VIT B12</td>
+              <td> LECHES EN POLVOS</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001120</td>
+              <td >VIGENTE</td>
+              <td >SNAKCS COPOS DE MAIZ MANI Y MAMON LIOFILIZADO LIBRE DE GLUTEN SIN </td>
+              <td >NUTRIFOR</td>
+              <td >SNAKCS 10 MINUTOS DE MAMON LIOFILIZADO COPOS DE MAIZ Y MANI </td>
+              <td> VEGETALES PROCESADOS</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001119</td>
+              <td >VIGENTE</td>
+              <td >MAMON LIOFILIZADO LIBRE DE GLUTEN SIN TACC</td>
+              <td >NUTRIFOR</td>
+              <td >SNAKS 10 MINUTOS LIOFILIZADOS </td>
+              <td> VEGETALES PROCESADOS</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001118</td>
+              <td >VIGENTE</td>
+              <td >CONSERVA MIXTA DE POLLO ARROZ Y VEGETALES LIOFILIZADOS BAJO EN SODIO</td>
+              <td >NUTRIFOR</td>
+              <td >GUISO DE ARROZ CON POLLO LIOFILIZADO</td>
+              <td> COMIDAS PREPARADAS CON TRATAMIENTO TÉRMICO QUE RECIBAN UN PROCESO DE MANIPULACIÓN POSTERIOR</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001117</td>
+              <td >VIGENTE</td>
+              <td >MERMELADA DE POMELO</td>
+              <td >NUTRIFOR</td>
+              <td >MERMELADA DE POMELO</td>
+              <td> CONFITURAS ( COMPOTAS; DULCES; EN ALMIBAR ; MERMELADAS; DULCES ; JALEAS )</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001116</td>
+              <td >VIGENTE</td>
+              <td >MERMELADA DE BANANA</td>
+              <td >NUTRIFOR</td>
+              <td >MERMELADA DE BANANA</td>
+              <td> CONFITURAS ( COMPOTAS; DULCES; EN ALMIBAR ; MERMELADAS; DULCES ; JALEAS )</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001115</td>
+              <td >VIGENTE</td>
+              <td >MERMELADA DE MANGO </td>
+              <td >NUTRIFOR</td>
+              <td >MERMELADA DE MANGO </td>
+              <td> CONFITURAS ( COMPOTAS; DULCES; EN ALMIBAR ; MERMELADAS; DULCES ; JALEAS )</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001114</td>
+              <td >VIGENTE</td>
+              <td >MERMELADA DE MAMON </td>
+              <td >NUTRIFOR</td>
+              <td >MERMELADA DE MAMON </td>
+              <td> CONFITURAS ( COMPOTAS; DULCES; EN ALMIBAR ; MERMELADAS; DULCES ; JALEAS )</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001113</td>
+              <td >VIGENTE</td>
+              <td >MERMELADA DE POMELO-BANANA</td>
+              <td >NUTRIFOR</td>
+              <td >MERMELADA DE POMELO-BANANA</td>
+              <td> CONFITURAS ( COMPOTAS; DULCES; EN ALMIBAR ; MERMELADAS; DULCES ; JALEAS )</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001112</td>
+              <td >VIGENTE</td>
+              <td >MERMELADA DE ZAPALLO</td>
+              <td >NUTRIFOR</td>
+              <td >MERMELADA DE ZAPALLO</td>
+              <td> CONFITURAS ( COMPOTAS; DULCES; EN ALMIBAR ; MERMELADAS; DULCES ; JALEAS )</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001111</td>
+              <td >VIGENTE</td>
+              <td >PULPA DE MANGO LIOFILIZADA LIBRE DE GLUTEN SIN TACC</td>
+              <td >NUTRIFOR</td>
+              <td >BOCADITO DE MANGO LIOFILIZADO </td>
+              <td> VEGETALES PROCESADOS</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001110</td>
+              <td >VIGENTE</td>
+              <td >GUISO DE ARROZ CON CARNE LIOFILIZADO </td>
+              <td >NUTRIFOR</td>
+              <td >COSERVA MIXTA DE CARNE VACUNA  ARROZ Y VEGETALES LIOFILIZADOS BAJO EN SODIO </td>
+              <td> COMIDAS PREPARADAS CON TRATAMIENTO TÉRMICO QUE RECIBAN UN PROCESO DE MANIPULACIÓN POSTERIOR</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001108</td>
+              <td >VIGENTE</td>
+              <td >MEZCLA DE COPOS DE MAIZ CON FRUTAS LIOFILIZADA Y FRUTAS SECAS </td>
+              <td >NUTRIFOR</td>
+              <td >SNAKS 10 NINUTOS ANANA LIOFILIZADO COPOS DE MAIZ Y MANI</td>
+              <td> VEGETALES SEMI PROCESADOS</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001107</td>
+              <td >VIGENTE</td>
+              <td >ANANA LIOFILIZADO</td>
+              <td >NUTRIFOR</td>
+              <td >SNAKCS 10 MINUTOS ANANA LIOFILIZADO </td>
+              <td> VEGETALES SEMI PROCESADOS</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001106</td>
+              <td >VIGENTE</td>
+              <td >MEZCLA DE COPOS DE MAIZ CON FRUTAS LIOFILIZADA Y FRUTAS SECAS </td>
+              <td >NUTRIFOR</td>
+              <td >SNAKCS 10 MINUTOS BANANA LIOFILIZADA COPOS DE MAIZ Y MANI</td>
+              <td> VEGETALES PROCESADOS</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001105</td>
+              <td >VIGENTE</td>
+              <td >BANANA LIOFILOZADA</td>
+              <td >NUTRIFOR</td>
+              <td >SNACKS 10 MINUTOS BANANA LIOFILIZADA</td>
+              <td> VEGETALES PROCESADOS</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001100</td>
+              <td >VIGENTE</td>
+              <td >MEZCLA DE YERBA MATE SOLUBLE CON LECHE ENTERA EN POLVO Y AZUCAR </td>
+              <td >NUTRIFOR</td>
+              <td >MATE COCIDO CON LECHE</td>
+              <td> SUBPRODUCTOS LACTEOS</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001083</td>
+              <td >VIGENTE</td>
+              <td >MERMELADA DE MANGO</td>
+              <td >MERMELADA DE MANGO</td>
+              <td >NUTRIFOR</td>
+              <td> CONFITURAS ( COMPOTAS; DULCES; EN ALMIBAR ; MERMELADAS; DULCES ; JALEAS )</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001082</td>
+              <td >VIGENTE</td>
+              <td >MERMELADA DE BANANA</td>
+              <td >NUTRIFOR</td>
+              <td >MERMELADA DE BANANA</td>
+              <td> CONFITURAS ( COMPOTAS; DULCES; EN ALMIBAR ; MERMELADAS; DULCES ; JALEAS )</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001041</td>
+              <td >VIGENTE</td>
+              <td >MEZCLA PARA PREPARAR GUISO DE ARROZ CON  LENTEJAS DESHIDRATADO </td>
+              <td >NUTRIFOR</td>
+              <td >GUISO DE ARROZ CON LENTEJAS</td>
+              <td> MEZCLAS</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001026</td>
+              <td >VIGENTE</td>
+              <td >MERMELADA DE ZAPALLO</td>
+              <td >NUTRIFOR</td>
+              <td >MERMELADA DE ZAPALLO</td>
+              <td> CONFITURAS ( COMPOTAS; DULCES; EN ALMIBAR ; MERMELADAS; DULCES ; JALEAS )</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001025</td>
+              <td >VIGENTE</td>
+              <td >LECHE CHOCOLATADA ENTERA EN POLVO INSTANTANEA</td>
+              <td >NUTRIFOR</td>
+              <td >LECHE CHOCOLATADA</td>
+              <td> LECHES EN POLVOS</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001024</td>
+              <td >VIGENTE</td>
+              <td >TOMATE TRITURADO</td>
+              <td >NUTRIFOR</td>
+              <td > TOMATE TRITURADO</td>
+              <td> VEGETALES EN CONSERVA</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001023</td>
+              <td >VIGENTE</td>
+              <td >PRE MEZCLA PARA PREPARAR SOPA PARAGUAYA</td>
+              <td >NUTRIFOR</td>
+              <td > SOPA PARAGUAYA</td>
+              <td> MEZCLAS</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001022</td>
+              <td >VIGENTE</td>
+              <td >PRE MEZCLA PARA PREPARAR CHIPA </td>
+              <td >NUTRIFOR</td>
+              <td >CHIPA </td>
+              <td> MEZCLAS</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001007</td>
+              <td >VIGENTE</td>
+              <td >MERMELADA DE POMELO</td>
+              <td >NUTRIFOR</td>
+              <td >MERMELADA DE POMELO</td>
+              <td> CONFITURAS ( COMPOTAS; DULCES; EN ALMIBAR ; MERMELADAS; DULCES ; JALEAS )</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001002</td>
+              <td >VIGENTE</td>
+              <td >MERMELADA DE MAMON</td>
+              <td >MERMELADA DE MAMON</td>
+              <td >NUTRIFOR</td>
+              <td> CONFITURAS ( COMPOTAS; DULCES; EN ALMIBAR ; MERMELADAS; DULCES ; JALEAS )</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001001</td>
+              <td >VIGENTE</td>
+              <td >HARINA DE MAÍZ COCCIÓN RÁPIDA PARA PREPARAR POLENTA CON AGREGADO DE LECHE ENTERA EN POLVO.</td>
+              <td >NUTRIFOR</td>
+              <td >HARINA DE MAÍZ COCCIÓN RÁPIDA PARA PREPARAR POLENTA CON AGREGADO DE LECHE ENTERA EN POLVO.</td>
+              <td> HARINAS / SÉMOLAS / ALMIDONES</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-001000</td>
+              <td >VIGENTE</td>
+              <td >LECHE CHOCOLATADA ENTERA EN POLVO</td>
+              <td >NUTRIFOR</td>
+              <td >LECHE CHOCOLATADA ENTERA EN POLVO</td>
+              <td> LECHES EN POLVOS</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-000999</td>
+              <td >VIGENTE</td>
+              <td >LECHE ENTERA EN POLVO FORTIFICADA CON HIERRO,VITAMINA C Y ZINC</td>
+              <td >NUTRIFOR</td>
+              <td >LECHE ENTERA EN POLVO FORTIFICADA CON HIERRO,VITAMINA C Y ZINC</td>
+              <td> LECHES EN POLVOS</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-000994</td>
+              <td >VIGENTE</td>
+              <td >MIEL DE ABEJA</td>
+              <td >ABEJA REINA</td>
+              <td >MIEL ABEJA REINA</td>
+              <td> MIELES</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-000993</td>
+              <td >VIGENTE</td>
+              <td >MIEL DE ABEJA</td>
+              <td >GUAIVII</td>
+              <td >GUAIVII</td>
+              <td> MIELES</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-000992</td>
+              <td >VIGENTE</td>
+              <td >BEBIDA SIN ALCOHOL GASIFICADA CON 5% DE JUGO DE LIMON </td>
+              <td >FANTA</td>
+              <td >LIMON DULCE</td>
+              <td> BEBIDAS ANALCOHÓLICAS Y PRODUCTOS PARA PREPARARLAS</td>
+              <td >AGUA CARBONATADA, AZUCARES, JUGO DE LIMON, ARO, AC REG 500ii, CONS BENZOATO DE SODIO, SEC 452i - 385, COL TARTRAZINA</td>
+              <td >88</td>
+              <td >ml</td>
+              <td >200</td>
+              <td >22</td>
+              <td >22</td>
+              <td >0,0</td>
+              <td >0,0</td>
+              <td >0,0</td>
+              <td >0.0</td>
+              <td >0.0</td>
+              <td >40</td>
+            </tr>
+        
+            <tr>
+              <td >09-000977</td>
+              <td >VIGENTE</td>
+              <td >MERMELADA DE MAMON</td>
+              <td >DEL CARMEN</td>
+              <td >MERMELADA DE MAMON</td>
+              <td> CONFITURAS ( COMPOTAS; DULCES; EN ALMIBAR ; MERMELADAS; DULCES ; JALEAS )</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-000976</td>
+              <td >VIGENTE</td>
+              <td >JALEA DE MEMBRILLO</td>
+              <td >DEL CARMEN</td>
+              <td >JALEA DE MEMBRILLO</td>
+              <td> CONFITURAS ( COMPOTAS; DULCES; EN ALMIBAR ; MERMELADAS; DULCES ; JALEAS )</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-000975</td>
+              <td >VIGENTE</td>
+              <td >MERMELADA DE MEMBRILLO</td>
+              <td >DEL CARMEN</td>
+              <td >MERMELADA DE MEMBRILLO</td>
+              <td> CONFITURAS ( COMPOTAS; DULCES; EN ALMIBAR ; MERMELADAS; DULCES ; JALEAS )</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-000974</td>
+              <td >VIGENTE</td>
+              <td >DULCE DE BANANA CON CACAO</td>
+              <td >DEL CARMEN</td>
+              <td >DULCE DE BANANA CON CACAO</td>
+              <td> CONFITURAS ( COMPOTAS; DULCES; EN ALMIBAR ; MERMELADAS; DULCES ; JALEAS )</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-000973</td>
+              <td >VIGENTE</td>
+              <td >DULCE DE MAMON</td>
+              <td >DEL CARMEN</td>
+              <td >DULCE DE MAMON</td>
+              <td> CONFITURAS ( COMPOTAS; DULCES; EN ALMIBAR ; MERMELADAS; DULCES ; JALEAS )</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-000972</td>
+              <td >VIGENTE</td>
+              <td >DULCE DE ZAPALLO</td>
+              <td >DEL CARMEN</td>
+              <td >DULCE DE ZAPALLO</td>
+              <td> CONFITURAS ( COMPOTAS; DULCES; EN ALMIBAR ; MERMELADAS; DULCES ; JALEAS )</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-000870</td>
+              <td >VIGENTE</td>
+              <td >BEBIDA SIN ALCOHOL DIETETICA GASIFICADA CON SABOR A NARANJA </td>
+              <td >FANTA NARANJA</td>
+              <td >FANTA NARANJA SIN AZUCARES</td>
+              <td> Aguas y aguas gasificadas</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-000848</td>
+              <td >VIGENTE</td>
+              <td >DULCE DE MEMBRILLO</td>
+              <td >DEL CARMEN</td>
+              <td >DULCE DE MEMBRILLO</td>
+              <td> CONFITURAS ( COMPOTAS; DULCES; EN ALMIBAR ; MERMELADAS; DULCES ; JALEAS )</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-000847</td>
+              <td >VIGENTE</td>
+              <td >DULCE DE BATATA CON CEREZA</td>
+              <td >DEL CARMEN</td>
+              <td >DULCE DE BATATA CON CEREZA</td>
+              <td> CONFITURAS ( COMPOTAS; DULCES; EN ALMIBAR ; MERMELADAS; DULCES ; JALEAS )</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-000846</td>
+              <td >VIGENTE</td>
+              <td >DULCE BATATA CON CHOCOLATE</td>
+              <td >DEL CARMEN</td>
+              <td >DULCE BATATA CON CHOCOLATE</td>
+              <td> CONFITURAS ( COMPOTAS; DULCES; EN ALMIBAR ; MERMELADAS; DULCES ; JALEAS )</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-000845</td>
+              <td >VIGENTE</td>
+              <td >DULCE DE BATATA A LA VAINILLA</td>
+              <td >DEL CARMEN</td>
+              <td >DULCE DE BATATA A LA VAINILLA</td>
+              <td> CONFITURAS ( COMPOTAS; DULCES; EN ALMIBAR ; MERMELADAS; DULCES ; JALEAS )</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-000722</td>
+              <td >VIGENTE</td>
+              <td >JUGO DE MANZANA A BASE DE CONCENTRADO PASTEURIZADO - 100% JUGO DE MANZANA</td>
+              <td >CEPITA </td>
+              <td >PREMIUM MANZANA</td>
+              <td> JUGOS VEGETALES</td>
+              <td >Agua, Jugo de manzana concentrado</td>
+              <td >96</td>
+              <td >ml</td>
+              <td >200</td>
+              <td >24</td>
+              <td >24</td>
+              <td >0,2</td>
+              <td >0,0</td>
+              <td >0,0</td>
+              <td >0,0</td>
+              <td >0,0</td>
+              <td >15</td>
+            </tr>
+        
+            <tr>
+              <td >09-000678</td>
+              <td >VIGENTE</td>
+              <td >ACEITE COMESTIBLE DE GIRASOL</td>
+              <td >IVOTY</td>
+              <td >ACEITE COMESTIBLE DE GIRASOL</td>
+              <td> ACEITES Y GRASAS DE ORIGEN VEGETAL (PUROS)</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-000573</td>
+              <td >VIGENTE</td>
+              <td >BEBIDA SIN ALCOHOL ARTIFICIAL DIETETICA GASIFICADA CON SABOR A LIMA </td>
+              <td >SPRITE SIN AZUCARES</td>
+              <td >SPRITE</td>
+              <td> Aguas y aguas gasificadas</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-000567</td>
+              <td >VIGENTE</td>
+              <td >AGUA MINERALIZADA ARTIFICIALMENTE NO GASIFICADA BAJA EN  SODIO</td>
+              <td >BENEDECTINO </td>
+              <td ></td>
+              <td> Aguas y aguas gasificadas</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-000559</td>
+              <td >VIGENTE</td>
+              <td >AGUA DE MESA ENVASADA</td>
+              <td >BENEDECTINO </td>
+              <td ></td>
+              <td> Aguas y aguas gasificadas</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-000534</td>
+              <td >VIGENTE</td>
+              <td >BEBIDA SIN ALCOHOL DIETETICA GASIFICADA DE EXTRACTOS VEGETALES </td>
+              <td >COCA-COLA</td>
+              <td >SABOR LIVIANO</td>
+              <td> BEBIDAS ANALCOHÓLICAS Y PRODUCTOS PARA PREPARARLAS</td>
+              <td >AGUA CARBONATADA, COL 150 d, ARO, EDU ASPARTAMO (24 mg/100 mL) - ACESULFAME K (16 mg/100 mL), ACI 330 - 338, CONS BENZOATO DE SODIO.</td>
+              <td >0,0</td>
+              <td >ml</td>
+              <td >200</td>
+              <td >0,0</td>
+              <td >0,0</td>
+              <td >0,0</td>
+              <td >0,0</td>
+              <td >0,0</td>
+              <td >0,0</td>
+              <td >0,0</td>
+              <td >18</td>
+            </tr>
+        
+            <tr>
+              <td >09-000533</td>
+              <td >VIGENTE</td>
+              <td >BEBIDA SIN ALCOHOL DIETETICA GASIFICADA  CON 5% DE JUGO DE LIMON SABOR LIMA LIMON</td>
+              <td >CRUSH </td>
+              <td >LIMA LIMON</td>
+              <td> BEBIDAS ANALCOHÓLICAS Y PRODUCTOS PARA PREPARARLAS</td>
+              <td >AGUA CARBONATADA, JUGO DE LIMON*, CLORURO DE SODIO, ARO, AC REG 500ii - 331iii, ADU ASPARTAMO (22 mg/100ml) - ACESULFAME K (14 mg/100ml), CONS BENZOATO DE SODIO, ACI 330</td>
+              <td >0,0</td>
+              <td >ml</td>
+              <td >200</td>
+              <td >0,0</td>
+              <td >0,0</td>
+              <td >0,0</td>
+              <td >0,0</td>
+              <td >0,0</td>
+              <td >0,0</td>
+              <td >0,0</td>
+              <td >46</td>
+            </tr>
+        
+            <tr>
+              <td >09-000516</td>
+              <td >NO VIGENTE</td>
+              <td >ACEITE COMESTIBLE MEZCLA</td>
+              <td >IVOTY</td>
+              <td >ACEITE COMESTIBLE MEZCLA</td>
+              <td> ACEITES Y GRASAS DE ORIGEN MIXTO</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-000507</td>
+              <td >VIGENTE</td>
+              <td >BEBIDA SIN ALCOHOL ARTIFICIAL GASIFICADA  CON SABOR CITRICO</td>
+              <td >SCHWEPPES</td>
+              <td >CITRUS</td>
+              <td> BEBIDAS ANALCOHÓLICAS Y PRODUCTOS PARA PREPARARLAS</td>
+              <td >AGUA CARBONATADA, AZUCARES, MEZCLA DE JUGOS CONCENTRADOS (NARANJA - MANZANA - POMELO), AROMATIZANTES, ACI ACIDO CITRICO, CONS BENZOATO DE SODIO, COL TATRAZINA</td>
+              <td >93</td>
+              <td >ml</td>
+              <td >200</td>
+              <td >23</td>
+              <td >23</td>
+              <td >0,0</td>
+              <td >0,0</td>
+              <td >0,0</td>
+              <td >0,0</td>
+              <td >0,0</td>
+              <td >20</td>
+            </tr>
+        
+            <tr>
+              <td >09-000505</td>
+              <td >VIGENTE</td>
+              <td >AGUA TONICA </td>
+              <td >SCHWEPPES</td>
+              <td ></td>
+              <td> BEBIDAS ANALCOHÓLICAS Y PRODUCTOS PARA PREPARARLAS</td>
+              <td >AGUA CARBONATADA,AZUCARES, QUININA, QUASIA, ACI ACIDO CITRICO, AROMATIZANTES, CONS BENZOATO DE SODIO</td>
+              <td >70</td>
+              <td >ml</td>
+              <td >200</td>
+              <td >17</td>
+              <td >17</td>
+              <td >0,0</td>
+              <td >0,0</td>
+              <td >0,0</td>
+              <td >0,0</td>
+              <td >0,0</td>
+              <td >18</td>
+            </tr>
+        
+            <tr>
+              <td >09-000504</td>
+              <td >VIGENTE</td>
+              <td >BEBIDA SIN ALCOHOL GASIFICADA  CON 5% DE JUGO DE LIMON</td>
+              <td >SPRITE</td>
+              <td >SPRITE</td>
+              <td> Aguas y aguas gasificadas</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-000502</td>
+              <td >VIGENTE</td>
+              <td >SODA </td>
+              <td >BENEDICTINO</td>
+              <td >CON GAS </td>
+              <td> Aguas y aguas gasificadas</td>
+              <td >AGUA CARBONATADA</td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-000497</td>
+              <td >VIGENTE</td>
+              <td >BEBIDA SIN ALCOHOL GASIFICADA DE EXTRACTOS VEGETALES </td>
+              <td >COCA COLA</td>
+              <td >SABOR ORIGINAL </td>
+              <td> BEBIDAS ANALCOHÓLICAS Y PRODUCTOS PARA PREPARARLAS</td>
+              <td >AGUA CARBONATADA, AZUCARES, COL 150d, ARO, ACI 338</td>
+              <td >84</td>
+              <td >ml</td>
+              <td >200</td>
+              <td >22</td>
+              <td >22</td>
+              <td >0,0</td>
+              <td >0,0</td>
+              <td >0,0</td>
+              <td >0,0</td>
+              <td >0,0</td>
+              <td >12</td>
+            </tr>
+        
+            <tr>
+              <td >09-000491</td>
+              <td >VIGENTE</td>
+              <td >AGUA MINERALIZADA ARTIFICIALMENTE GASIFICADA - CONTIENE SODIO</td>
+              <td >BENEDICTINO </td>
+              <td >CON GAS</td>
+              <td> Aguas y aguas gasificadas</td>
+              <td >Agua carbonatada, Bicarbonato de sodio, Sulfato de magnesio, Sulfato de sodio, Cloruro de potasio</td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-000090</td>
+              <td >VIGENTE</td>
+              <td >ACEITE ESENCIAL DE POMELO</td>
+              <td >FORMOSA ALIMENTOS SA</td>
+              <td >ACEITE ESENCIAL DE POMELO</td>
+              <td> JUGOS VEGETALES</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+        
+            <tr>
+              <td >09-000089</td>
+              <td >VIGENTE</td>
+              <td >JUGO CONCENTRADO DE POMELO CONGELADO</td>
+              <td >FORMOSA ALIMENTOS SA</td>
+              <td >JUGO CONCENTRADO DE POMELO CONGELADO</td>
+              <td> JUGOS VEGETALES</td>
+              <td ></td>
+              <td >-</td>
+              <td >g</td>
+              <td ></td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td >-</td>
+              <td ></td>
+            </tr>
+          </table>
+</body>
+
+</html>
