@@ -392,7 +392,12 @@ async function doSearch() {
 function renderFoodBtn(item) {
   const flag = item.is_ar ? ' 🇦🇷' : '';
   const badge = item.source === 'openfoodfacts'
-    ? `<span class="text-xs text-gray-500 flex-shrink-0">OFF</span>` : '';
+    ? `<span class="text-xs text-gray-500 flex-shrink-0">OFF</span>`
+    : item.source === 'rnpa_generic'
+      ? `<span class="text-xs text-brand-600 flex-shrink-0">genérico</span>`
+      : item.source === 'rnpa'
+        ? `<span class="text-xs text-gray-600 flex-shrink-0">🇦🇷</span>`
+        : '';
   return `
     <button type="button" onclick='selectFood(${JSON.stringify(item)})'
             class="w-full text-left px-3 py-2.5 rounded-xl bg-gray-700 hover:bg-gray-600 transition-colors">
@@ -420,8 +425,8 @@ function renderResults(local, off) {
 }
 
 function selectFood(item) {
-  // Productos de Open Food Facts → pre-llenar formulario manual
-  if (item.source === 'openfoodfacts') {
+  // Productos RNPA y Open Food Facts → pre-llenar formulario manual
+  if (item.source === 'openfoodfacts' || item.source === 'rnpa' || item.source === 'rnpa_generic') {
     const mealType = document.querySelector('#form-search input[name=meal_type]:checked')?.value || 'breakfast';
     const mf = document.getElementById('form-manual');
     mf.querySelector('input[name=manual_name]').value = item.name;

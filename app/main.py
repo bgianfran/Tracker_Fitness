@@ -15,6 +15,7 @@ from app.database import (
     BodyMeasurement, ManualWorkout, StravaToken,
 )
 from app.food_data import search_foods, get_food, FOOD_DATABASE
+from app.rnpa_search import search_rnpa
 from app.openfoodfacts import search_openfoodfacts, get_by_barcode
 from app.hevy import fetch_recent_workouts, format_workout_summary, get_workout_display_data
 from app.strava_api import get_auth_url, exchange_code, get_valid_token, fetch_activities, format_activity
@@ -219,6 +220,13 @@ async def estimate_targets(request: Request, db: Session = Depends(get_db)):
 
 @app.get("/api/search")
 def api_search(q: str = ""):
+    q = q.strip()
+    if not q:
+        return JSONResponse(content=[])
+    # RNPA (generics first, then branded), fallback to legacy hardcoded DB
+    rnpa = search_rnpa(q, limit=15)
+    if rnpa:
+        return JSONResponse(content=rnpa)
     return JSONResponse(content=search_foods(q))
 
 
@@ -333,7 +341,7 @@ def log_page(request: Request, db: Session = Depends(get_db)):
         "request": request,
         "current_user": current_user,
         "profile": profile,
-        "food_names": sorted(FOOD_DATABASE.keys()),
+        "food_names": [],
     })
 
 
