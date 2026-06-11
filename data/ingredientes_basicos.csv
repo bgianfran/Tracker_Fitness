@@ -132,3 +132,65 @@ Salsa de soja,Salsas y Aderezos,60,5.5,8.5,0.1,0.8,basico
 Vinagre de manzana,Salsas y Aderezos,21,0.0,0.9,0.0,0.0,basico
 Proteína whey (en polvo),Suplementos,380,75.0,8.0,5.0,0.0,basico
 Proteína caseína (en polvo),Suplementos,370,72.0,10.0,4.0,0.0,basico
+Asado de tira,Carnes y Pescados,240,17.2,0.0,19.0,0.0,basico
+Vacío,Carnes y Pescados,165,21.2,0.0,8.3,0.0,basico
+Costilla vacuna,Carnes y Pescados,280,18.0,0.0,22.0,0.0,basico
+Bife de lomo,Carnes y Pescados,143,21.8,0.0,6.2,0.0,basico
+Cuadril,Carnes y Pescados,189,21.0,0.0,11.0,0.0,basico
+Peceto,Carnes y Pescados,155,22.5,0.0,7.0,0.0,basico
+Matambre,Carnes y Pescados,149,21.7,0.0,6.3,0.0,basico
+Entraña,Carnes y Pescados,174,20.9,0.0,10.1,0.0,basico
+Tapa de asado,Carnes y Pescados,176,21.0,0.0,9.5,0.0,basico
+Tapa de cuadril,Carnes y Pescados,214,19.5,0.0,14.5,0.0,basico
+Rosbif (pecho),Carnes y Pescados,169,20.2,0.0,9.9,0.0,basico
+Osobuco,Carnes y Pescados,128,21.8,0.0,3.9,0.0,basico
+Colita de cuadril,Carnes y Pescados,198,20.7,0.0,12.2,0.0,basico
+Bola de lomo,Carnes y Pescados,216,18.9,0.0,15.6,0.0,basico
+Marucha / Tortuguita,Carnes y Pescados,142,20.9,0.0,5.8,0.0,basico
+Aguja,Carnes y Pescados,195,19.5,0.0,12.5,0.0,basico
+Falda,Carnes y Pescados,250,17.0,0.0,21.0,0.0,basico
+Corvina,Carnes y Pescados,104,20.0,0.0,2.5,0.0,basico
+Lenguado,Carnes y Pescados,71,12.4,0.0,1.9,0.0,basico
+Pejerrey,Carnes y Pescados,80,19.5,0.0,1.5,0.0,basico
+Surubí,Carnes y Pescados,165,17.5,0.0,10.5,0.0,basico
+Dorado (río),Carnes y Pescados,90,17.0,0.0,2.8,0.0,basico
+Besugo,Carnes y Pescados,86,17.0,0.0,2.0,0.0,basico
+Brótola,Carnes y Pescados,88,19.0,0.0,1.0,0.0,basico
+Anchoíta,Carnes y Pescados,131,20.4,0.0,4.9,0.0,basico
+Calamar,Carnes y Pescados,92,15.6,3.1,1.4,0.0,basico
+Pulpo,Carnes y Pescados,82,15.3,2.2,1.1,0.0,basico
+Mejillones,Carnes y Pescados,86,11.9,3.7,2.2,0.0,basico
+Almejas,Carnes y Pescados,73,12.8,2.6,1.0,0.0,basico
+Vieiras,Carnes y Pescados,69,12.3,3.2,0.5,0.0,basico
+Higo,Frutas,74,0.75,19.2,0.3,2.9,basico
+Granada,Frutas,83,1.67,18.7,1.17,4.0,basico
+Frambuesa,Frutas,52,1.2,11.9,0.65,6.5,basico
+Arándano,Frutas,57,0.74,14.5,0.33,2.4,basico
+Mora,Frutas,43,1.39,9.6,0.49,5.3,basico
+Maracuyá,Frutas,97,2.2,23.4,0.7,10.4,basico
+Coco (pulpa fresca),Frutas,354,3.33,15.2,33.5,9.0,basico
+Pomelo,Frutas,40,0.77,9.6,0.14,1.0,basico
+Lima,Frutas,30,0.7,10.5,0.2,2.8,basico
+Guayaba,Frutas,68,2.55,14.3,0.95,5.4,basico
+Damasco,Frutas,48,1.4,11.1,0.39,2.0,basico
+Membrillo,Frutas,57,0.4,15.3,0.1,1.9,basico
+Níspero,Frutas,47,0.43,12.1,0.2,1.7,basico
+Tuna (fruto de cactus),Frutas,41,0.73,9.6,0.51,3.6,basico
+Alcaucil,Verduras y Hortalizas,47,3.27,10.5,0.15,5.4,basico
+Chaucha,Verduras y Hortalizas,31,1.83,7.0,0.22,2.7,basico
+Arvejas frescas,Verduras y Hortalizas,81,5.42,14.5,0.4,5.1,basico
+Habas frescas,Verduras y Hortalizas,88,7.92,13.7,0.7,5.4,basico
+Nabo,Verduras y Hortalizas,28,0.9,6.4,0.1,1.8,basico
+Rabanito,Verduras y Hortalizas,16,0.68,3.4,0.1,1.6,basico
+Berro,Verduras y Hortalizas,11,2.3,1.3,0.1,0.5,basico
+Rúcula,Verduras y Hortalizas,25,2.58,3.7,0.66,1.6,basico
+Repollo,Verduras y Hortalizas,24,1.28,5.8,0.1,2.5,basico
+Kale (col rizada),Verduras y Hortalizas,35,2.92,4.4,1.49,4.1,basico
+Cebolla de verdeo,Verduras y Hortalizas,32,1.83,7.3,0.19,2.6,basico
+Morrón amarillo,Verduras y Hortalizas,27,1.0,6.3,0.21,0.9,basico
+Hinojo,Verduras y Hortalizas,31,1.24,7.3,0.2,3.1,basico
+Endibia,Verduras y Hortalizas,17,1.25,3.4,0.2,3.1,basico
+Espárrago,Verduras y Hortalizas,20,2.2,3.9,0.12,2.2,basico
+Tomate cherry,Verduras y Hortalizas,18,0.88,3.9,0.2,1.2,basico
+Ají picante,Verduras y Hortalizas,40,1.87,8.8,0.44,1.5,basico
+Choclo desgranado (crudo),Verduras y Hortalizas,86,3.27,19.0,1.35,2.7,basico
