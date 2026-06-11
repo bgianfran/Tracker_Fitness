@@ -1,20 +1,20 @@
 name,categoria,calories,protein,carbs,fat,fiber,source
-Carne vacuna magra (nalga),Carnes y Pescados,158,28.0,0.0,4.5,0.0,basico
-Carne vacuna (asado de tira),Carnes y Pescados,289,24.0,0.0,21.0,0.0,basico
-Carne vacuna (bife de chorizo),Carnes y Pescados,271,25.0,0.0,18.0,0.0,basico
-Carne vacuna (cuadril),Carnes y Pescados,177,27.0,0.0,7.0,0.0,basico
-Carne vacuna (paleta),Carnes y Pescados,210,25.0,0.0,12.0,0.0,basico
+Nalga,Carnes y Pescados,158,28.0,0.0,4.5,0.0,basico
+Asado de tira,Carnes y Pescados,289,24.0,0.0,21.0,0.0,basico
+Bife de chorizo,Carnes y Pescados,271,25.0,0.0,18.0,0.0,basico
+Cuadril,Carnes y Pescados,177,27.0,0.0,7.0,0.0,basico
+Paleta,Carnes y Pescados,210,25.0,0.0,12.0,0.0,basico
 Carne picada magra,Carnes y Pescados,215,26.0,0.0,12.0,0.0,basico
-Carne picada común,Carnes y Pescados,254,24.0,0.0,17.0,0.0,basico
-Cerdo (lomo),Carnes y Pescados,182,27.0,0.0,8.0,0.0,basico
-Cerdo (costilla),Carnes y Pescados,277,22.0,0.0,21.0,0.0,basico
-Pechuga de pollo (sin piel),Carnes y Pescados,165,31.0,0.0,3.6,0.0,basico
-Muslo de pollo (sin piel),Carnes y Pescados,209,26.0,0.0,11.0,0.0,basico
-Pollo entero (con piel),Carnes y Pescados,215,18.0,0.0,15.0,0.0,basico
+Carne picada,Carnes y Pescados,254,24.0,0.0,17.0,0.0,basico
+Lomo de cerdo,Carnes y Pescados,182,27.0,0.0,8.0,0.0,basico
+Costilla de cerdo,Carnes y Pescados,277,22.0,0.0,21.0,0.0,basico
+Pechuga de pollo,Carnes y Pescados,165,31.0,0.0,3.6,0.0,basico
+Muslo de pollo,Carnes y Pescados,209,26.0,0.0,11.0,0.0,basico
+Pollo entero,Carnes y Pescados,215,18.0,0.0,15.0,0.0,basico
 Ala de pollo,Carnes y Pescados,203,19.0,0.0,14.0,0.0,basico
-Pata de pollo (con piel),Carnes y Pescados,216,22.0,0.0,14.0,0.0,basico
+Pata de pollo,Carnes y Pescados,216,22.0,0.0,14.0,0.0,basico
 Atún fresco,Carnes y Pescados,144,23.0,0.0,5.0,0.0,basico
-Atún en agua (lata),Carnes y Pescados,116,26.0,0.0,1.0,0.0,basico
+Atún al agua (lata),Carnes y Pescados,116,26.0,0.0,1.0,0.0,basico
 Atún en aceite (lata),Carnes y Pescados,198,25.0,0.0,11.0,0.0,basico
 Salmón,Carnes y Pescados,208,20.0,0.0,13.0,0.0,basico
 Merluza,Carnes y Pescados,82,17.0,0.0,1.2,0.0,basico
@@ -32,58 +32,58 @@ Yogur natural descremado,Huevos y Lácteos,56,5.7,7.7,0.4,0.0,basico
 Crema de leche,Huevos y Lácteos,345,2.1,2.8,37.0,0.0,basico
 Ricota,Huevos y Lácteos,174,11.0,3.0,13.0,0.0,basico
 Queso cremoso,Huevos y Lácteos,330,22.0,2.0,26.0,0.0,basico
-Queso fresco (cuartirolo),Huevos y Lácteos,264,18.0,2.0,21.0,0.0,basico
-Queso rallado (parmesano),Huevos y Lácteos,431,38.0,4.0,29.0,0.0,basico
+Queso cuartirolo,Huevos y Lácteos,264,18.0,2.0,21.0,0.0,basico
+Queso parmesano rallado,Huevos y Lácteos,431,38.0,4.0,29.0,0.0,basico
 Queso mozzarella,Huevos y Lácteos,280,22.0,2.2,22.0,0.0,basico
 Queso por salut,Huevos y Lácteos,352,27.0,1.0,27.0,0.0,basico
-Arroz blanco crudo,Cereales y Harinas,365,7.1,80.0,0.7,1.3,basico
-Arroz integral crudo,Cereales y Harinas,370,8.0,77.0,3.0,3.5,basico
-Arroz blanco cocido,Cereales y Harinas,130,2.7,28.0,0.3,0.4,basico
-Arroz integral cocido,Cereales y Harinas,123,2.7,26.0,1.0,1.8,basico
-Avena (copos),Cereales y Harinas,389,17.0,66.0,7.0,10.0,basico
-Harina de trigo 000,Cereales y Harinas,364,10.0,76.0,1.0,2.7,basico
-Harina de trigo 0000,Cereales y Harinas,364,9.0,77.0,0.9,2.2,basico
+Arroz blanco (crudo),Cereales y Harinas,365,7.1,80.0,0.7,1.3,basico
+Arroz integral (crudo),Cereales y Harinas,370,8.0,77.0,3.0,3.5,basico
+Arroz blanco (cocido),Cereales y Harinas,130,2.7,28.0,0.3,0.4,basico
+Arroz integral (cocido),Cereales y Harinas,123,2.7,26.0,1.0,1.8,basico
+Avena,Cereales y Harinas,389,17.0,66.0,7.0,10.0,basico
+Harina 000,Cereales y Harinas,364,10.0,76.0,1.0,2.7,basico
+Harina 0000,Cereales y Harinas,364,9.0,77.0,0.9,2.2,basico
 Harina integral,Cereales y Harinas,340,13.0,68.0,2.5,10.0,basico
-Fideos secos (sémola),Cereales y Harinas,371,13.0,74.0,1.5,2.7,basico
+Fideos secos,Cereales y Harinas,371,13.0,74.0,1.5,2.7,basico
 Fideos cocidos,Cereales y Harinas,158,5.8,31.0,0.9,1.8,basico
-Pan blanco (lactal),Cereales y Harinas,265,9.0,49.0,3.2,2.7,basico
+Pan lactal,Cereales y Harinas,265,9.0,49.0,3.2,2.7,basico
 Pan integral,Cereales y Harinas,247,13.0,41.0,4.2,6.0,basico
-Pan francés (baguette),Cereales y Harinas,274,9.0,53.0,2.8,2.3,basico
-Quinoa cocida,Cereales y Harinas,120,4.4,22.0,1.9,2.8,basico
-Quinoa cruda,Cereales y Harinas,368,14.0,64.0,6.0,7.0,basico
-Lenteja cruda,Legumbres,352,25.0,60.0,1.1,10.7,basico
-Lenteja cocida,Legumbres,116,9.0,20.0,0.4,7.9,basico
-Garbanzo crudo,Legumbres,364,19.0,61.0,6.0,17.0,basico
-Garbanzo cocido,Legumbres,164,8.9,27.0,2.6,7.6,basico
-Poroto negro crudo,Legumbres,341,22.0,63.0,1.4,15.5,basico
-Poroto negro cocido,Legumbres,132,8.9,24.0,0.5,8.7,basico
-Poroto rojo cocido,Legumbres,127,8.7,23.0,0.5,6.4,basico
-Soja (porotos cocidos),Legumbres,173,17.0,10.0,9.0,6.0,basico
-Papa cruda,Verduras y Hortalizas,77,2.0,17.0,0.1,2.2,basico
-Papa cocida (hervida),Verduras y Hortalizas,86,1.9,20.0,0.1,1.8,basico
-Batata cruda,Verduras y Hortalizas,86,1.6,20.0,0.1,3.0,basico
+Pan francés,Cereales y Harinas,274,9.0,53.0,2.8,2.3,basico
+Quinoa (cocida),Cereales y Harinas,120,4.4,22.0,1.9,2.8,basico
+Quinoa (cruda),Cereales y Harinas,368,14.0,64.0,6.0,7.0,basico
+Lenteja (cruda),Legumbres,352,25.0,60.0,1.1,10.7,basico
+Lenteja (cocida),Legumbres,116,9.0,20.0,0.4,7.9,basico
+Garbanzo (crudo),Legumbres,364,19.0,61.0,6.0,17.0,basico
+Garbanzo (cocido),Legumbres,164,8.9,27.0,2.6,7.6,basico
+Poroto negro (crudo),Legumbres,341,22.0,63.0,1.4,15.5,basico
+Poroto negro (cocido),Legumbres,132,8.9,24.0,0.5,8.7,basico
+Poroto rojo (cocido),Legumbres,127,8.7,23.0,0.5,6.4,basico
+Soja (cocida),Legumbres,173,17.0,10.0,9.0,6.0,basico
+Papa,Verduras y Hortalizas,77,2.0,17.0,0.1,2.2,basico
+Papa hervida,Verduras y Hortalizas,86,1.9,20.0,0.1,1.8,basico
+Batata,Verduras y Hortalizas,86,1.6,20.0,0.1,3.0,basico
 Batata cocida,Verduras y Hortalizas,90,2.0,21.0,0.1,3.3,basico
 Tomate,Verduras y Hortalizas,18,0.9,3.9,0.2,1.2,basico
 Lechuga,Verduras y Hortalizas,15,1.4,2.9,0.2,1.3,basico
 Zanahoria,Verduras y Hortalizas,41,0.9,10.0,0.2,2.8,basico
 Cebolla,Verduras y Hortalizas,40,1.1,9.3,0.1,1.7,basico
 Ajo,Verduras y Hortalizas,149,6.4,33.0,0.5,2.1,basico
-Pimiento rojo,Verduras y Hortalizas,31,1.0,6.0,0.3,2.1,basico
-Pimiento verde,Verduras y Hortalizas,20,0.9,4.6,0.2,1.7,basico
+Morrón rojo,Verduras y Hortalizas,31,1.0,6.0,0.3,2.1,basico
+Morrón verde,Verduras y Hortalizas,20,0.9,4.6,0.2,1.7,basico
 Zapallo,Verduras y Hortalizas,26,1.0,6.5,0.1,0.5,basico
 Zucchini,Verduras y Hortalizas,17,1.2,3.1,0.3,1.0,basico
 Brócoli,Verduras y Hortalizas,34,2.8,7.0,0.4,2.6,basico
 Coliflor,Verduras y Hortalizas,25,1.9,5.0,0.3,2.0,basico
 Espinaca,Verduras y Hortalizas,23,2.9,3.6,0.4,2.2,basico
 Acelga,Verduras y Hortalizas,19,1.8,3.7,0.2,1.6,basico
-Choclo (mazorca),Verduras y Hortalizas,86,3.3,19.0,1.4,2.7,basico
+Choclo,Verduras y Hortalizas,86,3.3,19.0,1.4,2.7,basico
 Choclo cocido,Verduras y Hortalizas,96,3.4,21.0,1.5,2.0,basico
 Apio,Verduras y Hortalizas,16,0.7,3.0,0.2,1.6,basico
 Pepino,Verduras y Hortalizas,15,0.7,3.6,0.1,0.5,basico
 Berenjena,Verduras y Hortalizas,25,1.0,6.0,0.2,3.0,basico
 Remolacha,Verduras y Hortalizas,43,1.6,10.0,0.2,2.8,basico
 Puerro,Verduras y Hortalizas,61,1.5,14.0,0.3,1.8,basico
-Hongos champignon,Verduras y Hortalizas,22,3.1,3.3,0.3,1.0,basico
+Champignones,Verduras y Hortalizas,22,3.1,3.3,0.3,1.0,basico
 Palta,Verduras y Hortalizas,160,2.0,9.0,15.0,6.7,basico
 Banana,Frutas,89,1.1,23.0,0.3,2.6,basico
 Manzana,Frutas,52,0.3,14.0,0.2,2.4,basico
@@ -116,22 +116,22 @@ Semillas de girasol,Frutos Secos,584,21.0,20.0,51.0,8.6,basico
 Semillas de sésamo,Frutos Secos,573,18.0,23.0,50.0,11.8,basico
 Castañas de cajú,Frutos Secos,553,18.0,30.0,44.0,3.3,basico
 Pistachos,Frutos Secos,562,20.0,28.0,45.0,10.3,basico
-Azúcar blanca,Azúcares y Endulzantes,400,0.0,100.0,0.0,0.0,basico
+Azúcar,Azúcares y Endulzantes,400,0.0,100.0,0.0,0.0,basico
 Azúcar mascabo,Azúcares y Endulzantes,380,0.3,97.0,0.1,0.0,basico
 Miel,Azúcares y Endulzantes,304,0.3,82.0,0.0,0.2,basico
-Mermelada (promedio),Azúcares y Endulzantes,250,0.5,65.0,0.1,1.0,basico
+Mermelada,Azúcares y Endulzantes,250,0.5,65.0,0.1,1.0,basico
 Dulce de leche,Azúcares y Endulzantes,327,7.0,55.0,9.0,0.0,basico
 Sal fina,Condimentos,0,0.0,0.0,0.0,0.0,basico
 Caldo en cubito,Condimentos,167,4.0,27.0,5.0,0.0,basico
-Salsa de tomate (natural),Salsas y Aderezos,29,1.5,6.0,0.4,1.5,basico
+Salsa de tomate,Salsas y Aderezos,29,1.5,6.0,0.4,1.5,basico
 Puré de tomate,Salsas y Aderezos,38,1.9,7.5,0.4,1.8,basico
 Ketchup,Salsas y Aderezos,101,1.3,25.0,0.1,0.3,basico
 Mayonesa,Salsas y Aderezos,680,1.0,2.5,75.0,0.0,basico
 Mostaza,Salsas y Aderezos,66,4.4,5.8,3.6,0.0,basico
 Salsa de soja,Salsas y Aderezos,60,5.5,8.5,0.1,0.8,basico
 Vinagre de manzana,Salsas y Aderezos,21,0.0,0.9,0.0,0.0,basico
-Proteína whey (en polvo),Suplementos,380,75.0,8.0,5.0,0.0,basico
-Proteína caseína (en polvo),Suplementos,370,72.0,10.0,4.0,0.0,basico
+Proteína whey,Suplementos,380,75.0,8.0,5.0,0.0,basico
+Proteína caseína,Suplementos,370,72.0,10.0,4.0,0.0,basico
 Asado de tira,Carnes y Pescados,240,17.2,0.0,19.0,0.0,basico
 Vacío,Carnes y Pescados,165,21.2,0.0,8.3,0.0,basico
 Costilla vacuna,Carnes y Pescados,280,18.0,0.0,22.0,0.0,basico
@@ -142,18 +142,18 @@ Matambre,Carnes y Pescados,149,21.7,0.0,6.3,0.0,basico
 Entraña,Carnes y Pescados,174,20.9,0.0,10.1,0.0,basico
 Tapa de asado,Carnes y Pescados,176,21.0,0.0,9.5,0.0,basico
 Tapa de cuadril,Carnes y Pescados,214,19.5,0.0,14.5,0.0,basico
-Rosbif (pecho),Carnes y Pescados,169,20.2,0.0,9.9,0.0,basico
+Rosbif,Carnes y Pescados,169,20.2,0.0,9.9,0.0,basico
 Osobuco,Carnes y Pescados,128,21.8,0.0,3.9,0.0,basico
 Colita de cuadril,Carnes y Pescados,198,20.7,0.0,12.2,0.0,basico
 Bola de lomo,Carnes y Pescados,216,18.9,0.0,15.6,0.0,basico
-Marucha / Tortuguita,Carnes y Pescados,142,20.9,0.0,5.8,0.0,basico
+Marucha,Carnes y Pescados,142,20.9,0.0,5.8,0.0,basico
 Aguja,Carnes y Pescados,195,19.5,0.0,12.5,0.0,basico
 Falda,Carnes y Pescados,250,17.0,0.0,21.0,0.0,basico
 Corvina,Carnes y Pescados,104,20.0,0.0,2.5,0.0,basico
 Lenguado,Carnes y Pescados,71,12.4,0.0,1.9,0.0,basico
 Pejerrey,Carnes y Pescados,80,19.5,0.0,1.5,0.0,basico
 Surubí,Carnes y Pescados,165,17.5,0.0,10.5,0.0,basico
-Dorado (río),Carnes y Pescados,90,17.0,0.0,2.8,0.0,basico
+Dorado de río,Carnes y Pescados,90,17.0,0.0,2.8,0.0,basico
 Besugo,Carnes y Pescados,86,17.0,0.0,2.0,0.0,basico
 Brótola,Carnes y Pescados,88,19.0,0.0,1.0,0.0,basico
 Anchoíta,Carnes y Pescados,131,20.4,0.0,4.9,0.0,basico
@@ -168,14 +168,14 @@ Frambuesa,Frutas,52,1.2,11.9,0.65,6.5,basico
 Arándano,Frutas,57,0.74,14.5,0.33,2.4,basico
 Mora,Frutas,43,1.39,9.6,0.49,5.3,basico
 Maracuyá,Frutas,97,2.2,23.4,0.7,10.4,basico
-Coco (pulpa fresca),Frutas,354,3.33,15.2,33.5,9.0,basico
+Coco fresco,Frutas,354,3.33,15.2,33.5,9.0,basico
 Pomelo,Frutas,40,0.77,9.6,0.14,1.0,basico
 Lima,Frutas,30,0.7,10.5,0.2,2.8,basico
 Guayaba,Frutas,68,2.55,14.3,0.95,5.4,basico
 Damasco,Frutas,48,1.4,11.1,0.39,2.0,basico
 Membrillo,Frutas,57,0.4,15.3,0.1,1.9,basico
 Níspero,Frutas,47,0.43,12.1,0.2,1.7,basico
-Tuna (fruto de cactus),Frutas,41,0.73,9.6,0.51,3.6,basico
+Tuna,Frutas,41,0.73,9.6,0.51,3.6,basico
 Alcaucil,Verduras y Hortalizas,47,3.27,10.5,0.15,5.4,basico
 Chaucha,Verduras y Hortalizas,31,1.83,7.0,0.22,2.7,basico
 Arvejas frescas,Verduras y Hortalizas,81,5.42,14.5,0.4,5.1,basico
@@ -185,7 +185,7 @@ Rabanito,Verduras y Hortalizas,16,0.68,3.4,0.1,1.6,basico
 Berro,Verduras y Hortalizas,11,2.3,1.3,0.1,0.5,basico
 Rúcula,Verduras y Hortalizas,25,2.58,3.7,0.66,1.6,basico
 Repollo,Verduras y Hortalizas,24,1.28,5.8,0.1,2.5,basico
-Kale (col rizada),Verduras y Hortalizas,35,2.92,4.4,1.49,4.1,basico
+Kale,Verduras y Hortalizas,35,2.92,4.4,1.49,4.1,basico
 Cebolla de verdeo,Verduras y Hortalizas,32,1.83,7.3,0.19,2.6,basico
 Morrón amarillo,Verduras y Hortalizas,27,1.0,6.3,0.21,0.9,basico
 Hinojo,Verduras y Hortalizas,31,1.24,7.3,0.2,3.1,basico
@@ -193,4 +193,4 @@ Endibia,Verduras y Hortalizas,17,1.25,3.4,0.2,3.1,basico
 Espárrago,Verduras y Hortalizas,20,2.2,3.9,0.12,2.2,basico
 Tomate cherry,Verduras y Hortalizas,18,0.88,3.9,0.2,1.2,basico
 Ají picante,Verduras y Hortalizas,40,1.87,8.8,0.44,1.5,basico
-Choclo desgranado (crudo),Verduras y Hortalizas,86,3.27,19.0,1.35,2.7,basico
+Choclo desgranado,Verduras y Hortalizas,86,3.27,19.0,1.35,2.7,basico
