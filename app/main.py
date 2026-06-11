@@ -14,7 +14,6 @@ from app.database import (
     User, FoodEntry, UserProfile, DayScore, ChatMessage,
     BodyMeasurement, ManualWorkout, StravaToken,
 )
-from app.food_data import search_foods, get_food, FOOD_DATABASE
 from app.rnpa_search import search_rnpa
 from app.openfoodfacts import search_openfoodfacts, get_by_barcode
 from app.hevy import fetch_recent_workouts, format_workout_summary, get_workout_display_data
@@ -223,19 +222,7 @@ def api_search(q: str = ""):
     q = q.strip()
     if not q:
         return JSONResponse(content=[])
-    # RNPA (generics first, then branded), fallback to legacy hardcoded DB
-    rnpa = search_rnpa(q, limit=15)
-    if rnpa:
-        return JSONResponse(content=rnpa)
-    return JSONResponse(content=search_foods(q))
-
-
-@app.get("/api/food/{name}")
-def api_food(name: str):
-    data = get_food(name)
-    if not data:
-        raise HTTPException(status_code=404, detail="Alimento no encontrado")
-    return JSONResponse(content=data)
+    return JSONResponse(content=search_rnpa(q, limit=15))
 
 
 @app.get("/api/search/off")
@@ -422,30 +409,16 @@ def add_food(
     today = date.today()
     factor = quantity_g / 100.0
 
-    if entry_mode == "search" and food_name:
-        data = get_food(food_name)
-        if not data:
-            raise HTTPException(status_code=400, detail="Alimento no encontrado")
-        entry = FoodEntry(
-            user_id=current_user.id,
-            date=today, meal_type=meal_type, food_name=food_name,
-            quantity_g=quantity_g,
-            calories=round(data["calories"] * factor, 1),
-            protein=round(data["protein"] * factor, 1),
-            carbs=round(data["carbs"] * factor, 1),
-            fat=round(data["fat"] * factor, 1),
-        )
-    else:
-        entry = FoodEntry(
-            user_id=current_user.id,
-            date=today, meal_type=meal_type,
-            food_name=manual_name or "Alimento personalizado",
-            quantity_g=quantity_g,
-            calories=round(manual_calories * factor, 1),
-            protein=round(manual_protein * factor, 1),
-            carbs=round(manual_carbs * factor, 1),
-            fat=round(manual_fat * factor, 1),
-        )
+    entry = FoodEntry(
+        user_id=current_user.id,
+        date=today, meal_type=meal_type,
+        food_name=manual_name or food_name or "Alimento personalizado",
+        quantity_g=quantity_g,
+        calories=round(manual_calories * factor, 1),
+        protein=round(manual_protein * factor, 1),
+        carbs=round(manual_carbs * factor, 1),
+        fat=round(manual_fat * factor, 1),
+    )
 
     db.add(entry)
     db.commit()
