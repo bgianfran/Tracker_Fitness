@@ -1,11 +1,11 @@
 name,categoria,calories,protein,carbs,fat,fiber,source
-Nalga,Carnes y Pescados,158,28.0,0.0,4.5,0.0,basico
-Asado de tira,Carnes y Pescados,289,24.0,0.0,21.0,0.0,basico
-Bife de chorizo,Carnes y Pescados,271,25.0,0.0,18.0,0.0,basico
-Cuadril,Carnes y Pescados,177,27.0,0.0,7.0,0.0,basico
-Paleta,Carnes y Pescados,210,25.0,0.0,12.0,0.0,basico
-Carne picada magra,Carnes y Pescados,215,26.0,0.0,12.0,0.0,basico
-Carne picada,Carnes y Pescados,254,24.0,0.0,17.0,0.0,basico
+Nalga,Carnes y Pescados,106,22.0,0.0,1.7,0.0,argenfood_unlu
+Asado de tira,Carnes y Pescados,170,18.4,0.0,10.7,0.0,argenfood_unlu
+Bife de chorizo,Carnes y Pescados,190,21.0,0.0,12.0,0.0,argenfood_unlu
+Cuadril,Carnes y Pescados,111,21.0,0.0,3.0,0.0,argenfood_unlu
+Paleta,Carnes y Pescados,125,19.0,0.0,5.5,0.0,argenfood_unlu
+Carne picada magra,Carnes y Pescados,120,21.0,0.0,4.0,0.0,argenfood_unlu
+Carne picada,Carnes y Pescados,155,19.5,0.0,8.0,0.0,argenfood_unlu
 Lomo de cerdo,Carnes y Pescados,182,27.0,0.0,8.0,0.0,basico
 Costilla de cerdo,Carnes y Pescados,277,22.0,0.0,21.0,0.0,basico
 Pechuga de pollo,Carnes y Pescados,165,31.0,0.0,3.6,0.0,basico
@@ -132,23 +132,23 @@ Salsa de soja,Salsas y Aderezos,60,5.5,8.5,0.1,0.8,basico
 Vinagre de manzana,Salsas y Aderezos,21,0.0,0.9,0.0,0.0,basico
 Proteína whey,Suplementos,380,75.0,8.0,5.0,0.0,basico
 Proteína caseína,Suplementos,370,72.0,10.0,4.0,0.0,basico
-Asado de tira,Carnes y Pescados,240,17.2,0.0,19.0,0.0,basico
-Vacío,Carnes y Pescados,165,21.2,0.0,8.3,0.0,basico
-Costilla vacuna,Carnes y Pescados,280,18.0,0.0,22.0,0.0,basico
-Bife de lomo,Carnes y Pescados,143,21.8,0.0,6.2,0.0,basico
-Cuadril,Carnes y Pescados,189,21.0,0.0,11.0,0.0,basico
-Peceto,Carnes y Pescados,155,22.5,0.0,7.0,0.0,basico
-Matambre,Carnes y Pescados,149,21.7,0.0,6.3,0.0,basico
-Entraña,Carnes y Pescados,174,20.9,0.0,10.1,0.0,basico
-Tapa de asado,Carnes y Pescados,176,21.0,0.0,9.5,0.0,basico
-Tapa de cuadril,Carnes y Pescados,214,19.5,0.0,14.5,0.0,basico
-Rosbif,Carnes y Pescados,169,20.2,0.0,9.9,0.0,basico
-Osobuco,Carnes y Pescados,128,21.8,0.0,3.9,0.0,basico
-Colita de cuadril,Carnes y Pescados,198,20.7,0.0,12.2,0.0,basico
-Bola de lomo,Carnes y Pescados,216,18.9,0.0,15.6,0.0,basico
-Marucha,Carnes y Pescados,142,20.9,0.0,5.8,0.0,basico
-Aguja,Carnes y Pescados,195,19.5,0.0,12.5,0.0,basico
-Falda,Carnes y Pescados,250,17.0,0.0,21.0,0.0,basico
+Asado de tira,Carnes y Pescados,170,18.4,0.0,10.7,0.0,argenfood_unlu
+Vacío,Carnes y Pescados,174,20.0,0.0,11.0,0.0,argenfood_unlu
+Costilla vacuna,Carnes y Pescados,170,18.4,0.0,10.7,0.0,argenfood_unlu
+Bife de lomo,Carnes y Pescados,116,20.0,0.0,4.0,0.0,argenfood_unlu
+Cuadril,Carnes y Pescados,111,21.0,0.0,3.0,0.0,argenfood_unlu
+Peceto,Carnes y Pescados,125,23.0,0.0,1.9,0.0,argenfood_unlu
+Matambre,Carnes y Pescados,160,19.5,0.0,8.5,0.0,argenfood_unlu
+Entraña,Carnes y Pescados,174,19.0,0.0,11.0,0.0,argenfood_unlu
+Tapa de asado,Carnes y Pescados,170,18.4,0.0,10.7,0.0,argenfood_unlu
+Tapa de cuadril,Carnes y Pescados,211,20.0,0.0,15.0,0.0,argenfood_unlu
+Rosbif,Carnes y Pescados,154,22.0,0.0,7.6,0.0,argenfood_unlu
+Osobuco,Carnes y Pescados,135,19.0,0.0,5.0,0.0,argenfood_unlu
+Colita de cuadril,Carnes y Pescados,143,21.0,0.0,6.7,0.0,argenfood_unlu
+Bola de lomo,Carnes y Pescados,114,22.0,0.0,3.2,0.0,argenfood_unlu
+Marucha,Carnes y Pescados,132,20.0,0.0,6.1,0.0,argenfood_unlu
+Aguja,Carnes y Pescados,146,19.4,0.0,7.4,0.0,argenfood_unlu
+Falda,Carnes y Pescados,139,20.0,0.0,6.5,0.0,argenfood_unlu
 Corvina,Carnes y Pescados,104,20.0,0.0,2.5,0.0,basico
 Lenguado,Carnes y Pescados,71,12.4,0.0,1.9,0.0,basico
 Pejerrey,Carnes y Pescados,80,19.5,0.0,1.5,0.0,basico
