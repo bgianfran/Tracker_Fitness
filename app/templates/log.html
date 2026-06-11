@@ -206,15 +206,13 @@
           <input type="number" name="quantity_g" id="quantity-search" value="100" min="1" max="5000" step="1"
                  oninput="updateSearchPreview()"
                  class="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 text-sm">
-          <span class="absolute right-3 inset-y-0 flex items-center text-gray-400 text-sm pointer-events-none">g</span>
+          <span id="unit-label" class="absolute right-3 inset-y-0 flex items-center text-gray-400 text-sm pointer-events-none">g</span>
         </div>
-        <div class="flex gap-1">
-          {% for qty in [50, 100, 150, 200] %}
-          <button type="button" onclick="setQty({{ qty }})"
-                  class="qty-btn text-xs px-2.5 py-2 bg-gray-700 hover:bg-brand-600 text-gray-400 hover:text-white rounded-lg transition-colors border border-gray-600 hover:border-brand-500">
-            {{ qty }}g
-          </button>
-          {% endfor %}
+        <div id="qty-buttons" class="flex gap-1">
+          <button type="button" onclick="setQty(50)"  class="qty-btn text-xs px-2.5 py-2 bg-gray-700 hover:bg-brand-600 text-gray-400 hover:text-white rounded-lg transition-colors border border-gray-600 hover:border-brand-500">50g</button>
+          <button type="button" onclick="setQty(100)" class="qty-btn text-xs px-2.5 py-2 bg-gray-700 hover:bg-brand-600 text-gray-400 hover:text-white rounded-lg transition-colors border border-gray-600 hover:border-brand-500">100g</button>
+          <button type="button" onclick="setQty(150)" class="qty-btn text-xs px-2.5 py-2 bg-gray-700 hover:bg-brand-600 text-gray-400 hover:text-white rounded-lg transition-colors border border-gray-600 hover:border-brand-500">150g</button>
+          <button type="button" onclick="setQty(200)" class="qty-btn text-xs px-2.5 py-2 bg-gray-700 hover:bg-brand-600 text-gray-400 hover:text-white rounded-lg transition-colors border border-gray-600 hover:border-brand-500">200g</button>
         </div>
       </div>
       <!-- Live macro preview -->
@@ -435,11 +433,13 @@ function selectFood(item) {
   selectedFood = item;
   foodNameInput.value = item.name;
   selectedName.textContent = item.name;
-  selectedMacros.textContent = `${item.calories} kcal · P: ${item.protein}g · C: ${item.carbs}g · G: ${item.fat}g por 100g`;
+  const u = item.unidad === 'ml' ? 'ml' : 'g';
+  selectedMacros.textContent = `${item.calories} kcal · P: ${item.protein}g · C: ${item.carbs}g · G: ${item.fat}g por 100${u}`;
   selectedFoodDiv.classList.remove('hidden');
   searchResults.classList.add('hidden');
   searchResults.innerHTML = '';
   searchInput.value = '';
+  setUnit(u);
   updateSearchPreview();
 }
 
@@ -449,7 +449,20 @@ function clearSelection() {
   selectedFoodDiv.classList.add('hidden');
   macroPreview.classList.add('hidden');
   searchInput.value = '';
+  setUnit('g');
   searchInput.focus();
+}
+
+function setUnit(u) {
+  document.getElementById('unit-label').textContent = u;
+  const liquidQtys = [100, 200, 330, 500];
+  const solidQtys  = [50, 100, 150, 200];
+  const qtys = u === 'ml' ? liquidQtys : solidQtys;
+  const btns = document.querySelectorAll('#qty-buttons .qty-btn');
+  btns.forEach((btn, i) => {
+    btn.textContent = qtys[i] + u;
+    btn.onclick = () => setQty(qtys[i]);
+  });
 }
 
 function setQty(q) {
