@@ -30,6 +30,7 @@ def _load():
                     "fat": _f(row["fat"]),
                     "fiber": _f(row.get("fiber")),
                     "source": row.get("source", "basico"),
+                    "unidad": "g",
                 })
 
     # 2. RNPA generics (median of branded products)
@@ -48,6 +49,7 @@ def _load():
                     "sodium": _f(row.get("sodium")),
                     "source": "rnpa_generic",
                     "n_productos": int(row.get("n_productos") or 0),
+                    "unidad": "g",
                 })
 
     # 3. RNPA branded products
@@ -57,6 +59,7 @@ def _load():
             for row in csv.DictReader(f):
                 if not row.get("calories"):
                     continue
+                unidad = row.get("unidad", "g").strip().lower()
                 _branded.append({
                     "name": row["name"].strip(),
                     "marca": row.get("marca", "").strip(),
@@ -69,6 +72,7 @@ def _load():
                     "sodium": _f(row.get("sodium")),
                     "source": "rnpa",
                     "rnpa": row.get("rnpa", ""),
+                    "unidad": "ml" if unidad == "ml" else "g",
                 })
 
 
