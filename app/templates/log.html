@@ -394,7 +394,7 @@ function renderFoodBtn(item) {
     <button type="button" onclick='selectFood(${JSON.stringify(item)})'
             class="w-full text-left px-3 py-2.5 rounded-xl bg-gray-700 hover:bg-gray-600 transition-colors">
       <div class="flex items-center justify-between gap-2">
-        <span class="text-sm font-medium text-white truncate">${item.name}${flag}</span>
+        <span class="text-sm font-medium text-white truncate">${item.name}</span>
         <div class="flex items-center gap-1.5 flex-shrink-0">${badge}<span class="text-xs text-brand-400">${item.calories} kcal</span></div>
       </div>
       <div class="text-xs text-gray-500 mt-0.5">P: ${item.protein}g &bull; C: ${item.carbs}g &bull; G: ${item.fat}g <span class="text-gray-600">/ 100g</span></div>
