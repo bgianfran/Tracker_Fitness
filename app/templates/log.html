@@ -379,25 +379,17 @@ async function doSearch() {
   searchResults.classList.remove('hidden');
 
   try {
-    const [local, off] = await Promise.all([
-      fetch(`/api/search?q=${encodeURIComponent(q)}`).then(r => r.json()).catch(() => []),
-      fetch(`/api/search/off?q=${encodeURIComponent(q)}`).then(r => r.json()).catch(() => []),
-    ]);
-    renderResults(local, off);
+    const local = await fetch(`/api/search?q=${encodeURIComponent(q)}`).then(r => r.json()).catch(() => []);
+    renderResults(local);
   } catch(e) {
     console.error(e);
   }
 }
 
 function renderFoodBtn(item) {
-  const flag = item.is_ar ? ' 🇦🇷' : '';
-  const badge = item.source === 'openfoodfacts'
-    ? `<span class="text-xs text-gray-500 flex-shrink-0">OFF</span>`
-    : item.source === 'rnpa_generic'
-      ? `<span class="text-xs text-brand-600 flex-shrink-0">genérico</span>`
-      : item.source === 'rnpa'
-        ? `<span class="text-xs text-gray-600 flex-shrink-0">🇦🇷</span>`
-        : '';
+  const badge = item.source === 'rnpa_generic'
+    ? `<span class="text-xs text-brand-600 flex-shrink-0">genérico</span>`
+    : `<span class="text-xs text-gray-600 flex-shrink-0">🇦🇷</span>`;
   return `
     <button type="button" onclick='selectFood(${JSON.stringify(item)})'
             class="w-full text-left px-3 py-2.5 rounded-xl bg-gray-700 hover:bg-gray-600 transition-colors">
@@ -409,13 +401,9 @@ function renderFoodBtn(item) {
     </button>`;
 }
 
-function renderResults(local, off) {
+function renderResults(local) {
   let html = '';
   if (local.length) html += local.map(renderFoodBtn).join('');
-  if (off.length) {
-    if (local.length) html += `<p class="text-xs text-gray-500 px-2 pt-2 pb-1">Open Food Facts 🌍</p>`;
-    html += off.map(renderFoodBtn).join('');
-  }
   if (!html) {
     searchResults.innerHTML = `<p class="text-xs text-gray-500 px-2 py-2">Sin resultados para esa búsqueda</p>`;
   } else {
@@ -425,8 +413,8 @@ function renderResults(local, off) {
 }
 
 function selectFood(item) {
-  // Productos RNPA y Open Food Facts → pre-llenar formulario manual
-  if (item.source === 'openfoodfacts' || item.source === 'rnpa' || item.source === 'rnpa_generic') {
+  // Productos RNPA → pre-llenar formulario manual
+  if (item.source === 'rnpa' || item.source === 'rnpa_generic') {
     const mealType = document.querySelector('#form-search input[name=meal_type]:checked')?.value || 'breakfast';
     const mf = document.getElementById('form-manual');
     mf.querySelector('input[name=manual_name]').value = item.name;
