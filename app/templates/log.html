@@ -387,9 +387,11 @@ async function doSearch() {
 }
 
 function renderFoodBtn(item) {
-  const badge = item.source === 'rnpa_generic'
-    ? `<span class="text-xs text-brand-600 flex-shrink-0">genérico</span>`
-    : `<span class="text-xs text-gray-600 flex-shrink-0">🇦🇷</span>`;
+  const badge = (item.source === 'basico' || item.source === 'argenfood_unlu')
+    ? `<span class="text-xs text-emerald-500 flex-shrink-0">básico</span>`
+    : item.source === 'rnpa_generic'
+      ? `<span class="text-xs text-brand-400 flex-shrink-0">genérico</span>`
+      : `<span class="text-xs text-gray-500 flex-shrink-0">🇦🇷</span>`;
   return `
     <button type="button" onclick='selectFood(${JSON.stringify(item)})'
             class="w-full text-left px-3 py-2.5 rounded-xl bg-gray-700 hover:bg-gray-600 transition-colors">

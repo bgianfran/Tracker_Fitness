@@ -1,20 +1,38 @@
 """
-Argentine food search backed by RNPA data.
-Loads at startup: ~1,500 generics + ~57,000 branded products.
+Argentine food search.
+Priority: básicos (curated, grass-fed) > RNPA genéricos > RNPA branded
+Loads at startup: ~195 básicos + ~1,500 genéricos + ~57,000 branded.
 """
 import csv
-import os
 from pathlib import Path
 
 _DATA_DIR = Path(__file__).parent.parent / "data"
 
+_basics: list[dict] = []
 _generics: list[dict] = []
 _branded: list[dict] = []
 
 
 def _load():
-    global _generics, _branded
+    global _basics, _generics, _branded
 
+    # 1. Curated basic ingredients (highest priority)
+    basics_path = _DATA_DIR / "ingredientes_basicos.csv"
+    if basics_path.exists():
+        with open(basics_path, newline="", encoding="utf-8") as f:
+            for row in csv.DictReader(f):
+                _basics.append({
+                    "name": row["name"],
+                    "categoria": row["categoria"],
+                    "calories": _f(row["calories"]),
+                    "protein": _f(row["protein"]),
+                    "carbs": _f(row["carbs"]),
+                    "fat": _f(row["fat"]),
+                    "fiber": _f(row.get("fiber")),
+                    "source": row.get("source", "basico"),
+                })
+
+    # 2. RNPA generics (median of branded products)
     gen_path = _DATA_DIR / "alimentos_genericos.csv"
     if gen_path.exists():
         with open(gen_path, newline="", encoding="utf-8") as f:
@@ -32,17 +50,16 @@ def _load():
                     "n_productos": int(row.get("n_productos") or 0),
                 })
 
+    # 3. RNPA branded products
     rnpa_path = _DATA_DIR / "alimentos_rnpa.csv"
     if rnpa_path.exists():
         with open(rnpa_path, newline="", encoding="utf-8") as f:
             for row in csv.DictReader(f):
                 if not row.get("calories"):
                     continue
-                marca = row.get("marca", "").strip()
-                name = row["name"].strip()
                 _branded.append({
-                    "name": name,
-                    "marca": marca,
+                    "name": row["name"].strip(),
+                    "marca": row.get("marca", "").strip(),
                     "categoria": row["categoria"],
                     "calories": _f(row["calories"]),
                     "protein": _f(row["protein"]),
@@ -78,7 +95,6 @@ def _score(name: str, words: list[str]) -> int:
 
 
 def search_rnpa(query: str, limit: int = 15) -> list[dict]:
-    """Search generics then branded RNPA products."""
     q = query.lower().strip()
     if not q:
         return []
@@ -86,13 +102,19 @@ def search_rnpa(query: str, limit: int = 15) -> list[dict]:
 
     results = []
 
-    # Generics first
+    # Básicos: highest priority (+2000)
+    for item in _basics:
+        s = _score(item["name"], words)
+        if s:
+            results.append((s + 2000, item))
+
+    # RNPA generics: second (+1000)
     for item in _generics:
         s = _score(item["name"], words)
         if s:
-            results.append((s + 1000, item))  # +1000 so generics always rank above branded
+            results.append((s + 1000, item))
 
-    # Branded RNPA
+    # RNPA branded: base score
     for item in _branded:
         s = _score(item["name"], words)
         if s:
