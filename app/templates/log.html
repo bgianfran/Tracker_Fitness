@@ -7,23 +7,129 @@
   <!-- Header -->
   <div class="mb-6">
     <h1 class="text-2xl font-bold text-white">Registrar Comida</h1>
-    <p class="text-gray-400 text-sm mt-0.5">Buscá, describí o sacale una foto a tu plato</p>
+    <p class="text-gray-400 text-sm mt-0.5">Buscá ingrediente por ingrediente o analizá con IA</p>
   </div>
 
   <!-- Mode Tabs -->
   <div class="flex bg-gray-800 rounded-xl p-1 mb-6 border border-gray-700">
-    <button id="tab-search" onclick="switchMode('search')"
+    <button id="tab-manual" onclick="switchMode('manual')"
             class="flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-colors text-white bg-brand-600">
-      🔍 Buscar
+      🥗 Manual
     </button>
     <button id="tab-ai" onclick="switchMode('ai')"
             class="flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-colors text-gray-400 hover:text-white">
       ✨ IA
     </button>
-    <button id="tab-manual" onclick="switchMode('manual')"
-            class="flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-colors text-gray-400 hover:text-white">
-      ✏️ Manual
-    </button>
+  </div>
+
+  <!-- ─── Manual Mode (ingredient search) ───────────────────── -->
+  <div id="mode-manual">
+    <form id="form-search" method="POST" action="/log">
+      <input type="hidden" name="entry_mode" value="manual">
+
+      <!-- Meal type -->
+      <div class="bg-gray-800 rounded-2xl p-5 border border-gray-700 mb-4">
+        <label class="block text-sm font-semibold text-gray-300 mb-3">Tipo de comida</label>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          {% for value, label, icon in [("breakfast","Desayuno","☀️"),("lunch","Almuerzo","🌤️"),("dinner","Cena","🌙"),("snack","Snack","🍎")] %}
+          <label class="meal-option cursor-pointer">
+            <input type="radio" name="meal_type" value="{{ value }}" class="sr-only" {% if loop.first %}checked{% endif %}>
+            <div class="meal-btn flex flex-col items-center justify-center gap-1 py-3 px-2 rounded-xl border-2 border-gray-600 hover:border-brand-500 transition-all text-center
+              {% if loop.first %}border-brand-500 bg-brand-900/20 text-brand-400{% else %}text-gray-400{% endif %}">
+              <span class="text-xl">{{ icon }}</span>
+              <span class="text-xs font-medium">{{ label }}</span>
+            </div>
+          </label>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Food search -->
+      <div class="bg-gray-800 rounded-2xl p-5 border border-gray-700 mb-4">
+        <label class="block text-sm font-semibold text-gray-300 mb-3">Buscar ingrediente</label>
+
+        <div class="relative">
+          <div class="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+          </div>
+          <input id="search-input" type="text" placeholder="ej: pollo, arroz, huevo..."
+                 autocomplete="off"
+                 class="w-full bg-gray-700 border border-gray-600 rounded-xl pl-9 pr-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 text-sm">
+        </div>
+
+        <!-- Search results dropdown -->
+        <div id="search-results" class="mt-2 space-y-1 hidden"></div>
+
+        <!-- Selected food display -->
+        <div id="selected-food" class="hidden mt-3 p-3 bg-brand-900/20 border border-brand-800 rounded-xl">
+          <div class="flex items-start justify-between gap-2">
+            <div>
+              <p id="selected-name" class="text-sm font-semibold text-brand-300"></p>
+              <p id="selected-macros" class="text-xs text-gray-400 mt-0.5"></p>
+            </div>
+            <button type="button" onclick="clearSelection()"
+                    class="text-gray-500 hover:text-gray-300 flex-shrink-0">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Hidden nutritional values populated by JS -->
+        <input type="hidden" name="manual_name" id="food-name-input">
+        <input type="hidden" name="manual_calories" id="food-cal-input" value="0">
+        <input type="hidden" name="manual_protein"  id="food-prot-input" value="0">
+        <input type="hidden" name="manual_carbs"    id="food-carb-input" value="0">
+        <input type="hidden" name="manual_fat"      id="food-fat-input" value="0">
+      </div>
+
+      <!-- Quantity -->
+      <div class="bg-gray-800 rounded-2xl p-5 border border-gray-700 mb-6">
+        <label class="block text-sm font-semibold text-gray-300 mb-3">Cantidad</label>
+        <div class="flex items-center gap-3">
+          <div class="relative flex-1">
+            <input type="number" name="quantity_g" id="quantity-search" value="100" min="1" max="5000" step="1"
+                   oninput="updateSearchPreview()"
+                   class="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 text-sm">
+            <span id="unit-label" class="absolute right-3 inset-y-0 flex items-center text-gray-400 text-sm pointer-events-none">g</span>
+          </div>
+          <div id="qty-buttons" class="flex gap-1">
+            <button type="button" onclick="setQty(50)"  class="qty-btn text-xs px-2.5 py-2 bg-gray-700 hover:bg-brand-600 text-gray-400 hover:text-white rounded-lg transition-colors border border-gray-600 hover:border-brand-500">50g</button>
+            <button type="button" onclick="setQty(100)" class="qty-btn text-xs px-2.5 py-2 bg-gray-700 hover:bg-brand-600 text-gray-400 hover:text-white rounded-lg transition-colors border border-gray-600 hover:border-brand-500">100g</button>
+            <button type="button" onclick="setQty(150)" class="qty-btn text-xs px-2.5 py-2 bg-gray-700 hover:bg-brand-600 text-gray-400 hover:text-white rounded-lg transition-colors border border-gray-600 hover:border-brand-500">150g</button>
+            <button type="button" onclick="setQty(200)" class="qty-btn text-xs px-2.5 py-2 bg-gray-700 hover:bg-brand-600 text-gray-400 hover:text-white rounded-lg transition-colors border border-gray-600 hover:border-brand-500">200g</button>
+          </div>
+        </div>
+        <!-- Live macro preview -->
+        <div id="macro-preview" class="hidden mt-3 grid grid-cols-4 gap-2 text-center text-xs">
+          <div class="bg-gray-700 rounded-lg p-2">
+            <div class="text-gray-400">Calorías</div>
+            <div id="prev-cal" class="font-bold text-white text-sm">–</div>
+          </div>
+          <div class="bg-gray-700 rounded-lg p-2">
+            <div class="text-gray-400">Proteína</div>
+            <div id="prev-prot" class="font-bold text-brand-400 text-sm">–</div>
+          </div>
+          <div class="bg-gray-700 rounded-lg p-2">
+            <div class="text-gray-400">Carbos</div>
+            <div id="prev-carb" class="font-bold text-blue-400 text-sm">–</div>
+          </div>
+          <div class="bg-gray-700 rounded-lg p-2">
+            <div class="text-gray-400">Grasas</div>
+            <div id="prev-fat" class="font-bold text-yellow-400 text-sm">–</div>
+          </div>
+        </div>
+      </div>
+
+      <button type="submit" id="submit-search"
+              class="w-full bg-brand-500 hover:bg-brand-600 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold py-3 rounded-xl transition-colors text-sm shadow-lg shadow-brand-900/30">
+        Guardar registro
+      </button>
+    </form>
   </div>
 
   <!-- ─── AI Mode ─────────────────────────────────────────────── -->
@@ -140,177 +246,6 @@
     </div>
   </div>
 
-  <!-- ─── Search Mode ─────────────────────────────────────────── -->
-  <form id="form-search" method="POST" action="/log">
-    <input type="hidden" name="entry_mode" value="search">
-
-    <!-- Meal type -->
-    <div class="bg-gray-800 rounded-2xl p-5 border border-gray-700 mb-4">
-      <label class="block text-sm font-semibold text-gray-300 mb-3">Tipo de comida</label>
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-        {% for value, label, icon in [("breakfast","Desayuno","☀️"),("lunch","Almuerzo","🌤️"),("dinner","Cena","🌙"),("snack","Snack","🍎")] %}
-        <label class="meal-option cursor-pointer">
-          <input type="radio" name="meal_type" value="{{ value }}" class="sr-only" {% if loop.first %}checked{% endif %}>
-          <div class="meal-btn flex flex-col items-center justify-center gap-1 py-3 px-2 rounded-xl border-2 border-gray-600 hover:border-brand-500 transition-all text-center
-            {% if loop.first %}border-brand-500 bg-brand-900/20 text-brand-400{% else %}text-gray-400{% endif %}">
-            <span class="text-xl">{{ icon }}</span>
-            <span class="text-xs font-medium">{{ label }}</span>
-          </div>
-        </label>
-        {% endfor %}
-      </div>
-    </div>
-
-    <!-- Food search -->
-    <div class="bg-gray-800 rounded-2xl p-5 border border-gray-700 mb-4">
-      <label class="block text-sm font-semibold text-gray-300 mb-3">Buscar alimento</label>
-
-      <div class="relative">
-        <div class="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-          <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-          </svg>
-        </div>
-        <input id="search-input" type="text" placeholder="ej: pollo, arroz, huevo..."
-               autocomplete="off"
-               class="w-full bg-gray-700 border border-gray-600 rounded-xl pl-9 pr-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 text-sm">
-      </div>
-
-      <!-- Search results dropdown -->
-      <div id="search-results" class="mt-2 space-y-1 hidden"></div>
-
-      <!-- Selected food display -->
-      <div id="selected-food" class="hidden mt-3 p-3 bg-brand-900/20 border border-brand-800 rounded-xl">
-        <div class="flex items-start justify-between gap-2">
-          <div>
-            <p id="selected-name" class="text-sm font-semibold text-brand-300"></p>
-            <p id="selected-macros" class="text-xs text-gray-400 mt-0.5"></p>
-          </div>
-          <button type="button" onclick="clearSelection()"
-                  class="text-gray-500 hover:text-gray-300 flex-shrink-0">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-            </svg>
-          </button>
-        </div>
-        <input type="hidden" name="food_name" id="food-name-input">
-      </div>
-    </div>
-
-    <!-- Quantity -->
-    <div class="bg-gray-800 rounded-2xl p-5 border border-gray-700 mb-6">
-      <label class="block text-sm font-semibold text-gray-300 mb-3">Cantidad</label>
-      <div class="flex items-center gap-3">
-        <div class="relative flex-1">
-          <input type="number" name="quantity_g" id="quantity-search" value="100" min="1" max="5000" step="1"
-                 oninput="updateSearchPreview()"
-                 class="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 text-sm">
-          <span id="unit-label" class="absolute right-3 inset-y-0 flex items-center text-gray-400 text-sm pointer-events-none">g</span>
-        </div>
-        <div id="qty-buttons" class="flex gap-1">
-          <button type="button" onclick="setQty(50)"  class="qty-btn text-xs px-2.5 py-2 bg-gray-700 hover:bg-brand-600 text-gray-400 hover:text-white rounded-lg transition-colors border border-gray-600 hover:border-brand-500">50g</button>
-          <button type="button" onclick="setQty(100)" class="qty-btn text-xs px-2.5 py-2 bg-gray-700 hover:bg-brand-600 text-gray-400 hover:text-white rounded-lg transition-colors border border-gray-600 hover:border-brand-500">100g</button>
-          <button type="button" onclick="setQty(150)" class="qty-btn text-xs px-2.5 py-2 bg-gray-700 hover:bg-brand-600 text-gray-400 hover:text-white rounded-lg transition-colors border border-gray-600 hover:border-brand-500">150g</button>
-          <button type="button" onclick="setQty(200)" class="qty-btn text-xs px-2.5 py-2 bg-gray-700 hover:bg-brand-600 text-gray-400 hover:text-white rounded-lg transition-colors border border-gray-600 hover:border-brand-500">200g</button>
-        </div>
-      </div>
-      <!-- Live macro preview -->
-      <div id="macro-preview" class="hidden mt-3 grid grid-cols-4 gap-2 text-center text-xs">
-        <div class="bg-gray-700 rounded-lg p-2">
-          <div class="text-gray-400">Calorías</div>
-          <div id="prev-cal" class="font-bold text-white text-sm">–</div>
-        </div>
-        <div class="bg-gray-700 rounded-lg p-2">
-          <div class="text-gray-400">Proteína</div>
-          <div id="prev-prot" class="font-bold text-brand-400 text-sm">–</div>
-        </div>
-        <div class="bg-gray-700 rounded-lg p-2">
-          <div class="text-gray-400">Carbos</div>
-          <div id="prev-carb" class="font-bold text-blue-400 text-sm">–</div>
-        </div>
-        <div class="bg-gray-700 rounded-lg p-2">
-          <div class="text-gray-400">Grasas</div>
-          <div id="prev-fat" class="font-bold text-yellow-400 text-sm">–</div>
-        </div>
-      </div>
-    </div>
-
-    <button type="submit" id="submit-search"
-            class="w-full bg-brand-500 hover:bg-brand-600 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold py-3 rounded-xl transition-colors text-sm shadow-lg shadow-brand-900/30">
-      Guardar registro
-    </button>
-  </form>
-
-  <!-- ─── Manual Mode ─────────────────────────────────────────── -->
-  <form id="form-manual" method="POST" action="/log" class="hidden">
-    <input type="hidden" name="entry_mode" value="manual">
-
-    <!-- Meal type (manual) -->
-    <div class="bg-gray-800 rounded-2xl p-5 border border-gray-700 mb-4">
-      <label class="block text-sm font-semibold text-gray-300 mb-3">Tipo de comida</label>
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-        {% for value, label, icon in [("breakfast","Desayuno","☀️"),("lunch","Almuerzo","🌤️"),("dinner","Cena","🌙"),("snack","Snack","🍎")] %}
-        <label class="meal-option-manual cursor-pointer">
-          <input type="radio" name="meal_type" value="{{ value }}" class="sr-only" {% if loop.first %}checked{% endif %}>
-          <div class="meal-btn-manual flex flex-col items-center justify-center gap-1 py-3 px-2 rounded-xl border-2 border-gray-600 hover:border-brand-500 transition-all text-center
-            {% if loop.first %}border-brand-500 bg-brand-900/20 text-brand-400{% else %}text-gray-400{% endif %}">
-            <span class="text-xl">{{ icon }}</span>
-            <span class="text-xs font-medium">{{ label }}</span>
-          </div>
-        </label>
-        {% endfor %}
-      </div>
-    </div>
-
-    <!-- Manual fields -->
-    <div class="bg-gray-800 rounded-2xl p-5 border border-gray-700 mb-4 space-y-4">
-      <div>
-        <label class="block text-sm font-semibold text-gray-300 mb-2">Nombre del alimento</label>
-        <input type="text" name="manual_name" placeholder="ej: Pollo a la plancha"
-               class="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 text-sm">
-      </div>
-      <div>
-        <label class="block text-sm font-semibold text-gray-300 mb-2">Cantidad (gramos)</label>
-        <div class="relative">
-          <input type="number" name="quantity_g" value="100" min="1" max="5000" step="1"
-                 class="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 text-sm">
-          <span class="absolute right-3 inset-y-0 flex items-center text-gray-400 text-sm pointer-events-none">g</span>
-        </div>
-      </div>
-      <p class="text-xs text-gray-500 bg-gray-700/50 rounded-lg px-3 py-2">
-        Ingresá los valores nutricionales por cada <strong class="text-gray-300">100g</strong> del alimento.
-      </p>
-      <div class="grid grid-cols-2 gap-3">
-        <div>
-          <label class="block text-xs font-medium text-gray-400 mb-1.5">Calorías (kcal/100g)</label>
-          <input type="number" name="manual_calories" placeholder="0" min="0" step="0.1"
-                 class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-white placeholder-gray-600 focus:outline-none focus:border-brand-500 text-sm">
-        </div>
-        <div>
-          <label class="block text-xs font-medium text-gray-400 mb-1.5">Proteína (g/100g)</label>
-          <input type="number" name="manual_protein" placeholder="0" min="0" step="0.1"
-                 class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-white placeholder-gray-600 focus:outline-none focus:border-brand-500 text-sm">
-        </div>
-        <div>
-          <label class="block text-xs font-medium text-gray-400 mb-1.5">Carbohidratos (g/100g)</label>
-          <input type="number" name="manual_carbs" placeholder="0" min="0" step="0.1"
-                 class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-white placeholder-gray-600 focus:outline-none focus:border-brand-500 text-sm">
-        </div>
-        <div>
-          <label class="block text-xs font-medium text-gray-400 mb-1.5">Grasas (g/100g)</label>
-          <input type="number" name="manual_fat" placeholder="0" min="0" step="0.1"
-                 class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-white placeholder-gray-600 focus:outline-none focus:border-brand-500 text-sm">
-        </div>
-      </div>
-    </div>
-
-    <button type="submit"
-            class="w-full bg-brand-500 hover:bg-brand-600 text-white font-bold py-3 rounded-xl transition-colors text-sm shadow-lg shadow-brand-900/30">
-      Guardar registro
-    </button>
-  </form>
-
 </div>
 {% endblock %}
 
@@ -318,47 +253,38 @@
 <script>
 // ─── Mode switching ───────────────────────────────────────────
 function switchMode(mode) {
-  document.getElementById('form-search').classList.toggle('hidden', mode !== 'search');
-  document.getElementById('form-manual').classList.toggle('hidden', mode !== 'manual');
+  document.getElementById('mode-manual').classList.toggle('hidden', mode !== 'manual');
   document.getElementById('mode-ai').classList.toggle('hidden', mode !== 'ai');
   const base = 'flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-colors';
-  document.getElementById('tab-search').className = `${base} ${mode === 'search' ? 'text-white bg-brand-600' : 'text-gray-400 hover:text-white'}`;
-  document.getElementById('tab-ai').className    = `${base} ${mode === 'ai'     ? 'text-white bg-brand-600' : 'text-gray-400 hover:text-white'}`;
-  document.getElementById('tab-manual').className= `${base} ${mode === 'manual' ? 'text-white bg-brand-600' : 'text-gray-400 hover:text-white'}`;
+  document.getElementById('tab-manual').className = `${base} ${mode === 'manual' ? 'text-white bg-brand-600' : 'text-gray-400 hover:text-white'}`;
+  document.getElementById('tab-ai').className     = `${base} ${mode === 'ai'     ? 'text-white bg-brand-600' : 'text-gray-400 hover:text-white'}`;
 }
 
-// ─── Meal type selection (shared logic for both forms) ─────────
-function initMealButtons(optionClass, btnClass) {
-  document.querySelectorAll(`.${optionClass}`).forEach(label => {
-    const radio = label.querySelector('input[type=radio]');
-    const btn = label.querySelector(`.${btnClass}`);
-    radio.addEventListener('change', () => {
-      document.querySelectorAll(`.${btnClass}`).forEach(b => {
-        b.className = b.className
-          .replace(/border-brand-500|bg-brand-900\/20|text-brand-400/g, '')
-          .trim();
-        b.classList.add('border-gray-600', 'text-gray-400');
-      });
-      btn.classList.remove('border-gray-600', 'text-gray-400');
-      btn.classList.add('border-brand-500', 'bg-brand-900/20', 'text-brand-400');
+// ─── Meal type buttons ────────────────────────────────────────
+document.querySelectorAll('.meal-option').forEach(label => {
+  const radio = label.querySelector('input[type=radio]');
+  const btn = label.querySelector('.meal-btn');
+  radio.addEventListener('change', () => {
+    document.querySelectorAll('.meal-btn').forEach(b => {
+      b.className = b.className.replace(/border-brand-500|bg-brand-900\/20|text-brand-400/g, '').trim();
+      b.classList.add('border-gray-600', 'text-gray-400');
     });
-    label.addEventListener('click', () => radio.checked = true);
+    btn.classList.remove('border-gray-600', 'text-gray-400');
+    btn.classList.add('border-brand-500', 'bg-brand-900/20', 'text-brand-400');
   });
-}
-initMealButtons('meal-option', 'meal-btn');
-initMealButtons('meal-option-manual', 'meal-btn-manual');
+  label.addEventListener('click', () => radio.checked = true);
+});
 
 // ─── Food search ──────────────────────────────────────────────
 let selectedFood = null;
 let debounceTimer = null;
 
-const searchInput = document.getElementById('search-input');
-const searchResults = document.getElementById('search-results');
+const searchInput    = document.getElementById('search-input');
+const searchResults  = document.getElementById('search-results');
 const selectedFoodDiv = document.getElementById('selected-food');
-const selectedName = document.getElementById('selected-name');
+const selectedName   = document.getElementById('selected-name');
 const selectedMacros = document.getElementById('selected-macros');
-const foodNameInput = document.getElementById('food-name-input');
-const macroPreview = document.getElementById('macro-preview');
+const macroPreview   = document.getElementById('macro-preview');
 
 searchInput.addEventListener('input', () => {
   clearTimeout(debounceTimer);
@@ -372,16 +298,12 @@ async function doSearch() {
     searchResults.innerHTML = '';
     return;
   }
-
   searchResults.innerHTML = `<p class="text-xs text-gray-500 px-2 py-2 animate-pulse">Buscando...</p>`;
   searchResults.classList.remove('hidden');
-
   try {
-    const local = await fetch(`/api/search?q=${encodeURIComponent(q)}`).then(r => r.json()).catch(() => []);
-    renderResults(local);
-  } catch(e) {
-    console.error(e);
-  }
+    const results = await fetch(`/api/search?q=${encodeURIComponent(q)}`).then(r => r.json()).catch(() => []);
+    renderResults(results);
+  } catch(e) { console.error(e); }
 }
 
 function renderFoodBtn(item) {
@@ -390,6 +312,7 @@ function renderFoodBtn(item) {
     : item.source === 'rnpa_generic'
       ? `<span class="text-xs text-brand-400 flex-shrink-0">genérico</span>`
       : `<span class="text-xs text-gray-500 flex-shrink-0">🇦🇷</span>`;
+  const unitLabel = item.unidad === 'ml' ? 'ml' : 'g';
   return `
     <button type="button" onclick='selectFood(${JSON.stringify(item)})'
             class="w-full text-left px-3 py-2.5 rounded-xl bg-gray-700 hover:bg-gray-600 transition-colors">
@@ -397,43 +320,30 @@ function renderFoodBtn(item) {
         <span class="text-sm font-medium text-white truncate">${item.name}</span>
         <div class="flex items-center gap-1.5 flex-shrink-0">${badge}<span class="text-xs text-brand-400">${item.calories} kcal</span></div>
       </div>
-      <div class="text-xs text-gray-500 mt-0.5">P: ${item.protein}g &bull; C: ${item.carbs}g &bull; G: ${item.fat}g <span class="text-gray-600">/ 100g</span></div>
+      <div class="text-xs text-gray-500 mt-0.5">P: ${item.protein}g &bull; C: ${item.carbs}g &bull; G: ${item.fat}g <span class="text-gray-600">/ 100${unitLabel}</span></div>
     </button>`;
 }
 
-function renderResults(local) {
-  let html = '';
-  if (local.length) html += local.map(renderFoodBtn).join('');
-  if (!html) {
+function renderResults(items) {
+  if (!items.length) {
     searchResults.innerHTML = `<p class="text-xs text-gray-500 px-2 py-2">Sin resultados para esa búsqueda</p>`;
   } else {
-    searchResults.innerHTML = html;
+    searchResults.innerHTML = items.map(renderFoodBtn).join('');
   }
   searchResults.classList.remove('hidden');
 }
 
 function selectFood(item) {
-  // Productos RNPA → pre-llenar formulario manual
-  if (item.source === 'rnpa' || item.source === 'rnpa_generic') {
-    const mealType = document.querySelector('#form-search input[name=meal_type]:checked')?.value || 'breakfast';
-    const mf = document.getElementById('form-manual');
-    mf.querySelector('input[name=manual_name]').value = item.name;
-    mf.querySelector('input[name=manual_calories]').value = item.calories;
-    mf.querySelector('input[name=manual_protein]').value = item.protein;
-    mf.querySelector('input[name=manual_carbs]').value = item.carbs;
-    mf.querySelector('input[name=manual_fat]').value = item.fat;
-    const radio = mf.querySelector(`input[name=meal_type][value="${mealType}"]`);
-    if (radio) { radio.checked = true; radio.dispatchEvent(new Event('change')); }
-    searchResults.classList.add('hidden');
-    searchInput.value = '';
-    switchMode('manual');
-    return;
-  }
-
   selectedFood = item;
-  foodNameInput.value = item.name;
-  selectedName.textContent = item.name;
   const u = item.unidad === 'ml' ? 'ml' : 'g';
+
+  document.getElementById('food-name-input').value  = item.name;
+  document.getElementById('food-cal-input').value   = item.calories;
+  document.getElementById('food-prot-input').value  = item.protein;
+  document.getElementById('food-carb-input').value  = item.carbs;
+  document.getElementById('food-fat-input').value   = item.fat;
+
+  selectedName.textContent = item.name;
   selectedMacros.textContent = `${item.calories} kcal · P: ${item.protein}g · C: ${item.carbs}g · G: ${item.fat}g por 100${u}`;
   selectedFoodDiv.classList.remove('hidden');
   searchResults.classList.add('hidden');
@@ -445,7 +355,11 @@ function selectFood(item) {
 
 function clearSelection() {
   selectedFood = null;
-  foodNameInput.value = '';
+  document.getElementById('food-name-input').value = '';
+  document.getElementById('food-cal-input').value  = '0';
+  document.getElementById('food-prot-input').value = '0';
+  document.getElementById('food-carb-input').value = '0';
+  document.getElementById('food-fat-input').value  = '0';
   selectedFoodDiv.classList.add('hidden');
   macroPreview.classList.add('hidden');
   searchInput.value = '';
@@ -458,8 +372,7 @@ function setUnit(u) {
   const liquidQtys = [100, 200, 330, 500];
   const solidQtys  = [50, 100, 150, 200];
   const qtys = u === 'ml' ? liquidQtys : solidQtys;
-  const btns = document.querySelectorAll('#qty-buttons .qty-btn');
-  btns.forEach((btn, i) => {
+  document.querySelectorAll('#qty-buttons .qty-btn').forEach((btn, i) => {
     btn.textContent = qtys[i] + u;
     btn.onclick = () => setQty(qtys[i]);
   });
@@ -474,10 +387,10 @@ function updateSearchPreview() {
   if (!selectedFood) return;
   const qty = parseFloat(document.getElementById('quantity-search').value) || 0;
   const f = qty / 100;
-  document.getElementById('prev-cal').textContent = (selectedFood.calories * f).toFixed(0);
+  document.getElementById('prev-cal').textContent  = (selectedFood.calories * f).toFixed(0);
   document.getElementById('prev-prot').textContent = (selectedFood.protein * f).toFixed(1) + 'g';
   document.getElementById('prev-carb').textContent = (selectedFood.carbs * f).toFixed(1) + 'g';
-  document.getElementById('prev-fat').textContent = (selectedFood.fat * f).toFixed(1) + 'g';
+  document.getElementById('prev-fat').textContent  = (selectedFood.fat * f).toFixed(1) + 'g';
   macroPreview.classList.remove('hidden');
 }
 
@@ -488,8 +401,7 @@ document.addEventListener('click', e => {
   }
 });
 
-// ─── AI Mode ────────────────────────────────────────────────────
-
+// ─── AI Mode ──────────────────────────────────────────────────
 let selectedAIMeal = 'breakfast';
 
 function selectAIMeal(val) {
@@ -506,7 +418,6 @@ function selectAIMeal(val) {
   document.getElementById('ai-meal-type-input').value = val;
 }
 
-// Image preview
 document.getElementById('food-image').addEventListener('change', function() {
   const file = this.files[0];
   if (!file) return;
@@ -547,22 +458,23 @@ async function analyzeFood() {
     }
     const data = await res.json();
 
-    // Rellenar formulario
-    document.getElementById('ai-nombre').value = data.nombre || '';
-    document.getElementById('ai-calorias').value = data.calorias || '';
+    document.getElementById('ai-nombre').value    = data.nombre || '';
+    document.getElementById('ai-calorias').value  = data.calorias || '';
     document.getElementById('ai-proteinas').value = data.proteinas || '';
-    document.getElementById('ai-carbos').value = data.carbohidratos || '';
-    document.getElementById('ai-grasas').value = data.grasas || '';
+    document.getElementById('ai-carbos').value    = data.carbohidratos || '';
+    document.getElementById('ai-grasas').value    = data.grasas || '';
     document.getElementById('ai-meal-type-input').value = selectedAIMeal;
 
-    // Nota
     const notaEl = document.getElementById('ai-nota');
     notaEl.textContent = data.nota || '';
 
-    // Badge confianza
     const badge = document.getElementById('ai-confianza');
     const conf = data.confianza || 'media';
-    const confStyles = { alta: 'bg-brand-900/50 text-brand-400 border border-brand-700', media: 'bg-yellow-900/40 text-yellow-400 border border-yellow-800', baja: 'bg-red-900/40 text-red-400 border border-red-800' };
+    const confStyles = {
+      alta:  'bg-brand-900/50 text-brand-400 border border-brand-700',
+      media: 'bg-yellow-900/40 text-yellow-400 border border-yellow-800',
+      baja:  'bg-red-900/40 text-red-400 border border-red-800'
+    };
     badge.className = 'text-xs px-2 py-1 rounded-lg font-medium ' + (confStyles[conf] || confStyles.media);
     badge.textContent = 'Confianza: ' + conf;
 
