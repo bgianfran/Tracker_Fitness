@@ -244,8 +244,17 @@ def dashboard(request: Request, db: Session = Depends(get_db)):
     ).all()
 
     totals = {"calories": 0.0, "protein": 0.0, "carbs": 0.0, "fat": 0.0}
-    meals: dict[str, list] = {"Desayuno": [], "Almuerzo": [], "Cena": [], "Merienda/Snack": []}
-    meal_map = {"breakfast": "Desayuno", "lunch": "Almuerzo", "dinner": "Cena", "snack": "Merienda/Snack"}
+    meals: dict[str, list] = {"Almuerzo / Cena": [], "Desayuno / Merienda": [], "Snack": [], "Bebida": []}
+    meal_map = {
+        "lunch_dinner":    "Almuerzo / Cena",
+        "breakfast_snack": "Desayuno / Merienda",
+        "snack":           "Snack",
+        "drink":           "Bebida",
+        # legacy values
+        "breakfast": "Desayuno / Merienda",
+        "lunch":     "Almuerzo / Cena",
+        "dinner":    "Almuerzo / Cena",
+    }
 
     for e in entries:
         totals["calories"] += e.calories
