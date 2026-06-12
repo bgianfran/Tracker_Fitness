@@ -39,6 +39,7 @@ class FoodEntry(Base):
     carbs = Column(Float, nullable=False)
     fat = Column(Float, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
+    eaten_at = Column(DateTime, nullable=True)  # local time when food was consumed
 
 
 class UserProfile(Base):
@@ -163,3 +164,13 @@ def get_db():
 
 def init_db():
     Base.metadata.create_all(bind=engine)
+    # Add eaten_at column if it doesn't exist (migration for existing deployments)
+    try:
+        with engine.connect() as conn:
+            if DATABASE_URL.startswith("postgresql"):
+                conn.execute(__import__("sqlalchemy").text(
+                    "ALTER TABLE food_entries ADD COLUMN IF NOT EXISTS eaten_at TIMESTAMP"
+                ))
+                conn.commit()
+    except Exception:
+        pass

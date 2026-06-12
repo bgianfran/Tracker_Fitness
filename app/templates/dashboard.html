@@ -272,7 +272,7 @@
   <div class="lg:col-span-2 bg-gray-800 rounded-2xl p-5 border border-gray-700">
     <h2 class="text-base font-semibold text-white mb-4">Registro de hoy</h2>
 
-    {% set meal_icons = {"Desayuno": "☀️", "Almuerzo": "🌤️", "Cena": "🌙", "Merienda/Snack": "🍎"} %}
+    {% set meal_icons = {"Almuerzo / Cena": "🍽️", "Desayuno / Merienda": "☀️", "Snack": "🍎", "Bebida": "🥤"} %}
     {% set has_any = namespace(val=false) %}
     {% for meal_label, entries in meals.items() %}
       {% if entries %}{% set has_any.val = true %}{% endif %}
@@ -293,7 +293,12 @@
                    class="flex items-center justify-between bg-gray-750 rounded-xl px-3 py-2.5 hover:bg-gray-700 transition-colors group"
                    style="background-color: rgba(255,255,255,0.03);">
                 <div class="flex-1 min-w-0">
-                  <span class="text-sm font-medium text-white truncate block">{{ entry.food_name }}</span>
+                  <div class="flex items-center gap-2">
+                    <span class="text-sm font-medium text-white truncate">{{ entry.food_name }}</span>
+                    {% if entry.eaten_at %}
+                    <span class="text-xs text-gray-600 flex-shrink-0">{{ entry.eaten_at.strftime('%H:%M') }}</span>
+                    {% endif %}
+                  </div>
                   <span class="text-xs text-gray-500">{{ entry.quantity_g|round(0)|int }}g &bull;
                     <span class="text-brand-400">{{ entry.calories }} kcal</span> &bull;
                     P: {{ entry.protein }}g &bull; C: {{ entry.carbs }}g &bull; G: {{ entry.fat }}g

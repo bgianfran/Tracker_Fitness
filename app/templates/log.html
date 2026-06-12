@@ -25,14 +25,24 @@
   <!-- ─── Manual Mode ────────────────────────────────────────── -->
   <div id="mode-manual">
 
-    <!-- Meal type -->
+    <!-- Time + Meal type -->
     <div class="bg-gray-800 rounded-2xl p-5 border border-gray-700 mb-4">
+      <!-- Time input -->
+      <div class="flex items-center justify-between mb-4">
+        <label class="text-sm font-semibold text-gray-300">Horario</label>
+        <div class="flex items-center gap-2">
+          <input type="time" id="eaten-at-input" value="{{ default_time }}"
+                 class="bg-gray-700 border border-gray-600 rounded-xl px-3 py-1.5 text-white text-sm focus:outline-none focus:border-brand-500"
+                 onchange="autoSelectMealFromTime()">
+          <span class="text-xs text-gray-500">hs</span>
+        </div>
+      </div>
       <label class="block text-sm font-semibold text-gray-300 mb-3">Tipo de comida</label>
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-2" id="meal-btns">
         {% for value, label, icon in [("lunch_dinner","Almuerzo / Cena","🍽️"),("breakfast_snack","Desayuno / Merienda","☀️"),("snack","Snack","🍎"),("drink","Bebida","🥤")] %}
         <button type="button" data-meal="{{ value }}" onclick="selectMeal('{{ value }}')"
                 class="meal-btn flex flex-col items-center justify-center gap-1 py-3 px-2 rounded-xl border-2 transition-all text-center
-                  {% if loop.first %}border-brand-500 bg-brand-900/20 text-brand-400{% else %}border-gray-600 text-gray-400{% endif %}">
+                  {{ 'border-brand-500 bg-brand-900/20 text-brand-400' if value == suggested_meal else 'border-gray-600 text-gray-400' }}">
           <span class="text-xl">{{ icon }}</span>
           <span class="text-xs font-medium">{{ label }}</span>
         </button>
@@ -161,12 +171,20 @@
   <div id="mode-ai" class="hidden">
 
     <div class="bg-gray-800 rounded-2xl p-5 border border-gray-700 mb-4">
+      <div class="flex items-center justify-between mb-4">
+        <label class="text-sm font-semibold text-gray-300">Horario</label>
+        <div class="flex items-center gap-2">
+          <input type="time" id="ai-eaten-at-input" value="{{ default_time }}"
+                 class="bg-gray-700 border border-gray-600 rounded-xl px-3 py-1.5 text-white text-sm focus:outline-none focus:border-brand-500">
+          <span class="text-xs text-gray-500">hs</span>
+        </div>
+      </div>
       <label class="block text-sm font-semibold text-gray-300 mb-3">Tipo de comida</label>
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-2" id="ai-meal-btns">
         {% for value, label, icon in [("lunch_dinner","Almuerzo / Cena","🍽️"),("breakfast_snack","Desayuno / Merienda","☀️"),("snack","Snack","🍎"),("drink","Bebida","🥤")] %}
         <button type="button" data-meal="{{ value }}" onclick="selectAIMeal('{{ value }}')"
           class="ai-meal-btn flex flex-col items-center justify-center gap-1 py-3 px-2 rounded-xl border-2 transition-all text-center
-            {% if loop.first %}border-brand-500 bg-brand-900/20 text-brand-400{% else %}border-gray-600 text-gray-400{% endif %}">
+            {{ 'border-brand-500 bg-brand-900/20 text-brand-400' if value == suggested_meal else 'border-gray-600 text-gray-400' }}">
           <span class="text-xl">{{ icon }}</span>
           <span class="text-xs font-medium">{{ label }}</span>
         </button>
@@ -227,8 +245,9 @@
       </div>
       <form method="POST" action="/log" id="ai-save-form">
         <input type="hidden" name="entry_mode" value="manual">
-        <input type="hidden" name="meal_type" id="ai-meal-type-input" value="lunch_dinner">
+        <input type="hidden" name="meal_type" id="ai-meal-type-input" value="{{ suggested_meal }}">
         <input type="hidden" name="quantity_g" value="100">
+        <input type="hidden" name="eaten_at_str" id="ai-eaten-at-hidden" value="{{ default_time }}">
         <div class="mb-3">
           <label class="block text-xs font-medium text-gray-400 mb-1">Nombre del plato</label>
           <input type="text" name="manual_name" id="ai-nombre"
@@ -282,7 +301,8 @@ function switchMode(mode) {
 }
 
 // ─── Meal selection (manual mode) ────────────────────────────
-let selectedMeal = 'lunch_dinner';
+let selectedMeal = '{{ suggested_meal }}';
+
 function selectMeal(val) {
   selectedMeal = val;
   document.querySelectorAll('#meal-btns .meal-btn').forEach(btn => {
@@ -294,6 +314,18 @@ function selectMeal(val) {
       btn.classList.add('border-gray-600', 'text-gray-400');
     }
   });
+}
+
+function autoSelectMealFromTime() {
+  const val = document.getElementById('eaten-at-input').value;  // "HH:MM"
+  if (!val) return;
+  const h = parseInt(val.split(':')[0], 10);
+  let meal;
+  if (h >= 6  && h < 11) meal = 'breakfast_snack';
+  else if (h >= 11 && h < 16) meal = 'lunch_dinner';
+  else if (h >= 16 && h < 20) meal = 'snack';
+  else meal = 'lunch_dinner';
+  selectMeal(meal);
 }
 
 // ─── Ingredient list ──────────────────────────────────────────
@@ -470,11 +502,12 @@ async function savePlate() {
   const btn = document.getElementById('save-btn');
   btn.disabled = true;
   btn.textContent = 'Guardando...';
+  const eaten_at = document.getElementById('eaten-at-input').value || '';
   try {
     const res = await fetch('/api/log/batch', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ meal_type: selectedMeal, items: ingredients }),
+      body: JSON.stringify({ meal_type: selectedMeal, items: ingredients, eaten_at }),
     });
     if (!res.ok) throw new Error('Error al guardar');
     window.location.href = '/';
@@ -493,7 +526,10 @@ document.addEventListener('click', e => {
 });
 
 // ─── AI Mode ──────────────────────────────────────────────────
-let selectedAIMeal = 'lunch_dinner';
+let selectedAIMeal = '{{ suggested_meal }}';
+document.getElementById('ai-eaten-at-input').addEventListener('change', function() {
+  document.getElementById('ai-eaten-at-hidden').value = this.value;
+});
 
 function selectAIMeal(val) {
   selectedAIMeal = val;

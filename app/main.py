@@ -65,6 +65,28 @@ def on_startup():
     init_db()
 
 
+# ─── Helpers ─────────────────────────────────────────────────────────────────
+
+def _parse_eaten_at(eaten_at_str: str, today) -> datetime | None:
+    """Parse 'HH:MM' string into a datetime for today. Returns None if invalid."""
+    try:
+        t = datetime.strptime(eaten_at_str.strip(), "%H:%M")
+        return datetime(today.year, today.month, today.day, t.hour, t.minute)
+    except (ValueError, AttributeError):
+        return datetime.now()
+
+
+def _meal_from_hour(hour: int) -> str:
+    """Suggest meal category based on hour of day (0-23)."""
+    if 6 <= hour < 11:
+        return "breakfast_snack"
+    if 11 <= hour < 16:
+        return "lunch_dinner"
+    if 16 <= hour < 20:
+        return "snack"
+    return "lunch_dinner"  # late dinner
+
+
 # ─── Auth ───────────────────────────────────────────────────────────────────
 
 @app.get("/login", response_class=HTMLResponse)
@@ -318,11 +340,14 @@ def log_page(request: Request, db: Session = Depends(get_db)):
     if redirect:
         return redirect
     profile = db.query(UserProfile).filter(UserProfile.user_id == current_user.id).first()
+    now = datetime.now()
     return templates.TemplateResponse("log.html", {
         "request": request,
         "current_user": current_user,
         "profile": profile,
         "food_names": [],
+        "default_time": now.strftime("%H:%M"),
+        "suggested_meal": _meal_from_hour(now.hour),
     })
 
 
@@ -395,6 +420,7 @@ def add_food(
     manual_protein: float = Form(0),
     manual_carbs: float = Form(0),
     manual_fat: float = Form(0),
+    eaten_at_str: str = Form(""),
 ):
     current_user, redirect = get_user_from_request(request, db)
     if redirect:
@@ -402,6 +428,7 @@ def add_food(
 
     today = date.today()
     factor = quantity_g / 100.0
+    eaten_at = _parse_eaten_at(eaten_at_str, today)
 
     entry = FoodEntry(
         user_id=current_user.id,
@@ -412,6 +439,7 @@ def add_food(
         protein=round(manual_protein * factor, 1),
         carbs=round(manual_carbs * factor, 1),
         fat=round(manual_fat * factor, 1),
+        eaten_at=eaten_at,
     )
 
     db.add(entry)
@@ -425,10 +453,11 @@ def add_food_batch(request: Request, db: Session = Depends(get_db), payload: dic
     if not current_user:
         raise HTTPException(status_code=401)
     today = date.today()
-    meal_type = payload.get("meal_type", "lunch")
+    meal_type = payload.get("meal_type", "lunch_dinner")
     items = payload.get("items", [])
     if not items:
         raise HTTPException(status_code=400, detail="Sin ingredientes")
+    eaten_at = _parse_eaten_at(payload.get("eaten_at", ""), today)
     for item in items:
         factor = float(item.get("quantity_g", 100)) / 100.0
         entry = FoodEntry(
@@ -441,6 +470,7 @@ def add_food_batch(request: Request, db: Session = Depends(get_db), payload: dic
             protein=round(float(item.get("protein", 0)) * factor, 1),
             carbs=round(float(item.get("carbs", 0)) * factor, 1),
             fat=round(float(item.get("fat", 0)) * factor, 1),
+            eaten_at=eaten_at,
         )
         db.add(entry)
     db.commit()
