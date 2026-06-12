@@ -2,424 +2,264 @@
 {% block title %}Dashboard – FitTracker{% endblock %}
 
 {% block content %}
+<style>
+  .ring-track { fill: none; stroke: var(--surface-2); }
+  .ring-fill  { fill: none; stroke-linecap: round; transition: stroke-dasharray .6s ease; }
+  .ring-good  { stroke: var(--accent); }
+  .ring-warn  { stroke: var(--warn); }
+  .ring-over  { stroke: var(--bad); }
+</style>
+
 <!-- Header -->
-<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+<div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:20px; flex-wrap:wrap;">
   <div>
-    <h1 class="text-2xl font-bold text-white">¡Hola, {{ profile.name }}! 👋</h1>
-    <p class="text-gray-400 text-sm mt-0.5 capitalize">{{ today_str }}</p>
+    <h1 style="font-size:1.5em; margin-bottom:4px;">¡Hola, {{ profile.name }}!</h1>
+    <p class="muted" style="text-transform:capitalize; font-size:.9em;">{{ today_str }}</p>
   </div>
-  <a href="/comidas"
-     class="inline-flex items-center gap-2 bg-brand-500 hover:bg-brand-600 text-white font-semibold px-5 py-2.5 rounded-xl shadow-lg shadow-brand-900/30 transition-colors text-sm">
-    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
-    </svg>
+  <a href="/comidas" class="btn btn-primary" style="text-decoration:none; flex-shrink:0;">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
     Registrar comida
   </a>
 </div>
 
 <!-- Time window selector -->
-<div class="flex items-center gap-2 mb-6 overflow-x-auto pb-1">
-  <button onclick="setWindow('day')" id="win-day"
-          class="win-btn flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-colors bg-brand-600 text-white">
-    Hoy
-  </button>
-  <button onclick="setWindow('week')" id="win-week"
-          class="win-btn flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-colors bg-gray-700 text-gray-400 hover:text-white">
-    7 días
-  </button>
-  <button onclick="setWindow('month')" id="win-month"
-          class="win-btn flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-colors bg-gray-700 text-gray-400 hover:text-white">
-    30 días
-  </button>
-</div>
-
-<!-- Window stats (shown when week/month selected) -->
-<div id="window-stats" class="hidden mb-6 grid grid-cols-2 lg:grid-cols-4 gap-4">
-  <div class="bg-gray-800 rounded-2xl p-4 border border-gray-700">
-    <p class="text-xs text-gray-400 uppercase mb-1">Calorías prom/día</p>
-    <p id="ws-cal" class="text-2xl font-bold text-white">–</p>
-  </div>
-  <div class="bg-gray-800 rounded-2xl p-4 border border-gray-700">
-    <p class="text-xs text-gray-400 uppercase mb-1">Proteína prom/día</p>
-    <p id="ws-prot" class="text-2xl font-bold text-brand-400">–</p>
-  </div>
-  <div class="bg-gray-800 rounded-2xl p-4 border border-gray-700">
-    <p class="text-xs text-gray-400 uppercase mb-1">Carbos prom/día</p>
-    <p id="ws-carb" class="text-2xl font-bold text-blue-400">–</p>
-  </div>
-  <div class="bg-gray-800 rounded-2xl p-4 border border-gray-700">
-    <p class="text-xs text-gray-400 uppercase mb-1">Grasas prom/día</p>
-    <p id="ws-fat" class="text-2xl font-bold text-yellow-400">–</p>
+<div style="display:flex; gap:8px; margin-bottom:20px; overflow-x:auto; padding-bottom:4px;">
+  <div class="seg">
+    <button onclick="setWindow('day')"   id="win-day"   data-on="1">Hoy</button>
+    <button onclick="setWindow('week')"  id="win-week"  data-on="0">7 días</button>
+    <button onclick="setWindow('month')" id="win-month" data-on="0">30 días</button>
   </div>
 </div>
 
-<!-- Macro Cards -->
-<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-
-  {% set card_data = [
-    ("Calorías",      totals.calories,  profile.target_calories, "kcal", progress.calories,  "#34d399", "#f59e0b", "#ef4444"),
-    ("Proteínas",     totals.protein,   profile.target_protein,  "g",    progress.protein,   "#34d399", "#f59e0b", "#ef4444"),
-    ("Carbohidratos", totals.carbs,     profile.target_carbs,    "g",    progress.carbs,     "#34d399", "#f59e0b", "#ef4444"),
-    ("Grasas",        totals.fat,       profile.target_fat,      "g",    progress.fat,       "#34d399", "#f59e0b", "#ef4444")
-  ] %}
-
-  <!-- Calorías -->
-  <div class="card-hover bg-gray-800 rounded-2xl p-4 border border-gray-700 col-span-2 sm:col-span-1 lg:col-span-1">
-    <div class="flex items-center justify-between mb-2">
-      <span class="text-xs font-medium text-gray-400 uppercase tracking-wide">Calorías</span>
-      <span class="text-xs font-bold
-        {% if progress.calories <= 90 %}text-brand-400{% elif progress.calories <= 100 %}text-yellow-400{% else %}text-red-400{% endif %}">
-        {{ progress.calories }}%
-      </span>
+<!-- Window stats (week/month) -->
+<div id="window-stats" style="display:none; margin-bottom:20px;">
+  <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px,1fr)); gap:var(--gap);">
+    <div class="card" style="text-align:center;">
+      <div class="eyebrow" style="margin-bottom:6px;">Cal prom/día</div>
+      <div id="ws-cal" style="font-size:1.6em; font-weight:700;">–</div>
+      <div class="faint" style="font-size:.78em;">kcal</div>
     </div>
-    <div class="mb-3">
-      <span class="text-2xl font-bold text-white">{{ totals.calories }}</span>
-      <span class="text-gray-400 text-sm"> / {{ profile.target_calories }} kcal</span>
+    <div class="card" style="text-align:center;">
+      <div class="eyebrow" style="margin-bottom:6px;">Proteína prom/día</div>
+      <div id="ws-prot" style="font-size:1.6em; font-weight:700; color:var(--protein);">–</div>
+      <div class="faint" style="font-size:.78em;">gramos</div>
     </div>
-    <div class="h-2 bg-gray-700 rounded-full overflow-hidden">
-      <div class="progress-bar h-full rounded-full
-        {% if progress.calories <= 90 %}bg-brand-400{% elif progress.calories <= 100 %}bg-yellow-400{% else %}bg-red-400{% endif %}"
-        style="width: {{ [progress.calories, 100]|min }}%"></div>
+    <div class="card" style="text-align:center;">
+      <div class="eyebrow" style="margin-bottom:6px;">Carbos prom/día</div>
+      <div id="ws-carb" style="font-size:1.6em; font-weight:700; color:var(--carbs);">–</div>
+      <div class="faint" style="font-size:.78em;">gramos</div>
     </div>
-    <p class="text-xs text-gray-500 mt-1.5">{{ (profile.target_calories - totals.calories)|round(0)|int }} kcal restantes</p>
+    <div class="card" style="text-align:center;">
+      <div class="eyebrow" style="margin-bottom:6px;">Grasas prom/día</div>
+      <div id="ws-fat" style="font-size:1.6em; font-weight:700; color:var(--fat);">–</div>
+      <div class="faint" style="font-size:.78em;">gramos</div>
+    </div>
   </div>
-
-  <!-- Proteínas -->
-  <div class="card-hover bg-gray-800 rounded-2xl p-4 border border-gray-700">
-    <div class="flex items-center justify-between mb-2">
-      <span class="text-xs font-medium text-gray-400 uppercase tracking-wide">Proteínas</span>
-      <span class="text-xs font-bold
-        {% if progress.protein <= 90 %}text-brand-400{% elif progress.protein <= 100 %}text-yellow-400{% else %}text-red-400{% endif %}">
-        {{ progress.protein }}%
-      </span>
-    </div>
-    <div class="mb-3">
-      <span class="text-2xl font-bold text-white">{{ totals.protein }}</span>
-      <span class="text-gray-400 text-sm"> / {{ profile.target_protein }}g</span>
-    </div>
-    <div class="h-2 bg-gray-700 rounded-full overflow-hidden">
-      <div class="progress-bar h-full rounded-full
-        {% if progress.protein <= 90 %}bg-brand-400{% elif progress.protein <= 100 %}bg-yellow-400{% else %}bg-red-400{% endif %}"
-        style="width: {{ [progress.protein, 100]|min }}%"></div>
-    </div>
-    <p class="text-xs text-gray-500 mt-1.5">{{ (profile.target_protein - totals.protein)|round(1) }}g restantes</p>
-  </div>
-
-  <!-- Carbohidratos -->
-  <div class="card-hover bg-gray-800 rounded-2xl p-4 border border-gray-700">
-    <div class="flex items-center justify-between mb-2">
-      <span class="text-xs font-medium text-gray-400 uppercase tracking-wide">Carbos</span>
-      <span class="text-xs font-bold
-        {% if progress.carbs <= 90 %}text-brand-400{% elif progress.carbs <= 100 %}text-yellow-400{% else %}text-red-400{% endif %}">
-        {{ progress.carbs }}%
-      </span>
-    </div>
-    <div class="mb-3">
-      <span class="text-2xl font-bold text-white">{{ totals.carbs }}</span>
-      <span class="text-gray-400 text-sm"> / {{ profile.target_carbs }}g</span>
-    </div>
-    <div class="h-2 bg-gray-700 rounded-full overflow-hidden">
-      <div class="progress-bar h-full rounded-full
-        {% if progress.carbs <= 90 %}bg-brand-400{% elif progress.carbs <= 100 %}bg-yellow-400{% else %}bg-red-400{% endif %}"
-        style="width: {{ [progress.carbs, 100]|min }}%"></div>
-    </div>
-    <p class="text-xs text-gray-500 mt-1.5">{{ (profile.target_carbs - totals.carbs)|round(1) }}g restantes</p>
-  </div>
-
-  <!-- Grasas -->
-  <div class="card-hover bg-gray-800 rounded-2xl p-4 border border-gray-700">
-    <div class="flex items-center justify-between mb-2">
-      <span class="text-xs font-medium text-gray-400 uppercase tracking-wide">Grasas</span>
-      <span class="text-xs font-bold
-        {% if progress.fat <= 90 %}text-brand-400{% elif progress.fat <= 100 %}text-yellow-400{% else %}text-red-400{% endif %}">
-        {{ progress.fat }}%
-      </span>
-    </div>
-    <div class="mb-3">
-      <span class="text-2xl font-bold text-white">{{ totals.fat }}</span>
-      <span class="text-gray-400 text-sm"> / {{ profile.target_fat }}g</span>
-    </div>
-    <div class="h-2 bg-gray-700 rounded-full overflow-hidden">
-      <div class="progress-bar h-full rounded-full
-        {% if progress.fat <= 90 %}bg-brand-400{% elif progress.fat <= 100 %}bg-yellow-400{% else %}bg-red-400{% endif %}"
-        style="width: {{ [progress.fat, 100]|min }}%"></div>
-    </div>
-    <p class="text-xs text-gray-500 mt-1.5">{{ (profile.target_fat - totals.fat)|round(1) }}g restantes</p>
-  </div>
-
 </div>
 
-<!-- Score + Weekly Progress -->
-<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<!-- Main stats row -->
+<div style="display:grid; grid-template-columns:1fr; gap:var(--gap); margin-bottom:var(--gap);">
+  <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px,1fr)); gap:var(--gap);">
 
-  <!-- Puntaje del día -->
-  <div class="bg-gray-800 rounded-2xl p-5 border border-gray-700">
-    <div class="flex items-center justify-between mb-3">
-      <h2 class="text-base font-semibold text-white">Puntaje del día</h2>
-      {% if today_score %}
-      <span class="text-xs bg-brand-900/50 text-brand-400 px-2 py-1 rounded-lg font-medium border border-brand-800/50">
-        Guardado ✓
-      </span>
-      {% endif %}
-    </div>
-
-    <!-- Score preview (auto-calculado) -->
-    <div class="flex items-center gap-3 mb-4 bg-gray-700/40 rounded-xl px-4 py-3">
-      <div id="preview-stars" class="flex gap-0.5 text-3xl">
-        {% set s = today_score.score if today_score else 0 %}
-        {% set star_colors = {1: '#ef4444', 2: '#f97316', 3: '#f59e0b', 4: '#84cc16', 5: '#34d399'} %}
-        {% for i in range(1, 6) %}
-        <span style="color: {% if s > 0 and i <= s %}{{ star_colors[s] }}{% else %}#374151{% endif %}">★</span>
-        {% endfor %}
-      </div>
-      <div>
-        <div id="preview-label" class="text-sm font-semibold text-white">
-          {% if today_score %}
-            {% set labels = {1: 'Mal día', 2: 'Regular', 3: 'Ok', 4: 'Bien', 5: '¡Perfecto!'} %}
-            {{ labels[today_score.score] }}
-          {% elif totals.calories == 0 %}
-            Sin registros aún
-          {% else %}
-            Calculando...
-          {% endif %}
+    <!-- Calories Ring card -->
+    <div class="card" style="display:flex; align-items:center; gap:20px;">
+      <!-- SVG Ring -->
+      {% set cal_pct = [progress.calories, 100]|min %}
+      {% set r = 42 %}
+      {% set circ = 263.9 %}
+      {% set dash = (cal_pct / 100 * circ)|round(1) %}
+      {% set ring_cls = 'ring-good' if progress.calories <= 90 else ('ring-warn' if progress.calories <= 100 else 'ring-over') %}
+      <div style="position:relative; flex-shrink:0;">
+        <svg width="100" height="100" viewBox="0 0 100 100">
+          <circle class="ring-track" cx="50" cy="50" r="{{ r }}" stroke-width="9"/>
+          <circle class="{{ ring_cls }} ring-fill" cx="50" cy="50" r="{{ r }}" stroke-width="9"
+            stroke-dasharray="{{ dash }} {{ circ }}"
+            transform="rotate(-90 50 50)"/>
+        </svg>
+        <div style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;">
+          <span style="font-size:1.25em; font-weight:700; line-height:1;">{{ totals.calories }}</span>
+          <span class="faint" style="font-size:.65em;">kcal</span>
         </div>
-        <div id="preview-detail" class="text-xs text-gray-400">
-          {% if today_score %}
-            Calorías: {{ today_score.cal_pct }}% · Proteína: {{ today_score.protein_pct }}%
-          {% elif totals.calories > 0 %}
-            Calorías: {{ progress.calories }}% · Proteína: {{ progress.protein }}%
-          {% else %}
-            Registrá comidas para ver tu puntaje
-          {% endif %}
+      </div>
+      <div style="flex:1; min-width:0;">
+        <div style="font-size:1.05em; font-weight:700; margin-bottom:4px;">Calorías</div>
+        <div class="muted" style="font-size:.85em; margin-bottom:10px;">{{ (profile.target_calories - totals.calories)|round(0)|int }} restantes de {{ profile.target_calories }}</div>
+        <!-- Macro bars -->
+        <div class="macro-bar-wrap">
+          <div class="macro-bar-row">
+            <span class="macro-bar-label">Prot.</span>
+            <div class="macro-bar-track"><div class="macro-bar-fill" style="width:{{ [progress.protein,100]|min }}%; background:var(--protein);"></div></div>
+            <span class="macro-bar-val">{{ totals.protein }}g</span>
+          </div>
+          <div class="macro-bar-row">
+            <span class="macro-bar-label">Carbs</span>
+            <div class="macro-bar-track"><div class="macro-bar-fill" style="width:{{ [progress.carbs,100]|min }}%; background:var(--carbs);"></div></div>
+            <span class="macro-bar-val">{{ totals.carbs }}g</span>
+          </div>
+          <div class="macro-bar-row">
+            <span class="macro-bar-label">Grasa</span>
+            <div class="macro-bar-track"><div class="macro-bar-fill" style="width:{{ [progress.fat,100]|min }}%; background:var(--fat);"></div></div>
+            <span class="macro-bar-val">{{ totals.fat }}g</span>
+          </div>
         </div>
       </div>
     </div>
 
-    <form method="post" action="/score" id="score-form">
-      <input type="hidden" name="score_date" value="{{ today }}">
+    <!-- Macro target cards -->
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--gap);">
 
-      <!-- Selector de bienestar -->
-      <p class="text-xs text-gray-400 mb-2 font-medium">¿Cómo te sentiste hoy?</p>
-      <div class="grid grid-cols-3 gap-2 mb-3" id="wellbeing-btns">
-        {% set cur_wb = today_score.wellbeing if today_score else '' %}
-        <button type="button" data-val="hungry" onclick="selectWellbeing('hungry')"
-          class="wellbeing-btn flex flex-col items-center gap-1 py-2.5 px-1 rounded-xl border transition-all text-xs font-medium
-            {% if cur_wb == 'hungry' %}border-blue-500 bg-blue-900/30 text-blue-300{% else %}border-gray-600 bg-gray-700/40 text-gray-400{% endif %}">
-          <span class="text-xl">😤</span>Tuve hambre
-        </button>
-        <button type="button" data-val="good" onclick="selectWellbeing('good')"
-          class="wellbeing-btn flex flex-col items-center gap-1 py-2.5 px-1 rounded-xl border transition-all text-xs font-medium
-            {% if cur_wb == 'good' or cur_wb == '' %}border-brand-500 bg-brand-900/30 text-brand-300{% else %}border-gray-600 bg-gray-700/40 text-gray-400{% endif %}">
-          <span class="text-xl">😊</span>Me sentí bien
-        </button>
-        <button type="button" data-val="overate" onclick="selectWellbeing('overate')"
-          class="wellbeing-btn flex flex-col items-center gap-1 py-2.5 px-1 rounded-xl border transition-all text-xs font-medium
-            {% if cur_wb == 'overate' %}border-red-500 bg-red-900/30 text-red-300{% else %}border-gray-600 bg-gray-700/40 text-gray-400{% endif %}">
-          <span class="text-xl">😩</span>Comí de más
-        </button>
+      <div class="card">
+        <div class="eyebrow" style="margin-bottom:6px;">Proteínas</div>
+        <div style="font-size:1.4em; font-weight:700; color:var(--protein);">{{ totals.protein }}<span style="font-size:.55em; font-weight:500; color:var(--muted);">g</span></div>
+        <div class="faint" style="font-size:.78em; margin-top:2px;">/ {{ profile.target_protein }}g</div>
+        <div class="macro-bar-track" style="margin-top:8px;">
+          <div class="macro-bar-fill" style="width:{{ [progress.protein,100]|min }}%; background:var(--protein);"></div>
+        </div>
       </div>
-      <input type="hidden" name="wellbeing" id="wellbeing-input" value="{{ today_score.wellbeing if today_score else 'good' }}">
 
-      <textarea name="notes" placeholder="Nota opcional (ej: entrené bien, día estresante...)"
-        class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-gray-200 placeholder-gray-500 focus:outline-none focus:border-brand-500 resize-none mb-3"
-        rows="2">{{ today_score.notes if today_score else '' }}</textarea>
-      <button type="submit"
-        class="w-full bg-brand-500 hover:bg-brand-600 text-white font-semibold py-2.5 rounded-xl transition-colors text-sm">
-        {{ 'Actualizar puntaje' if today_score else 'Guardar puntaje del día' }}
-      </button>
-    </form>
-  </div>
-
-  <!-- Progreso semanal de puntos -->
-  <div class="bg-gray-800 rounded-2xl p-5 border border-gray-700">
-    <div class="flex items-center justify-between mb-1">
-      <h2 class="text-base font-semibold text-white">Semana en puntos</h2>
-      <span class="text-2xl font-bold
-        {% if weekly_total >= weekly_goal %}text-brand-400{% elif weekly_total >= weekly_goal * 0.6 %}text-yellow-400{% else %}text-gray-400{% endif %}">
-        {{ weekly_total }}<span class="text-base font-normal text-gray-500">/{{ weekly_goal }}</span>
-      </span>
-    </div>
-    <p class="text-xs text-gray-500 mb-4">{{ scored_days }} de 7 días puntuados — objetivo: {{ weekly_goal }} pts</p>
-
-    <!-- Weekly bar -->
-    <div class="h-3 bg-gray-700 rounded-full overflow-hidden mb-4">
-      <div class="h-full rounded-full transition-all duration-700
-        {% if weekly_total >= weekly_goal %}bg-brand-400{% elif weekly_total >= weekly_goal * 0.6 %}bg-yellow-400{% else %}bg-blue-400{% endif %}"
-        style="width: {{ [((weekly_total / weekly_goal) * 100)|round(1), 100]|min }}%"></div>
-    </div>
-
-    <!-- Stars scale legend -->
-    <div class="grid grid-cols-5 gap-1 text-center">
-      {% set score_labels = [("1", "Mal día", "#ef4444"), ("2", "Regular", "#f97316"), ("3", "Ok", "#f59e0b"), ("4", "Bien", "#84cc16"), ("5", "Perfecto", "#34d399")] %}
-      {% for val, label, color in score_labels %}
-      <div class="bg-gray-700/50 rounded-lg py-2 px-1">
-        <div class="text-lg" style="color: {{ color }};">★</div>
-        <div class="text-xs text-gray-400 leading-tight">{{ label }}</div>
+      <div class="card">
+        <div class="eyebrow" style="margin-bottom:6px;">Carbos</div>
+        <div style="font-size:1.4em; font-weight:700; color:var(--carbs);">{{ totals.carbs }}<span style="font-size:.55em; font-weight:500; color:var(--muted);">g</span></div>
+        <div class="faint" style="font-size:.78em; margin-top:2px;">/ {{ profile.target_carbs }}g</div>
+        <div class="macro-bar-track" style="margin-top:8px;">
+          <div class="macro-bar-fill" style="width:{{ [progress.carbs,100]|min }}%; background:var(--carbs);"></div>
+        </div>
       </div>
-      {% endfor %}
+
+      <div class="card">
+        <div class="eyebrow" style="margin-bottom:6px;">Grasas</div>
+        <div style="font-size:1.4em; font-weight:700; color:var(--fat);">{{ totals.fat }}<span style="font-size:.55em; font-weight:500; color:var(--muted);">g</span></div>
+        <div class="faint" style="font-size:.78em; margin-top:2px;">/ {{ profile.target_fat }}g</div>
+        <div class="macro-bar-track" style="margin-top:8px;">
+          <div class="macro-bar-fill" style="width:{{ [progress.fat,100]|min }}%; background:var(--fat);"></div>
+        </div>
+      </div>
+
+      <div class="card" style="background: var(--accent-soft); border-color: transparent;">
+        <div class="eyebrow" style="margin-bottom:6px;">Progreso</div>
+        <div style="font-size:1.4em; font-weight:700; color:var(--accent);">{{ progress.calories }}<span style="font-size:.55em; font-weight:500;">%</span></div>
+        <div style="font-size:.78em; color:var(--accent); margin-top:2px; opacity:.8;">del objetivo</div>
+        <div class="macro-bar-track" style="margin-top:8px; background: color-mix(in srgb, var(--accent) 20%, var(--surface));">
+          <div class="macro-bar-fill" style="width:{{ [progress.calories,100]|min }}%; background:var(--accent);"></div>
+        </div>
+      </div>
+
     </div>
   </div>
 </div>
 
-<!-- Chart + Meals -->
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+<!-- Food log + Chart -->
+<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px,1fr)); gap:var(--gap);">
 
-  <!-- Doughnut Chart -->
-  <div class="bg-gray-800 rounded-2xl p-5 border border-gray-700 flex flex-col items-center">
-    <h2 class="text-base font-semibold text-white mb-4 self-start">Distribución de Macros</h2>
-    {% if totals.calories > 0 %}
-    <div class="relative w-48 h-48">
-      <canvas id="macroChart"></canvas>
-      <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-        <span class="text-2xl font-bold text-white">{{ totals.calories }}</span>
-        <span class="text-xs text-gray-400">kcal</span>
-      </div>
+  <!-- Today's food entries -->
+  <div class="card" style="grid-column: span 2; min-width:0;">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+      <h2 style="font-size:1em;">Registro de hoy</h2>
+      <a href="/comidas" class="btn btn-soft btn-sm" style="text-decoration:none;">Ver todo</a>
     </div>
-    <div class="mt-4 grid grid-cols-3 gap-3 w-full text-center text-xs">
-      <div>
-        <div class="w-3 h-3 rounded-full bg-brand-400 mx-auto mb-1"></div>
-        <div class="text-gray-400">Prot.</div>
-        <div class="font-bold text-white">{{ totals.protein }}g</div>
-      </div>
-      <div>
-        <div class="w-3 h-3 rounded-full bg-blue-400 mx-auto mb-1"></div>
-        <div class="text-gray-400">Carbs</div>
-        <div class="font-bold text-white">{{ totals.carbs }}g</div>
-      </div>
-      <div>
-        <div class="w-3 h-3 rounded-full bg-yellow-400 mx-auto mb-1"></div>
-        <div class="text-gray-400">Grasa</div>
-        <div class="font-bold text-white">{{ totals.fat }}g</div>
-      </div>
-    </div>
-    {% else %}
-    <div class="flex flex-col items-center justify-center h-48 text-center">
-      <svg class="w-16 h-16 text-gray-600 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-          d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-      </svg>
-      <p class="text-gray-500 text-sm">Sin datos aún hoy</p>
-      <a href="/comidas" class="mt-2 text-brand-400 text-xs hover:underline">Registrar comida</a>
-    </div>
-    {% endif %}
-  </div>
-
-  <!-- Today's food log -->
-  <div class="lg:col-span-2 bg-gray-800 rounded-2xl p-5 border border-gray-700">
-    <h2 class="text-base font-semibold text-white mb-4">Registro de hoy</h2>
 
     {% set meal_icons = {"Almuerzo / Cena": "🍽️", "Desayuno / Merienda": "☀️", "Snack": "🍎", "Bebida": "🥤"} %}
     {% set has_any = namespace(val=false) %}
-    {% for meal_label, entries in meals.items() %}
-      {% if entries %}{% set has_any.val = true %}{% endif %}
-    {% endfor %}
+    {% for meal_label, entries in meals.items() %}{% if entries %}{% set has_any.val = true %}{% endif %}{% endfor %}
 
     {% if has_any.val %}
-      <div class="space-y-4">
-        {% for meal_label, entries in meals.items() %}
-          {% if entries %}
-          <div>
-            <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-              <span>{{ meal_icons.get(meal_label, "🍽️") }}</span>
-              {{ meal_label }}
-            </h3>
-            <div class="space-y-1.5">
-              {% for entry in entries %}
-              <div id="entry-{{ entry.id }}"
-                   class="flex items-center justify-between bg-gray-750 rounded-xl px-3 py-2.5 hover:bg-gray-700 transition-colors group"
-                   style="background-color: rgba(255,255,255,0.03);">
-                <div class="flex-1 min-w-0">
-                  <div class="flex items-center gap-2">
-                    <span class="text-sm font-medium text-white truncate">{{ entry.food_name }}</span>
-                    {% if entry.eaten_at %}
-                    <span class="text-xs text-gray-600 flex-shrink-0">{{ entry.eaten_at.strftime('%H:%M') }}</span>
-                    {% endif %}
-                  </div>
-                  <span class="text-xs text-gray-500">{{ entry.quantity_g|round(0)|int }}g &bull;
-                    <span class="text-brand-400">{{ entry.calories }} kcal</span> &bull;
-                    P: {{ entry.protein }}g &bull; C: {{ entry.carbs }}g &bull; G: {{ entry.fat }}g
-                  </span>
-                </div>
-                <button onclick="deleteEntry({{ entry.id }})"
-                        class="ml-3 p-1.5 text-gray-600 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100 flex-shrink-0"
-                        title="Eliminar">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                  </svg>
-                </button>
-              </div>
-              {% endfor %}
-            </div>
+    <div class="stack" style="gap:16px;">
+      {% for meal_label, entries in meals.items() %}
+        {% if entries %}
+        <div>
+          <div class="eyebrow" style="margin-bottom:8px; display:flex; align-items:center; gap:6px;">
+            <span>{{ meal_icons.get(meal_label, "🍽️") }}</span>
+            {{ meal_label }}
           </div>
-          {% endif %}
-        {% endfor %}
-      </div>
+          <div class="stack" style="gap:4px;">
+            {% for entry in entries %}
+            <div id="entry-{{ entry.id }}"
+                 style="display:flex; align-items:center; justify-content:space-between;
+                        background:var(--surface-2); border-radius:calc(var(--radius) - 6px);
+                        padding:10px 14px; gap:12px; transition: opacity .3s, transform .3s;">
+              <div style="flex:1; min-width:0;">
+                <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                  <span style="font-weight:600; font-size:.9em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:200px;">{{ entry.food_name }}</span>
+                  {% if entry.eaten_at %}
+                  <span class="faint" style="font-size:.75em; flex-shrink:0;">{{ entry.eaten_at.strftime('%H:%M') }}</span>
+                  {% endif %}
+                </div>
+                <div class="faint" style="font-size:.78em; margin-top:2px;">
+                  {{ entry.quantity_g|round(0)|int }}g &bull;
+                  <span style="color:var(--accent); font-weight:600;">{{ entry.calories }} kcal</span> &bull;
+                  <span style="color:var(--protein);">P {{ entry.protein }}g</span> &bull;
+                  <span style="color:var(--carbs);">C {{ entry.carbs }}g</span> &bull;
+                  <span style="color:var(--fat);">G {{ entry.fat }}g</span>
+                </div>
+              </div>
+              <button onclick="deleteEntry({{ entry.id }})"
+                      style="background:none; border:none; color:var(--faint); padding:4px; border-radius:6px; transition:color .15s; flex-shrink:0;"
+                      onmouseover="this.style.color='var(--bad)'" onmouseout="this.style.color='var(--faint)'"
+                      title="Eliminar">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>
+                </svg>
+              </button>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+      {% endfor %}
+    </div>
     {% else %}
-      <div class="flex flex-col items-center justify-center py-12 text-center">
-        <svg class="w-14 h-14 text-gray-600 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-            d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-        </svg>
-        <p class="text-gray-400 font-medium">No hay registros hoy</p>
-        <p class="text-gray-600 text-sm mt-1">Empezá registrando tu primera comida</p>
-        <a href="/comidas"
-           class="mt-4 bg-brand-500 hover:bg-brand-600 text-white text-sm font-semibold px-5 py-2 rounded-xl transition-colors">
-          Registrar ahora
-        </a>
+    <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px 0; text-align:center; gap:12px;">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--faint);">
+        <path d="M5 3v8M8 3v8M5 7h3M6.5 11v10M16 3c-1.5 1-2 3-2 6 0 2 1 3 2 3s2-1 2-3c0-3-.5-5-2-6Zm0 9v9"/>
+      </svg>
+      <div>
+        <div style="font-weight:600; color:var(--muted);">No hay registros hoy</div>
+        <div class="faint" style="font-size:.85em; margin-top:4px;">Empezá registrando tu primera comida</div>
       </div>
+      <a href="/comidas" class="btn btn-primary" style="text-decoration:none;">Registrar ahora</a>
+    </div>
     {% endif %}
   </div>
+
+  <!-- Macro donut -->
+  {% if totals.calories > 0 %}
+  <div class="card" style="display:flex; flex-direction:column; align-items:center;">
+    <h2 style="font-size:1em; align-self:flex-start; margin-bottom:16px;">Distribución de macros</h2>
+    <div style="position:relative; width:160px; height:160px;">
+      <canvas id="macroChart"></canvas>
+      <div style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; pointer-events:none; text-align:center;">
+        <span style="font-size:1.3em; font-weight:700;">{{ totals.calories }}</span>
+        <span class="faint" style="font-size:.7em;">kcal</span>
+      </div>
+    </div>
+    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px; width:100%; margin-top:14px; text-align:center;">
+      <div>
+        <div style="width:10px; height:10px; border-radius:50%; background:var(--protein); margin:0 auto 4px;"></div>
+        <div class="faint" style="font-size:.73em;">Prot.</div>
+        <div style="font-weight:700; font-size:.88em;">{{ totals.protein }}g</div>
+      </div>
+      <div>
+        <div style="width:10px; height:10px; border-radius:50%; background:var(--carbs); margin:0 auto 4px;"></div>
+        <div class="faint" style="font-size:.73em;">Carbs</div>
+        <div style="font-weight:700; font-size:.88em;">{{ totals.carbs }}g</div>
+      </div>
+      <div>
+        <div style="width:10px; height:10px; border-radius:50%; background:var(--fat); margin:0 auto 4px;"></div>
+        <div class="faint" style="font-size:.73em;">Grasa</div>
+        <div style="font-weight:700; font-size:.88em;">{{ totals.fat }}g</div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-// Wellbeing selector
-const STAR_COLORS = { 1: '#ef4444', 2: '#f97316', 3: '#f59e0b', 4: '#84cc16', 5: '#34d399' };
-const SCORE_LABELS = { 1: 'Mal día', 2: 'Regular', 3: 'Ok', 4: 'Bien', 5: '¡Perfecto!' };
-const WB_STYLES = {
-  hungry:  { border: 'border-blue-500',  bg: 'bg-blue-900/30',  text: 'text-blue-300' },
-  good:    { border: 'border-brand-500', bg: 'bg-brand-900/30', text: 'text-brand-300' },
-  overate: { border: 'border-red-500',   bg: 'bg-red-900/30',   text: 'text-red-300' },
-};
-
-function selectWellbeing(val) {
-  document.getElementById('wellbeing-input').value = val;
-  document.querySelectorAll('.wellbeing-btn').forEach(btn => {
-    const s = WB_STYLES[btn.dataset.val];
-    if (btn.dataset.val === val) {
-      btn.className = btn.className.replace(/border-\S+|bg-\S+|text-\S+/g, '').trim();
-      btn.classList.add(s.border, s.bg, s.text);
-    } else {
-      btn.className = btn.className.replace(/border-\S+|bg-\S+|text-\S+/g, '').trim();
-      btn.classList.add('border-gray-600', 'bg-gray-700/40', 'text-gray-400');
-    }
-  });
-  refreshPreview();
-}
-
-async function refreshPreview() {
-  const wb = document.getElementById('wellbeing-input').value || 'good';
-  try {
-    const res = await fetch(`/api/score/preview?wellbeing=${wb}`);
-    const data = await res.json();
-    const stars = document.querySelectorAll('#preview-stars span');
-    stars.forEach((s, i) => {
-      s.style.color = i < data.score ? STAR_COLORS[data.score] : '#374151';
-    });
-    document.getElementById('preview-label').textContent = SCORE_LABELS[data.score] || '';
-    document.getElementById('preview-detail').textContent =
-      `Calorías: ${data.cal_pct}% · Proteína: ${data.protein_pct}%`;
-  } catch(e) {}
-}
-
-// Init preview si hay datos
-{% if totals.calories > 0 and not today_score %}
-refreshPreview();
-{% endif %}
-
 {% if totals.calories > 0 %}
+// Get CSS variable colors after render
+const getVar = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
 const ctx = document.getElementById('macroChart').getContext('2d');
 new Chart(ctx, {
   type: 'doughnut',
@@ -427,8 +267,8 @@ new Chart(ctx, {
     labels: ['Proteínas', 'Carbohidratos', 'Grasas'],
     datasets: [{
       data: [{{ totals.protein * 4 }}, {{ totals.carbs * 4 }}, {{ totals.fat * 9 }}],
-      backgroundColor: ['#34d399', '#60a5fa', '#fbbf24'],
-      borderColor: ['#1f2937'],
+      backgroundColor: [getVar('--protein'), getVar('--carbs'), getVar('--fat')],
+      borderColor: [getVar('--card-bg') || getVar('--surface')],
       borderWidth: 3,
       hoverOffset: 6
     }]
@@ -439,9 +279,9 @@ new Chart(ctx, {
       legend: { display: false },
       tooltip: {
         callbacks: {
-          label: function(ctx) {
-            const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
-            const pct = total > 0 ? ((ctx.parsed / total) * 100).toFixed(1) : 0;
+          label(ctx) {
+            const total = ctx.dataset.data.reduce((a,b)=>a+b,0);
+            const pct = total > 0 ? ((ctx.parsed/total)*100).toFixed(1) : 0;
             return ` ${ctx.label}: ${pct}%`;
           }
         }
@@ -457,36 +297,28 @@ async function deleteEntry(id) {
     const res = await fetch(`/log/${id}`, { method: 'DELETE' });
     if (res.ok) {
       const el = document.getElementById(`entry-${id}`);
-      el.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
       el.style.opacity = '0';
       el.style.transform = 'translateX(20px)';
       setTimeout(() => window.location.reload(), 350);
     }
-  } catch(e) {
-    alert('Error al eliminar la entrada');
-  }
+  } catch(e) { alert('Error al eliminar'); }
 }
 
-// Time window
 let currentWindow = 'day';
 async function setWindow(w) {
   currentWindow = w;
-  document.querySelectorAll('.win-btn').forEach(btn => {
-    btn.className = 'win-btn flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-colors '
-      + (btn.id === `win-${w}` ? 'bg-brand-600 text-white' : 'bg-gray-700 text-gray-400 hover:text-white');
+  ['day','week','month'].forEach(x => {
+    document.getElementById(`win-${x}`).setAttribute('data-on', x === w ? '1' : '0');
   });
-  if (w === 'day') {
-    document.getElementById('window-stats').classList.add('hidden');
-    return;
-  }
+  if (w === 'day') { document.getElementById('window-stats').style.display = 'none'; return; }
   try {
-    const data = await fetch(`/api/stats?window=${w}`).then(r => r.json());
+    const data = await fetch(`/api/stats?window=${w}`).then(r=>r.json());
     const days = data.days || 1;
-    document.getElementById('ws-cal').textContent = Math.round(data.totals.calories / days);
-    document.getElementById('ws-prot').textContent = Math.round(data.totals.protein / days) + 'g';
-    document.getElementById('ws-carb').textContent = Math.round(data.totals.carbs / days) + 'g';
-    document.getElementById('ws-fat').textContent = Math.round(data.totals.fat / days) + 'g';
-    document.getElementById('window-stats').classList.remove('hidden');
+    document.getElementById('ws-cal').textContent  = Math.round(data.totals.calories / days);
+    document.getElementById('ws-prot').textContent = Math.round(data.totals.protein  / days) + 'g';
+    document.getElementById('ws-carb').textContent = Math.round(data.totals.carbs    / days) + 'g';
+    document.getElementById('ws-fat').textContent  = Math.round(data.totals.fat      / days) + 'g';
+    document.getElementById('window-stats').style.display = 'block';
   } catch(e) { console.error(e); }
 }
 </script>

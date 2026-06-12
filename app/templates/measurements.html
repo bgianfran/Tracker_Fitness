@@ -4,13 +4,13 @@
 {% block content %}
 
 <!-- Header -->
-<div class="flex items-center justify-between mb-6">
+<div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
   <div>
-    <h1 class="text-2xl font-bold text-white">Mediciones</h1>
-    <p class="text-gray-400 text-sm mt-0.5">Peso, composición corporal e InBody</p>
+    <h1 style="font-size:1.4em;">Mediciones</h1>
+    <p class="muted" style="font-size:.88em; margin-top:4px;">Peso, composición corporal e InBody</p>
   </div>
   <button onclick="toggleForm()"
-    class="flex items-center gap-2 bg-brand-600 hover:bg-brand-500 text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors">
+    class="btn btn-primary btn-sm">
     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
     </svg>
@@ -19,22 +19,22 @@
 </div>
 
 <!-- ── Formulario (colapsado por defecto) ───────────────────────────────── -->
-<div id="form-section" class="hidden mb-6">
-  <div class="bg-gray-800 rounded-2xl border border-gray-700 overflow-hidden">
+<div id="form-section" style="display:none; margin-bottom:20px;">
+  <div class="card card-pad0">
 
     <!-- Import InBody -->
-    <div class="p-5 border-b border-gray-700">
-      <h3 class="text-sm font-semibold text-white mb-3 flex items-center gap-2">
-        <span class="bg-brand-500/20 text-brand-400 text-xs px-2 py-0.5 rounded-lg">IA</span>
+    <div style="padding:var(--pad); border-bottom:1px solid var(--border);">
+      <h3 style="font-size:.9em; font-weight:700; margin-bottom:10px; display:flex; align-items:center; gap:8px;">
+        <span style="background:var(--accent-soft); color:var(--accent); font-size:.75em; padding:2px 8px; border-radius:6px; font-weight:700;">IA</span>
         Importar desde foto InBody
       </h3>
-      <div class="flex gap-3 items-start">
+      <div style="display:flex; gap:10px; align-items:flex-start;">
         <div id="import-drop" onclick="document.getElementById('import-file').click()"
-          class="flex-1 border-2 border-dashed border-gray-600 hover:border-brand-500 rounded-xl p-4 text-center cursor-pointer transition-colors">
-          <p class="text-sm text-gray-400" id="import-label">Tocá para subir la foto del InBody</p>
+          style="flex:1; border:2px dashed var(--border); border-radius:calc(var(--radius) - 4px); padding:14px; text-align:center; cursor:pointer; transition:border-color .15s;">
+          <p class="muted" style="font-size:.85em;" id="import-label">Tocá para subir la foto del InBody</p>
         </div>
         <button type="button" onclick="importInBody()" id="import-btn"
-          class="bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium px-4 py-3 rounded-xl transition-colors flex-shrink-0">
+          class="btn btn-primary btn-sm" style="flex-shrink:0;">
           Analizar
         </button>
       </div>
@@ -43,124 +43,124 @@
 
     <form method="POST" action="/measurements" id="measurement-form">
       <!-- Fecha + Score InBody -->
-      <div class="p-5 border-b border-gray-700">
-        <div class="grid grid-cols-2 gap-4">
+      <div style="padding:var(--pad); border-bottom:1px solid var(--border);">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--gap);">
           <div>
-            <label class="block text-xs font-medium text-gray-400 mb-1">Fecha *</label>
+            <label class="label" style="margin-bottom:5px; display:block;">Fecha *</label>
             <input type="date" name="fecha_medicion" id="f-fecha" required
               value="{{ now().strftime('%Y-%m-%d') if now else '' }}"
-              class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brand-500">
+              class="input">
           </div>
           <div>
-            <label class="block text-xs font-medium text-gray-400 mb-1">Puntuación InBody</label>
+            <label class="label" style="margin-bottom:5px; display:block;">Puntuación InBody</label>
             <input type="number" name="puntuacion_inbody" id="f-puntuacion" min="0" max="100" placeholder="85"
-              class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brand-500">
+              class="input">
           </div>
         </div>
       </div>
 
       <!-- Composición Corporal -->
-      <div class="p-5 border-b border-gray-700">
-        <h4 class="text-xs font-semibold text-brand-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+      <div style="padding:var(--pad); border-bottom:1px solid var(--border);">
+        <h4 class="eyebrow" style="margin-bottom:10px; color:var(--accent); display:flex; align-items:center; gap:8px;">
           <span class="w-1 h-3 bg-brand-400 rounded-full inline-block"></span>
           Composición Corporal
         </h4>
-        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(130px,1fr)); gap:10px;">
           <div>
-            <label class="block text-xs text-gray-400 mb-1">Peso (kg)</label>
+            <label class="label" style="margin-bottom:5px; display:block;">Peso (kg)</label>
             <input type="number" name="peso_kg" id="f-peso" step="0.1" placeholder="102.6"
-              class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brand-500">
+              class="input">
           </div>
           <div>
-            <label class="block text-xs text-gray-400 mb-1">Agua corporal (L)</label>
+            <label class="label" style="margin-bottom:5px; display:block;">Agua corporal (L)</label>
             <input type="number" name="agua_corporal_l" id="f-agua" step="0.1" placeholder="57.3"
-              class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brand-500">
+              class="input">
           </div>
           <div>
-            <label class="block text-xs text-gray-400 mb-1">Proteínas (kg)</label>
+            <label class="label" style="margin-bottom:5px; display:block;">Proteínas (kg)</label>
             <input type="number" name="proteinas_kg" id="f-proteinas" step="0.01" placeholder="15.7"
-              class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brand-500">
+              class="input">
           </div>
           <div>
-            <label class="block text-xs text-gray-400 mb-1">Minerales (kg)</label>
+            <label class="label" style="margin-bottom:5px; display:block;">Minerales (kg)</label>
             <input type="number" name="minerales_kg" id="f-minerales" step="0.01" placeholder="5.39"
-              class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brand-500">
+              class="input">
           </div>
           <div>
-            <label class="block text-xs text-gray-400 mb-1">Masa Grasa (kg)</label>
+            <label class="label" style="margin-bottom:5px; display:block;">Masa Grasa (kg)</label>
             <input type="number" name="masa_grasa_corporal_kg" id="f-grasa" step="0.1" placeholder="24.2"
-              class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brand-500">
+              class="input">
           </div>
           <div>
-            <label class="block text-xs text-gray-400 mb-1">% Grasa corporal</label>
+            <label class="label" style="margin-bottom:5px; display:block;">% Grasa corporal</label>
             <input type="number" name="pgc" id="f-pgc" step="0.1" placeholder="23.6"
-              class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brand-500">
+              class="input">
           </div>
         </div>
       </div>
 
       <!-- Músculo -->
-      <div class="p-5 border-b border-gray-700">
-        <h4 class="text-xs font-semibold text-blue-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+      <div style="padding:var(--pad); border-bottom:1px solid var(--border);">
+        <h4 class="eyebrow" style="margin-bottom:10px; color:var(--muscle); display:flex; align-items:center; gap:8px;">
           <span class="w-1 h-3 bg-blue-400 rounded-full inline-block"></span>
           Músculo
         </h4>
-        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(130px,1fr)); gap:10px;">
           <div>
-            <label class="block text-xs text-gray-400 mb-1">Masa musculoesquelética (kg)</label>
+            <label class="label" style="margin-bottom:5px; display:block;">Masa musculoesquelética (kg)</label>
             <input type="number" name="masa_musculoesqueletica_kg" id="f-musculo" step="0.1" placeholder="45.3"
-              class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brand-500">
+              class="input">
           </div>
           <div>
-            <label class="block text-xs text-gray-400 mb-1">IMC</label>
+            <label class="label" style="margin-bottom:5px; display:block;">IMC</label>
             <input type="number" name="imc" id="f-imc" step="0.1" placeholder="30.6"
-              class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brand-500">
+              class="input">
           </div>
         </div>
       </div>
 
       <!-- Control -->
-      <div class="p-5 border-b border-gray-700">
-        <h4 class="text-xs font-semibold text-yellow-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+      <div style="padding:var(--pad); border-bottom:1px solid var(--border);">
+        <h4 class="eyebrow" style="margin-bottom:10px; color:var(--fat); display:flex; align-items:center; gap:8px;">
           <span class="w-1 h-3 bg-yellow-400 rounded-full inline-block"></span>
           Control InBody
         </h4>
-        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(130px,1fr)); gap:10px;">
           <div>
-            <label class="block text-xs text-gray-400 mb-1">Control peso (kg)</label>
+            <label class="label" style="margin-bottom:5px; display:block;">Control peso (kg)</label>
             <input type="number" name="control_peso_kg" id="f-ctrl-peso" step="0.1" placeholder="-10.4"
-              class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brand-500">
+              class="input">
           </div>
           <div>
-            <label class="block text-xs text-gray-400 mb-1">Control grasa (kg)</label>
+            <label class="label" style="margin-bottom:5px; display:block;">Control grasa (kg)</label>
             <input type="number" name="control_grasa_kg" id="f-ctrl-grasa" step="0.1"
-              class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brand-500">
+              class="input">
           </div>
           <div>
-            <label class="block text-xs text-gray-400 mb-1">Control músculo (kg)</label>
+            <label class="label" style="margin-bottom:5px; display:block;">Control músculo (kg)</label>
             <input type="number" name="control_musculo_kg" id="f-ctrl-musculo" step="0.1"
-              class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brand-500">
+              class="input">
           </div>
           <div>
-            <label class="block text-xs text-gray-400 mb-1">Relación cintura/cadera</label>
+            <label class="label" style="margin-bottom:5px; display:block;">Relación cintura/cadera</label>
             <input type="number" name="relacion_cintura_cadera" id="f-cintura" step="0.01" placeholder="0.95"
-              class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brand-500">
+              class="input">
           </div>
           <div>
-            <label class="block text-xs text-gray-400 mb-1">Grasa visceral (nivel)</label>
+            <label class="label" style="margin-bottom:5px; display:block;">Grasa visceral (nivel)</label>
             <input type="number" name="nivel_grasa_visceral" id="f-visceral" step="1" placeholder="10"
-              class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brand-500">
+              class="input">
           </div>
         </div>
       </div>
 
       <!-- Segmental Magro -->
-      <div class="p-5 border-b border-gray-700">
-        <h4 class="text-xs font-semibold text-purple-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+      <div style="padding:var(--pad); border-bottom:1px solid var(--border);">
+        <h4 class="eyebrow" style="margin-bottom:10px; color:#a855f7; display:flex; align-items:center; gap:8px;">
           <span class="w-1 h-3 bg-purple-400 rounded-full inline-block"></span>
           Segmental Magro (kg)
         </h4>
-        <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(100px,1fr)); gap:10px;">
           {% for name, label, placeholder in [
             ("magro_brazo_derecho_kg","Brazo Der.","4.71"),
             ("magro_brazo_izquierdo_kg","Brazo Izq.","4.71"),
@@ -169,21 +169,21 @@
             ("magro_pierna_izquierda_kg","Pierna Izq.","11.7"),
           ] %}
           <div>
-            <label class="block text-xs text-gray-400 mb-1">{{ label }}</label>
+            <label class="label" style="margin-bottom:5px; display:block;">{{ label }}</label>
             <input type="number" name="{{ name }}" step="0.01" placeholder="{{ placeholder }}"
-              class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brand-500 segmental-magro">
+              class="input segmental-magro">
           </div>
           {% endfor %}
         </div>
       </div>
 
       <!-- Segmental Grasa -->
-      <div class="p-5 border-b border-gray-700">
-        <h4 class="text-xs font-semibold text-orange-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+      <div style="padding:var(--pad); border-bottom:1px solid var(--border);">
+        <h4 class="eyebrow" style="margin-bottom:10px; color:#f97316; display:flex; align-items:center; gap:8px;">
           <span class="w-1 h-3 bg-orange-400 rounded-full inline-block"></span>
           Segmental Grasa (kg)
         </h4>
-        <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(100px,1fr)); gap:10px;">
           {% for name, label, placeholder in [
             ("grasa_brazo_derecho_kg","Brazo Der.","1.4"),
             ("grasa_brazo_izquierdo_kg","Brazo Izq.","1.4"),
@@ -192,21 +192,21 @@
             ("grasa_pierna_izquierda_kg","Pierna Izq.","3.1"),
           ] %}
           <div>
-            <label class="block text-xs text-gray-400 mb-1">{{ label }}</label>
+            <label class="label" style="margin-bottom:5px; display:block;">{{ label }}</label>
             <input type="number" name="{{ name }}" step="0.01" placeholder="{{ placeholder }}"
-              class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brand-500">
+              class="input">
           </div>
           {% endfor %}
         </div>
       </div>
 
       <!-- Pliegues -->
-      <div class="p-5 border-b border-gray-700">
-        <h4 class="text-xs font-semibold text-pink-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+      <div style="padding:var(--pad); border-bottom:1px solid var(--border);">
+        <h4 class="eyebrow" style="margin-bottom:10px; color:#ec4899; display:flex; align-items:center; gap:8px;">
           <span class="w-1 h-3 bg-pink-400 rounded-full inline-block"></span>
           Pliegues Cutáneos (mm)
         </h4>
-        <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(100px,1fr)); gap:10px;">
           {% for name, label in [
             ("pliegue_triceps_mm","Tríceps"),
             ("pliegue_subescapular_mm","Subescapular"),
@@ -215,28 +215,28 @@
             ("pliegue_muslo_mm","Muslo"),
           ] %}
           <div>
-            <label class="block text-xs text-gray-400 mb-1">{{ label }}</label>
+            <label class="label" style="margin-bottom:5px; display:block;">{{ label }}</label>
             <input type="number" name="{{ name }}" step="0.1"
-              class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brand-500">
+              class="input">
           </div>
           {% endfor %}
         </div>
       </div>
 
       <!-- Notas + Submit -->
-      <div class="p-5">
-        <div class="mb-4">
-          <label class="block text-xs font-medium text-gray-400 mb-1">Notas</label>
+      <div style="padding:var(--pad);">
+        <div style="margin-bottom:14px;">
+          <label class="label" style="margin-bottom:5px; display:block;">Notas</label>
           <textarea name="notas" rows="2" placeholder="Contexto: ayuno, horario, etc."
-            class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-brand-500 resize-none"></textarea>
+            class="input" style="min-height:60px; padding:10px 14px; resize:vertical;"></textarea>
         </div>
-        <div class="flex gap-3">
+        <div style="display:flex; gap:10px;">
           <button type="submit"
-            class="flex-1 bg-brand-500 hover:bg-brand-600 text-white font-semibold py-3 rounded-xl transition-colors">
+            class="btn btn-primary" style="flex:1;">
             Guardar medición
           </button>
           <button type="button" onclick="toggleForm()"
-            class="px-5 bg-gray-700 hover:bg-gray-600 text-gray-300 font-medium py-3 rounded-xl transition-colors">
+            class="btn btn-ghost">
             Cancelar
           </button>
         </div>
@@ -248,9 +248,9 @@
 {% if measurements %}
 
 <!-- ── Selector de métricas para gráficos ────────────────────────────────── -->
-<div class="bg-gray-800 rounded-2xl p-4 border border-gray-700 mb-4">
-  <p class="text-xs font-medium text-gray-400 uppercase tracking-wider mb-3">Mostrar en gráficos</p>
-  <div class="flex flex-wrap gap-2" id="metric-chips">
+<div class="card" style="margin-bottom:14px;">
+  <p class="eyebrow" style="margin-bottom:10px;">Mostrar en gráficos</p>
+  <div style="display:flex; flex-wrap:wrap; gap:8px;" id="metric-chips">
     {% set all_metrics = [
       ("peso_kg",                    "Peso",          "#34d399"),
       ("masa_musculoesqueletica_kg",  "Músculo",       "#60a5fa"),
@@ -265,8 +265,7 @@
     <button type="button"
       data-key="{{ key }}" data-label="{{ label }}" data-color="{{ color }}"
       onclick="toggleMetric(this)"
-      class="metric-chip px-3 py-1.5 rounded-lg text-xs font-medium border transition-all
-        {% if loop.index <= 3 %}border-transparent text-white active-chip{% else %}border-gray-600 text-gray-400{% endif %}"
+      class="metric-chip chip {% if loop.index <= 3 %}active-chip{% endif %}"
       {% if loop.index <= 3 %}style="background-color: {{ color }}20; border-color: {{ color }}60; color: {{ color }}"{% endif %}>
       {{ label }}
     </button>
@@ -275,126 +274,126 @@
 </div>
 
 <!-- ── Gráficos ──────────────────────────────────────────────────────────── -->
-<div id="charts-section" class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+<div id="charts-section" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px,1fr)); gap:var(--gap); margin-bottom:20px;">
   <!-- Generado por JS -->
 </div>
 
 <!-- ── Tabla de historial ────────────────────────────────────────────────── -->
-<div class="bg-gray-800 rounded-2xl border border-gray-700 overflow-hidden mb-6">
-  <div class="p-4 border-b border-gray-700 flex items-center justify-between">
-    <h2 class="text-sm font-semibold text-white">Historial de mediciones</h2>
-    <span class="text-xs text-gray-500">{{ measurements|length }} registros</span>
+<div class="card card-pad0" style="margin-bottom:20px;">
+  <div style="padding:12px 16px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between;">
+    <h2 style="font-size:.9em; font-weight:700;">Historial de mediciones</h2>
+    <span class="faint" style="font-size:.78em;">{{ measurements|length }} registros</span>
   </div>
 
   <!-- Desktop: tabla scrollable horizontalmente -->
   <div class="overflow-x-auto">
-    <table class="w-full text-sm min-w-max">
+    <table style="width:100%; font-size:.85em; min-width:600px; border-collapse:collapse;">
       <thead>
-        <tr class="border-b border-gray-700 text-xs text-gray-400 uppercase tracking-wide">
-          <th class="text-left px-4 py-3 sticky left-0 bg-gray-800 z-10 min-w-[100px]">Fecha</th>
-          <th class="text-right px-3 py-3 min-w-[80px]">Peso</th>
-          <th class="text-right px-3 py-3 min-w-[90px]">Músculo</th>
-          <th class="text-right px-3 py-3 min-w-[80px]">% Grasa</th>
-          <th class="text-right px-3 py-3 min-w-[80px]">Grasa kg</th>
-          <th class="text-right px-3 py-3 min-w-[90px]">Score InBody</th>
-          <th class="text-right px-3 py-3 min-w-[70px]">Agua (L)</th>
-          <th class="text-right px-3 py-3 min-w-[70px]">IMC</th>
-          <th class="text-right px-3 py-3 min-w-[80px]">Gr. Visc.</th>
-          <th class="px-3 py-3 min-w-[80px]"></th>
+        <tr style="border-bottom:1px solid var(--border); font-size:.72em; color:var(--faint); text-transform:uppercase; letter-spacing:.05em;">
+          <th style="text-align:left; padding:10px 14px; background:var(--surface); position:sticky; left:0; z-index:2; min-width:100px;">Fecha</th>
+          <th style="text-align:right; padding:10px 10px; min-width:80px;">Peso</th>
+          <th style="text-align:right; padding:10px 10px; min-width:90px;">Músculo</th>
+          <th style="text-align:right; padding:10px 10px; min-width:80px;">% Grasa</th>
+          <th style="text-align:right; padding:10px 10px; min-width:80px;">Grasa kg</th>
+          <th style="text-align:right; padding:10px 10px; min-width:90px;">Score InBody</th>
+          <th style="text-align:right; padding:10px 10px; min-width:70px;">Agua (L)</th>
+          <th style="text-align:right; padding:10px 10px; min-width:70px;">IMC</th>
+          <th style="text-align:right; padding:10px 10px; min-width:80px;">Gr. Visc.</th>
+          <th style="padding:10px 10px; min-width:80px;"></th>
         </tr>
       </thead>
       <tbody>
         {% for m in measurements %}
         {% set prev = measurements[loop.index] if loop.index < measurements|length else none %}
-        <tr class="border-b border-gray-700/50 hover:bg-gray-700/30 transition-colors">
-          <td class="px-4 py-3 sticky left-0 bg-gray-800 z-10">
-            <a href="/measurements/{{ m.id }}" class="text-white font-medium hover:text-brand-400 transition-colors">
+        <tr style="border-bottom:1px solid color-mix(in srgb, var(--border) 60%, transparent);">
+          <td style="padding:10px 14px; background:var(--surface); position:sticky; left:0; z-index:1;">
+            <a href="/measurements/{{ m.id }}" style="font-weight:600; color:var(--text); text-decoration:none;">
               {{ m.fecha_medicion.strftime('%d/%m/%Y') }}
             </a>
             {% if m.notas %}
-            <p class="text-xs text-gray-500 truncate max-w-[90px]">{{ m.notas }}</p>
+            <p class="faint" style="font-size:.74em; max-width:90px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ m.notas }}</p>
             {% endif %}
           </td>
 
           <!-- Peso con delta -->
-          <td class="px-3 py-3 text-right">
+          <td style="padding:10px 10px; text-align:right;">
             {% if m.peso_kg %}
-            <span class="text-white font-medium">{{ "%.1f"|format(m.peso_kg) }}</span>
-            <span class="text-gray-500 text-xs"> kg</span>
+            <span style="font-weight:600;">{{ "%.1f"|format(m.peso_kg) }}</span>
+            <span class="faint" style="font-size:.78em;"> kg</span>
             {% if prev and prev.peso_kg %}
             {% set d = m.peso_kg - prev.peso_kg %}
-            <div class="text-xs {% if d < 0 %}text-brand-400{% elif d > 0 %}text-red-400{% else %}text-gray-500{% endif %}">
+            <div style="font-size:.75em; color:{% if d < 0 %}var(--good){% elif d > 0 %}var(--bad){% else %}var(--faint){% endif %};">
               {{ "▼" if d < 0 else ("▲" if d > 0 else "—") }}{{ "%.1f"|format(d|abs) }}
             </div>
             {% endif %}
-            {% else %}<span class="text-gray-600">—</span>{% endif %}
+            {% else %}<span class="faint">—</span>{% endif %}
           </td>
 
           <!-- Músculo -->
-          <td class="px-3 py-3 text-right">
+          <td style="padding:10px 10px; text-align:right;">
             {% if m.masa_musculoesqueletica_kg %}
-            <span class="text-blue-300 font-medium">{{ "%.1f"|format(m.masa_musculoesqueletica_kg) }}</span>
-            <span class="text-gray-500 text-xs"> kg</span>
+            <span style="font-weight:600; color:var(--muscle);">{{ "%.1f"|format(m.masa_musculoesqueletica_kg) }}</span>
+            <span class="faint" style="font-size:.78em;"> kg</span>
             {% if prev and prev.masa_musculoesqueletica_kg %}
             {% set d = m.masa_musculoesqueletica_kg - prev.masa_musculoesqueletica_kg %}
-            <div class="text-xs {% if d > 0 %}text-brand-400{% elif d < 0 %}text-red-400{% else %}text-gray-500{% endif %}">
+            <div style="font-size:.75em; color:{% if d > 0 %}var(--good){% elif d < 0 %}var(--bad){% else %}var(--faint){% endif %};">
               {{ "▲" if d > 0 else ("▼" if d < 0 else "—") }}{{ "%.1f"|format(d|abs) }}
             </div>
             {% endif %}
-            {% else %}<span class="text-gray-600">—</span>{% endif %}
+            {% else %}<span class="faint">—</span>{% endif %}
           </td>
 
           <!-- % Grasa -->
-          <td class="px-3 py-3 text-right">
+          <td style="padding:10px 10px; text-align:right;">
             {% if m.pgc %}
-            <span class="text-orange-300 font-medium">{{ "%.1f"|format(m.pgc) }}</span>
-            <span class="text-gray-500 text-xs">%</span>
+            <span style="font-weight:600; color:var(--fat);">{{ "%.1f"|format(m.pgc) }}</span>
+            <span class="faint" style="font-size:.78em;">%</span>
             {% if prev and prev.pgc %}
             {% set d = m.pgc - prev.pgc %}
-            <div class="text-xs {% if d < 0 %}text-brand-400{% elif d > 0 %}text-red-400{% else %}text-gray-500{% endif %}">
+            <div style="font-size:.75em; color:{% if d < 0 %}var(--good){% elif d > 0 %}var(--bad){% else %}var(--faint){% endif %};">
               {{ "▼" if d < 0 else ("▲" if d > 0 else "—") }}{{ "%.1f"|format(d|abs) }}
             </div>
             {% endif %}
-            {% else %}<span class="text-gray-600">—</span>{% endif %}
+            {% else %}<span class="faint">—</span>{% endif %}
           </td>
 
           <!-- Grasa kg -->
-          <td class="px-3 py-3 text-right">
+          <td style="padding:10px 10px; text-align:right;">
             {% if m.masa_grasa_corporal_kg %}
-            <span class="text-red-300 font-medium">{{ "%.1f"|format(m.masa_grasa_corporal_kg) }}</span>
-            <span class="text-gray-500 text-xs"> kg</span>
-            {% else %}<span class="text-gray-600">—</span>{% endif %}
+            <span style="font-weight:600; color:var(--bodyfat);">{{ "%.1f"|format(m.masa_grasa_corporal_kg) }}</span>
+            <span class="faint" style="font-size:.78em;"> kg</span>
+            {% else %}<span class="faint">—</span>{% endif %}
           </td>
 
           <!-- Score InBody -->
-          <td class="px-3 py-3 text-right">
+          <td style="padding:10px 10px; text-align:right;">
             {% if m.puntuacion_inbody %}
-            <span class="font-bold {% if m.puntuacion_inbody >= 80 %}text-brand-400{% elif m.puntuacion_inbody >= 60 %}text-yellow-400{% else %}text-red-400{% endif %}">
+            <span style="font-weight:700; color:{% if m.puntuacion_inbody >= 80 %}var(--good){% elif m.puntuacion_inbody >= 60 %}var(--warn){% else %}var(--bad){% endif %};">
               {{ m.puntuacion_inbody }}
             </span>
-            <span class="text-gray-500 text-xs">/100</span>
-            {% else %}<span class="text-gray-600">—</span>{% endif %}
+            <span class="faint" style="font-size:.78em;">/100</span>
+            {% else %}<span class="faint">—</span>{% endif %}
           </td>
 
           <!-- Agua -->
-          <td class="px-3 py-3 text-right text-gray-300">
+          <td style="padding:10px 10px; text-align:right; color:var(--muted);">
             {{ "%.1f"|format(m.agua_corporal_l) if m.agua_corporal_l else "—" }}
           </td>
 
           <!-- IMC -->
-          <td class="px-3 py-3 text-right text-gray-300">
+          <td style="padding:10px 10px; text-align:right; color:var(--muted);">
             {{ "%.1f"|format(m.imc) if m.imc else "—" }}
           </td>
 
           <!-- Gr. Visceral -->
-          <td class="px-3 py-3 text-right text-gray-300">
+          <td style="padding:10px 10px; text-align:right; color:var(--muted);">
             {{ m.nivel_grasa_visceral if m.nivel_grasa_visceral else "—" }}
           </td>
 
           <!-- Acciones -->
-          <td class="px-3 py-3 text-right">
+          <td style="padding:10px 10px; text-align:right;">
             <button onclick="deleteMeasurement({{ m.id }})"
-              class="text-gray-600 hover:text-red-400 transition-colors p-1">
+              style="background:none; border:none; color:var(--faint); cursor:pointer; padding:4px;">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
@@ -410,15 +409,15 @@
 
 {% else %}
 <!-- Empty state -->
-<div class="bg-gray-800 rounded-2xl border border-gray-700 p-12 text-center">
-  <svg class="w-14 h-14 text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<div class="card" style="text-align:center; padding:60px var(--pad);">
+  <svg style="width:56px; height:56px; color:var(--faint); margin:0 auto 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
       d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
   </svg>
-  <p class="text-white font-semibold mb-1">Todavía no hay mediciones</p>
-  <p class="text-gray-400 text-sm mb-4">Cargá tu primer registro de peso o InBody</p>
+  <p style="font-weight:600; margin-bottom:6px;">Todavía no hay mediciones</p>
+  <p class="muted" style="font-size:.88em; margin-bottom:16px;">Cargá tu primer registro de peso o InBody</p>
   <button onclick="toggleForm()"
-    class="bg-brand-500 hover:bg-brand-600 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-colors">
+    class="btn btn-primary">
     Cargar primera medición
   </button>
 </div>
@@ -491,8 +490,8 @@ function renderCharts() {
     if (!hasData) return;
 
     const wrapper = document.createElement('div');
-    wrapper.className = 'bg-gray-800 rounded-2xl p-4 border border-gray-700';
-    wrapper.innerHTML = `<h3 class="text-xs font-semibold uppercase tracking-wider mb-3" style="color:${metric.color}">${metric.label}</h3><canvas id="chart-${metric.key}" height="120"></canvas>`;
+    wrapper.className = 'card';
+    wrapper.innerHTML = `<h3 class="eyebrow" style="margin-bottom:10px; color:${metric.color}">${metric.label}</h3><canvas id="chart-${metric.key}" height="120"></canvas>`;
     section.appendChild(wrapper);
 
     const ctx = document.getElementById(`chart-${metric.key}`).getContext('2d');
@@ -524,8 +523,8 @@ function renderCharts() {
           }
         },
         scales: {
-          x: { ticks: { color: '#6b7280', font: { size: 10 } }, grid: { color: '#374151' } },
-          y: { ticks: { color: '#6b7280', font: { size: 10 } }, grid: { color: '#374151' } }
+          x: { ticks: { color: getComputedStyle(document.documentElement).getPropertyValue('--faint'), font: { size: 10 } }, grid: { color: getComputedStyle(document.documentElement).getPropertyValue('--border') } },
+          y: { ticks: { color: getComputedStyle(document.documentElement).getPropertyValue('--faint'), font: { size: 10 } }, grid: { color: getComputedStyle(document.documentElement).getPropertyValue('--border') } }
         }
       }
     });
@@ -538,8 +537,8 @@ renderCharts();
 // ── Toggle formulario ────────────────────────────────────────────────────────
 function toggleForm() {
   const s = document.getElementById('form-section');
-  s.classList.toggle('hidden');
-  if (!s.classList.contains('hidden')) {
+  s.style.display = s.style.display === 'none' ? '' : 'none';
+  if (s.style.display !== 'none') {
     s.scrollIntoView({ behavior: 'smooth' });
     // Set today's date
     const d = document.getElementById('f-fecha');
@@ -590,7 +589,7 @@ async function importInBody() {
     for (const [key, id] of Object.entries(map)) {
       if (data[key] != null) {
         const el = document.getElementById(id);
-        if (el) { el.value = data[key]; el.classList.add('border-brand-400'); filled++; }
+        if (el) { el.value = data[key]; el.style.borderColor = 'var(--accent)'; filled++; }
       }
     }
     // Abrir formulario

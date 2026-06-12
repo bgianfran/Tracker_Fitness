@@ -1,262 +1,817 @@
 <!DOCTYPE html>
-<html lang="es" class="dark">
+<html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <!-- viewport-fit=cover cubre el notch y la barra de inicio en iPhone -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>{% block title %}FitTracker{% endblock %}</title>
 
-  <!-- PWA / Add to Home Screen -->
+  <!-- PWA -->
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="FitTracker" />
   <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="theme-color" content="#111827" />
+  <meta name="theme-color" content="#f0f2f5" id="theme-color-meta" />
   <meta name="description" content="Trackeá tus calorías, macros y entrenamiento" />
   <link rel="manifest" href="/manifest.json" />
 
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          colors: {
-            brand: {
-              50:  '#ecfdf5', 100: '#d1fae5', 200: '#a7f3d0',
-              300: '#6ee7b7', 400: '#34d399', 500: '#10b981',
-              600: '#059669', 700: '#047857', 800: '#065f46', 900: '#064e3b',
-            }
-          }
-        }
-      }
-    }
-  </script>
+
   <style>
-    /* Safe area para notch (iPhone X+) y barra de inicio */
+    /* =========================================================
+       DESIGN TOKENS — generados desde buildVars()
+       Palette: acero (default), light theme
+       ========================================================= */
     :root {
+      /* safe area */
       --sat: env(safe-area-inset-top);
       --sar: env(safe-area-inset-right);
       --sab: env(safe-area-inset-bottom);
       --sal: env(safe-area-inset-left);
+
+      /* neutral ramp — acero light (nHue:222, nSat:14) */
+      --bg:        hsl(222 14% 95.5%);
+      --surface:   hsl(218 10% 100%);
+      --surface-2: hsl(222 14% 97.5%);
+      --border:    hsl(222 14% 89%);
+      --text:      hsl(230 22% 16%);
+      --muted:     hsl(224 16% 40%);
+      --faint:     hsl(222 14% 58%);
+
+      /* accent — acero light */
+      --accent:      #3a5ccc;
+      --accent-soft: color-mix(in srgb, #3a5ccc 12%, hsl(218 10% 100%));
+      --on-accent:   #ffffff;
+
+      /* dataviz — light */
+      --protein: #1f9d6b;
+      --carbs:   #3f74d8;
+      --fat:     #dd9a2e;
+      --muscle:  #3f74d8;
+      --bodyfat: #d96a5b;
+      --water:   #39a7c9;
+      --good:    #1f9d6b;
+      --warn:    #d99a2e;
+      --bad:     #d2503f;
+
+      /* density — normal */
+      --gap:     14px;
+      --pad:     18px;
+      --radius:  17px;
+      --control: 44px;
+      --fs:      15.5px;
+
+      /* font */
+      --font: 'Hanken Grotesk', system-ui, sans-serif;
+
+      /* card style — suave */
+      --card-bg:     var(--surface);
+      --card-border: 1px solid transparent;
+      --card-shadow: 0 1px 2px rgba(15,23,42,.04), 0 10px 28px -16px rgba(15,23,42,.18);
     }
 
-    /* Navbar ocupa el área del notch en iPhone en landscape */
-    .navbar-safe {
-      padding-top: env(safe-area-inset-top);
-      padding-left: env(safe-area-inset-left);
-      padding-right: env(safe-area-inset-right);
+    /* ── Dark mode overrides ── */
+    .dark {
+      /* neutral ramp — acero dark (nHue:222, nSat:12) */
+      --bg:        hsl(222 12% 8%);
+      --surface:   hsl(222 12% 12.5%);
+      --surface-2: hsl(222 12% 17%);
+      --border:    hsl(222 12% 23%);
+      --text:      hsl(220 10% 93%);
+      --muted:     hsl(220 10% 66%);
+      --faint:     hsl(220 10% 48%);
+
+      /* accent — acero dark */
+      --accent:      #7a93f5;
+      --accent-soft: color-mix(in srgb, #7a93f5 22%, hsl(222 12% 12.5%));
+      --on-accent:   #0c1016;
+
+      /* dataviz — dark */
+      --protein: #3fcf95;
+      --carbs:   #6f9bf0;
+      --fat:     #f0bd5a;
+      --muscle:  #6f9bf0;
+      --bodyfat: #ef8a7c;
+      --water:   #5cc3e0;
+      --good:    #3fcf95;
+      --warn:    #f0bd5a;
+      --bad:     #ef7565;
+
+      /* card shadow dark */
+      --card-shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
     }
 
-    /* Bottom nav respeta la barra de inicio del iPhone */
-    .bottom-nav-safe {
-      padding-bottom: env(safe-area-inset-bottom);
+    /* ── Palette overrides (applied by JS) ── */
+    /* salvia */
+    [data-palette="salvia"]:not(.dark) {
+      --bg: hsl(155 14% 95.5%); --surface: hsl(151 10% 100%); --surface-2: hsl(155 14% 97.5%);
+      --border: hsl(155 14% 89%); --text: hsl(163 22% 16%); --muted: hsl(157 16% 40%); --faint: hsl(155 14% 58%);
+      --accent: #1f9d6b; --accent-soft: color-mix(in srgb, #1f9d6b 12%, hsl(151 10% 100%)); --on-accent: #fff;
+    }
+    [data-palette="salvia"].dark {
+      --bg: hsl(155 8% 8%); --surface: hsl(155 8% 12.5%); --surface-2: hsl(155 8% 17%);
+      --border: hsl(155 8% 23%); --text: hsl(153 6% 93%); --muted: hsl(153 6% 66%); --faint: hsl(153 6% 48%);
+      --accent: #43cf95; --accent-soft: color-mix(in srgb, #43cf95 22%, hsl(155 8% 12.5%)); --on-accent: #0c1016;
+    }
+    /* grafito */
+    [data-palette="grafito"]:not(.dark) {
+      --bg: hsl(230 5% 95.5%); --surface: hsl(226 1% 100%); --surface-2: hsl(230 5% 97.5%);
+      --border: hsl(230 5% 89%); --text: hsl(238 13% 16%); --muted: hsl(232 7% 40%); --faint: hsl(230 5% 58%);
+      --accent: #0d8f8f; --accent-soft: color-mix(in srgb, #0d8f8f 12%, hsl(226 1% 100%)); --on-accent: #fff;
+    }
+    [data-palette="grafito"].dark {
+      --bg: hsl(230 3% 8%); --surface: hsl(230 3% 12.5%); --surface-2: hsl(230 3% 17%);
+      --border: hsl(230 3% 23%); --text: hsl(228 1% 93%); --muted: hsl(228 1% 66%); --faint: hsl(228 1% 48%);
+      --accent: #2fd4d4; --accent-soft: color-mix(in srgb, #2fd4d4 22%, hsl(230 3% 12.5%)); --on-accent: #0c1016;
+    }
+    /* arena */
+    [data-palette="arena"]:not(.dark) {
+      --bg: hsl(36 16% 95.5%); --surface: hsl(32 12% 100%); --surface-2: hsl(36 16% 97.5%);
+      --border: hsl(36 16% 89%); --text: hsl(44 24% 16%); --muted: hsl(38 18% 40%); --faint: hsl(36 16% 58%);
+      --accent: #bd6a39; --accent-soft: color-mix(in srgb, #bd6a39 12%, hsl(32 12% 100%)); --on-accent: #fff;
+    }
+    [data-palette="arena"].dark {
+      --bg: hsl(36 14% 8%); --surface: hsl(36 14% 12.5%); --surface-2: hsl(36 14% 17%);
+      --border: hsl(36 14% 23%); --text: hsl(34 12% 93%); --muted: hsl(34 12% 66%); --faint: hsl(34 12% 48%);
+      --accent: #e09155; --accent-soft: color-mix(in srgb, #e09155 22%, hsl(36 14% 12.5%)); --on-accent: #0c1016;
     }
 
-    /* El contenido principal no queda tapado por la bottom nav en mobile */
-    @media (max-width: 767px) {
-      main { padding-bottom: calc(4.5rem + env(safe-area-inset-bottom)); }
+    /* =========================================================
+       BASE STYLES
+       ========================================================= */
+    *, *::before, *::after { box-sizing: border-box; }
+
+    html { font-size: var(--fs); }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      font-size: var(--fs);
+      line-height: 1.45;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      font-variant-numeric: tabular-nums;
+      transition: background .35s ease, color .35s ease;
+      margin: 0;
     }
 
-    /* iOS Safari: evitar zoom en inputs (font-size mínimo 16px) */
-    input, select, textarea { font-size: 16px !important; }
+    h1, h2, h3, h4 { margin: 0; font-weight: 650; letter-spacing: -.01em; }
+    p { margin: 0; }
+    button { font-family: inherit; cursor: pointer; }
 
-    /* Progress bar transition */
-    .progress-bar { transition: width 0.6s ease; }
+    /* iOS Safari: avoid zoom on inputs */
+    input, select, textarea { font-size: 16px !important; font-family: var(--font); }
 
-    /* Card hover (solo en dispositivos con hover real) */
-    @media (hover: hover) {
-      .card-hover { transition: transform 0.2s ease, box-shadow 0.2s ease; }
-      .card-hover:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.4); }
-    }
-
-    /* Scrollbar (solo desktop) */
-    @media (min-width: 768px) {
-      ::-webkit-scrollbar { width: 6px; height: 6px; }
-      ::-webkit-scrollbar-track { background: #1f2937; }
-      ::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
-      ::-webkit-scrollbar-thumb:hover { background: #4b5563; }
-    }
-
-    /* Número input sin flechas */
+    /* Number input: no arrows */
     input[type=number]::-webkit-inner-spin-button,
     input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
     input[type=number] { -moz-appearance: textfield; }
 
-    /* Touch targets mínimo 44x44 (Apple HIG) */
-    .touch-target {
-      min-height: 44px;
-      min-width: 44px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    /* =========================================================
+       SHELL LAYOUT
+       ========================================================= */
+    .ft-shell { display: flex; min-height: 100vh; }
+    .ft-side   { display: none; }
+    .ft-main   { flex: 1; min-width: 0; width: 100%; }
+    .ft-scroll { max-width: 1180px; margin: 0 auto; padding: calc(var(--pad) + 4px) var(--pad) 120px; }
+
+    /* ── Top bar (mobile) ── */
+    .ft-topbar {
+      position: sticky; top: 0; z-index: 30;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px var(--pad);
+      background: color-mix(in srgb, var(--bg) 86%, transparent);
+      backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+    }
+    .ft-logo {
+      display: flex; align-items: center; gap: 9px;
+      font-weight: 700; letter-spacing: -.02em; font-size: 1.05em;
+      text-decoration: none; color: var(--text);
+    }
+    .ft-logo-mark {
+      width: 30px; height: 30px; border-radius: 9px;
+      display: grid; place-items: center;
+      background: var(--accent); color: var(--on-accent); flex-shrink: 0;
     }
 
-    /* Bottom nav activo */
-    .bn-active svg { color: #34d399; }
-    .bn-active span { color: #34d399; }
+    /* ── Bottom nav (mobile) ── */
+    .ft-bottomnav {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 40;
+      display: grid; grid-template-columns: repeat(5, 1fr);
+      background: color-mix(in srgb, var(--surface) 92%, transparent);
+      backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+      border-top: 1px solid var(--border);
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+    .ft-bn-item {
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+      padding: 9px 0 10px; border: none; background: none;
+      color: var(--faint); transition: color .2s;
+      text-decoration: none;
+    }
+    .ft-bn-item[data-active="1"] { color: var(--accent); }
+    .ft-bn-item span { font-size: 10.5px; font-weight: 600; letter-spacing: .01em; }
+    .ft-bn-dot {
+      width: 5px; height: 5px; border-radius: 50%; background: var(--accent);
+      margin-top: 1px; opacity: 0; transition: opacity .2s;
+    }
+    .ft-bn-item[data-active="1"] .ft-bn-dot { opacity: 1; }
+
+    /* ── Desktop sidebar ── */
+    @media (min-width: 900px) {
+      .ft-topbar    { display: none; }
+      .ft-bottomnav { display: none; }
+      .ft-side {
+        display: flex; flex-direction: column; width: 252px; flex-shrink: 0;
+        position: sticky; top: 0; height: 100vh;
+        padding: 22px 16px; gap: 6px;
+        background: var(--surface);
+        border-right: 1px solid var(--border);
+        overflow-y: auto;
+      }
+      .ft-scroll { padding: 30px 34px 48px; }
+      .ft-side-item {
+        display: flex; align-items: center; gap: 12px;
+        padding: 11px 14px; border-radius: 12px;
+        border: none; background: none;
+        color: var(--muted); font-weight: 600; font-size: .95em;
+        width: 100%; text-align: left;
+        transition: all .16s; text-decoration: none;
+      }
+      .ft-side-item:hover { background: var(--surface-2); color: var(--text); }
+      .ft-side-item[data-active="1"] { background: var(--accent-soft); color: var(--accent); }
+      .only-mobile { display: none !important; }
+    }
+    @media (max-width: 899px) { .only-desktop { display: none !important; } }
+
+    /* =========================================================
+       COMPONENTS
+       ========================================================= */
+
+    /* Card */
+    .card {
+      background: var(--card-bg); border: var(--card-border);
+      box-shadow: var(--card-shadow); border-radius: var(--radius); padding: var(--pad);
+    }
+    .card-pad0 { padding: 0; overflow: hidden; }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+      border: none; border-radius: calc(var(--radius) - 5px);
+      font-weight: 600; font-size: .92em;
+      padding: 0 16px; min-height: var(--control);
+      transition: filter .15s, background .15s, transform .08s;
+    }
+    .btn:active { transform: translateY(1px); }
+    .btn-primary { background: var(--accent); color: var(--on-accent); }
+    .btn-primary:hover { filter: brightness(1.06); }
+    .btn-soft { background: var(--accent-soft); color: var(--accent); }
+    .btn-ghost { background: var(--surface-2); color: var(--text); border: 1px solid var(--border); }
+    .btn-ghost:hover { border-color: var(--accent); }
+    .btn-danger { background: color-mix(in srgb, var(--bad) 14%, var(--surface)); color: var(--bad); border: 1px solid color-mix(in srgb, var(--bad) 30%, var(--border)); }
+    .btn-block { width: 100%; }
+    .btn-sm { min-height: 36px; padding: 0 12px; font-size: .85em; }
+
+    /* Segmented control */
+    .seg {
+      display: inline-flex; background: var(--surface-2);
+      border: 1px solid var(--border); border-radius: 999px;
+      padding: 3px; gap: 2px;
+    }
+    .seg button {
+      border: none; background: none; color: var(--muted);
+      font-weight: 600; font-size: .85em;
+      padding: 7px 15px; border-radius: 999px;
+      transition: all .18s; white-space: nowrap;
+    }
+    .seg button[data-on="1"] { background: var(--accent); color: var(--on-accent); }
+
+    /* Chip / pill */
+    .chip {
+      display: inline-flex; align-items: center; gap: 6px; border-radius: 999px;
+      padding: 5px 11px; font-size: .8em; font-weight: 600;
+      border: 1px solid var(--border); background: var(--surface-2); color: var(--muted);
+      transition: all .15s;
+    }
+
+    /* Input */
+    .input {
+      width: 100%; background: var(--surface-2); border: 1px solid var(--border);
+      color: var(--text); border-radius: calc(var(--radius) - 6px);
+      padding: 0 14px; min-height: var(--control); font: inherit;
+      outline: none; transition: border-color .15s;
+    }
+    .input:focus { border-color: var(--accent); }
+
+    /* Select */
+    select.input { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 36px; }
+
+    /* Typography helpers */
+    .label   { font-size: .8em; font-weight: 600; color: var(--muted); }
+    .eyebrow { font-size: .72em; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--faint); }
+    .muted   { color: var(--muted); }
+    .faint   { color: var(--faint); }
+    .num     { font-variant-numeric: tabular-nums; }
+
+    /* Divider */
+    .divider { height: 1px; background: var(--border); border: none; margin: 0; }
+
+    /* Layout utilities */
+    .grid-auto { display: grid; gap: var(--gap); grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+    .stack { display: flex; flex-direction: column; gap: var(--gap); }
+    .row   { display: flex; gap: var(--gap); }
+
+    /* Badge */
+    .badge {
+      display: inline-flex; align-items: center; border-radius: 999px;
+      padding: 3px 9px; font-size: .75em; font-weight: 700;
+    }
+    .badge-protein { background: color-mix(in srgb, var(--protein) 15%, var(--surface)); color: var(--protein); }
+    .badge-carbs   { background: color-mix(in srgb, var(--carbs) 15%, var(--surface)); color: var(--carbs); }
+    .badge-fat     { background: color-mix(in srgb, var(--fat) 15%, var(--surface)); color: var(--fat); }
+    .badge-good    { background: color-mix(in srgb, var(--good) 15%, var(--surface)); color: var(--good); }
+    .badge-warn    { background: color-mix(in srgb, var(--warn) 18%, var(--surface)); color: var(--warn); }
+
+    /* Macro bar */
+    .macro-bar-wrap { display: flex; flex-direction: column; gap: 6px; }
+    .macro-bar-row  { display: flex; align-items: center; gap: 10px; }
+    .macro-bar-label { font-size: .78em; font-weight: 600; color: var(--muted); width: 54px; }
+    .macro-bar-track { flex: 1; height: 7px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+    .macro-bar-fill  { height: 100%; border-radius: 999px; transition: width .5s ease; }
+    .macro-bar-val   { font-size: .78em; font-weight: 700; color: var(--text); width: 36px; text-align: right; }
+
+    /* Scrollbar */
+    @media (min-width: 900px) {
+      ::-webkit-scrollbar { width: 6px; height: 6px; }
+      ::-webkit-scrollbar-track { background: var(--bg); }
+      ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+      ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+    }
+
+    /* Progress bar */
+    .progress-bar { transition: width .6s ease; }
+
+    /* Touch targets */
+    .touch-target { min-height: 44px; min-width: 44px; display: flex; align-items: center; justify-content: center; }
+
+    /* Sidebar logo separator */
+    .ft-side-sep { height: 1px; background: var(--border); margin: 8px 0; }
+
+    /* User avatar */
+    .avatar {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: var(--accent); color: var(--on-accent);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: .85em; flex-shrink: 0;
+    }
+
+    /* Dropdown */
+    .dropdown {
+      position: absolute; right: 0; top: calc(100% + 6px);
+      min-width: 180px; background: var(--surface);
+      border: 1px solid var(--border); border-radius: var(--radius);
+      box-shadow: 0 8px 32px -8px rgba(0,0,0,.25);
+      padding: 6px; z-index: 50;
+    }
+    .dropdown a, .dropdown button {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 12px; border-radius: calc(var(--radius) - 5px);
+      font-size: .9em; font-weight: 500; color: var(--text);
+      transition: background .15s; text-decoration: none; width: 100%;
+      border: none; background: none; text-align: left;
+    }
+    .dropdown a:hover, .dropdown button:hover { background: var(--surface-2); }
+    .dropdown .dropdown-danger { color: var(--bad); }
+    .dropdown .dropdown-sep { height: 1px; background: var(--border); margin: 4px 0; }
+
+    /* Appearance panel */
+    .appear-panel {
+      position: fixed; top: 0; right: 0; bottom: 0; width: 300px;
+      background: var(--surface); border-left: 1px solid var(--border);
+      box-shadow: -8px 0 40px rgba(0,0,0,.15);
+      z-index: 60; padding: var(--pad); overflow-y: auto;
+      transform: translateX(100%); transition: transform .25s ease;
+    }
+    .appear-panel.open { transform: translateX(0); }
+    .appear-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.3);
+      z-index: 59; opacity: 0; pointer-events: none; transition: opacity .25s;
+    }
+    .appear-overlay.open { opacity: 1; pointer-events: auto; }
+
+    /* Palette swatch */
+    .swatch {
+      width: 32px; height: 32px; border-radius: 50%; cursor: pointer;
+      border: 3px solid transparent; transition: border-color .15s;
+    }
+    .swatch[data-selected="1"] { border-color: var(--text); }
+
+    /* Small icon helper */
+    .icon-sm { width: 18px; height: 18px; }
+    .icon-md { width: 22px; height: 22px; }
   </style>
 </head>
-<body class="bg-gray-900 text-gray-100 min-h-screen flex flex-col">
 
-  <!-- Navbar top (siempre visible) -->
-  <nav class="bg-gray-800/95 backdrop-blur border-b border-gray-700 sticky top-0 z-50 navbar-safe">
-    <div class="max-w-6xl mx-auto px-4">
-      <div class="flex items-center justify-between h-14">
-        <!-- Logo -->
-        <a href="/" class="flex items-center gap-2 text-lg font-bold text-brand-400">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
-              d="M13 10V3L4 14h7v7l9-11h-7z"/>
+<!-- data-palette and dark class set by JS before paint -->
+<body class="ft-app" id="ft-body">
+
+  <div class="ft-shell">
+
+    <!-- ── Desktop Sidebar ── -->
+    <aside class="ft-side" id="ft-sidebar">
+      <!-- Logo -->
+      <a href="/" class="ft-logo" style="padding: 4px 14px 10px; margin-bottom: 4px;">
+        <div class="ft-logo-mark">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M13 3 5 13h6l-1 8 8-10h-6l1-8Z"/>
           </svg>
-          <span>FitTracker</span>
-        </a>
-        <!-- Mobile user avatar + profile link -->
-        {% if current_user is defined and current_user %}
-        <a href="/profile" class="md:hidden flex items-center gap-1.5 text-sm text-gray-300">
-          <div class="w-8 h-8 rounded-full bg-brand-600 flex items-center justify-center text-white text-sm font-bold">
-            {{ current_user.name[0].upper() }}
-          </div>
-        </a>
-        {% endif %}
+        </div>
+        FitTracker
+      </a>
 
-        <!-- Desktop nav (oculto en mobile — se usa bottom nav) -->
-        <div class="hidden md:flex items-center gap-1">
-          <a href="/" class="nav-link px-3 py-2 rounded-lg text-sm font-medium text-gray-300 hover:text-brand-400 hover:bg-gray-700 transition-colors">Dashboard</a>
-          <a href="/comidas" class="nav-link px-3 py-2 rounded-lg text-sm font-medium text-gray-300 hover:text-brand-400 hover:bg-gray-700 transition-colors">Comidas</a>
-          <a href="/entrenos" class="nav-link px-3 py-2 rounded-lg text-sm font-medium text-gray-300 hover:text-brand-400 hover:bg-gray-700 transition-colors">Entrenos</a>
-          <a href="/mediciones" class="nav-link px-3 py-2 rounded-lg text-sm font-medium text-gray-300 hover:text-brand-400 hover:bg-gray-700 transition-colors">Mediciones</a>
-          <a href="/social" class="nav-link px-3 py-2 rounded-lg text-sm font-medium text-gray-300 hover:text-brand-400 hover:bg-gray-700 transition-colors">Social</a>
-          <!-- User menu -->
-          {% if current_user is defined and current_user %}
-          <div class="relative ml-2" id="user-menu-wrapper">
-            <button onclick="document.getElementById('user-dropdown').classList.toggle('hidden')"
-              class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-700 transition-colors">
-              <div class="w-7 h-7 rounded-full bg-brand-600 flex items-center justify-center text-white text-xs font-bold">
-                {{ current_user.name[0].upper() }}
-              </div>
-              <span>{{ current_user.name.split()[0] }}</span>
-              <svg class="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-              </svg>
+      <div class="ft-side-sep"></div>
+
+      <!-- Nav links -->
+      <a href="/" class="ft-side-item" data-nav="/">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 11.5 12 4l9 7.5M5.5 10v9.5h13V10"/>
+        </svg>
+        Inicio
+      </a>
+      <a href="/comidas" class="ft-side-item" data-nav="/comidas">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 3v8M8 3v8M5 7h3M6.5 11v10M16 3c-1.5 1-2 3-2 6 0 2 1 3 2 3s2-1 2-3c0-3-.5-5-2-6Zm0 9v9"/>
+        </svg>
+        Comidas
+      </a>
+      <a href="/entrenos" class="ft-side-item" data-nav="/entrenos">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6.5 8v8M17.5 8v8M4 10v4M20 10v4M6.5 12h11"/>
+        </svg>
+        Entrenos
+      </a>
+      <a href="/mediciones" class="ft-side-item" data-nav="/mediciones">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 7h16M4 7v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7M4 7l1.2-2.5a1 1 0 0 1 .9-.5h11.8a1 1 0 0 1 .9.5L20 7M9 11v3M15 11v3M12 11v4"/>
+        </svg>
+        Mediciones
+      </a>
+      <a href="/social" class="ft-side-item" data-nav="/social">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM3 20c0-3 2.7-5 6-5s6 2 6 5M17 14c2.2.4 4 2 4 5M16 5a3 3 0 0 1 0 6"/>
+        </svg>
+        Social
+      </a>
+
+      <!-- spacer -->
+      <div style="flex: 1;"></div>
+      <div class="ft-side-sep"></div>
+
+      {% if current_user is defined and current_user %}
+      <!-- User section in sidebar -->
+      <div style="position: relative;" id="sidebar-user-wrap">
+        <button onclick="toggleSidebarUser()" class="ft-side-item" style="width: 100%;">
+          <div class="avatar">{{ current_user.name[0].upper() }}</div>
+          <span style="flex: 1; text-align: left; font-size: .9em;">{{ current_user.name.split()[0] }}</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 6l6 6-6 6"/>
+          </svg>
+        </button>
+        <div id="sidebar-user-dd" class="dropdown" style="display: none; bottom: calc(100% + 6px); top: auto;">
+          <a href="/profile">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/></svg>
+            Mi perfil
+          </a>
+          <a href="/reminders">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            Recordatorios
+          </a>
+          <a href="/coach">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 0v4m0 16v-4M2 12h4m16 0h-4"/></svg>
+            Coach IA
+          </a>
+          <button onclick="openAppearance()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93A10 10 0 1 0 4.93 19.07M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>
+            Apariencia
+          </button>
+          <div class="dropdown-sep"></div>
+          <form action="/logout" method="post">
+            <button type="submit" class="dropdown-danger">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+              Cerrar sesión
             </button>
-            <div id="user-dropdown" class="hidden absolute right-0 top-full mt-1 w-44 bg-gray-800 border border-gray-700 rounded-xl shadow-xl py-1 z-50">
-              <a href="/profile" class="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-gray-700">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                </svg>
-                Mi perfil
-              </a>
-              <a href="/reminders" class="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-gray-700">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
-                </svg>
-                Recordatorios
-              </a>
-              <a href="/coach" class="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-gray-700">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
-                </svg>
-                Coach IA
-              </a>
-              <div class="border-t border-gray-700 my-1"></div>
-              <form action="/logout" method="post">
-                <button type="submit" class="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-400 hover:text-red-300 hover:bg-red-900/20">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-                  </svg>
-                  Cerrar sesión
-                </button>
-              </form>
-            </div>
-          </div>
-          {% endif %}
+          </form>
         </div>
       </div>
-    </div>
-  </nav>
+      {% endif %}
+    </aside>
 
-  <!-- Main content -->
-  <main class="flex-1 max-w-6xl mx-auto w-full px-4 py-5">
-    {% block content %}{% endblock %}
-  </main>
+    <!-- ── Main content area ── -->
+    <div class="ft-main">
 
-  <!-- Footer solo desktop -->
-  <footer class="hidden md:block bg-gray-800 border-t border-gray-700 mt-auto">
-    <div class="max-w-6xl mx-auto px-4 py-3 text-center text-xs text-gray-500">
-      FitTracker &mdash; Tu compañero de entrenamiento
-    </div>
-  </footer>
+      <!-- Top bar (mobile) -->
+      <div class="ft-topbar">
+        <a href="/" class="ft-logo">
+          <div class="ft-logo-mark">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M13 3 5 13h6l-1 8 8-10h-6l1-8Z"/>
+            </svg>
+          </div>
+          FitTracker
+        </a>
+        {% if current_user is defined and current_user %}
+        <div style="position: relative;" id="topbar-user-wrap">
+          <button onclick="toggleTopbarUser()" style="background: none; border: none; padding: 4px;">
+            <div class="avatar">{{ current_user.name[0].upper() }}</div>
+          </button>
+          <div id="topbar-user-dd" class="dropdown" style="display: none;">
+            <a href="/profile">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/></svg>
+              Mi perfil
+            </a>
+            <a href="/reminders">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+              Recordatorios
+            </a>
+            <a href="/coach">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2z"/></svg>
+              Coach IA
+            </a>
+            <button onclick="openAppearance()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>
+              Apariencia
+            </button>
+            <div class="dropdown-sep"></div>
+            <form action="/logout" method="post">
+              <button type="submit" class="dropdown-danger">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+                Cerrar sesión
+              </button>
+            </form>
+          </div>
+        </div>
+        {% endif %}
+      </div>
 
-  <!-- Bottom Navigation Bar (solo mobile) -->
-  <nav class="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-gray-800/95 backdrop-blur border-t border-gray-700 bottom-nav-safe">
-    <div class="grid grid-cols-5 h-16">
-      <a href="/" class="bottom-nav-link flex flex-col items-center justify-center gap-0.5 text-gray-400 active:bg-gray-700 transition-colors">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
-        </svg>
-        <span class="text-xs font-medium">Inicio</span>
-      </a>
-      <a href="/comidas" class="bottom-nav-link flex flex-col items-center justify-center gap-0.5 text-gray-400 active:bg-gray-700 transition-colors">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
-        </svg>
-        <span class="text-xs font-medium">Comidas</span>
-      </a>
-      <a href="/entrenos" class="bottom-nav-link flex flex-col items-center justify-center gap-0.5 text-gray-400 active:bg-gray-700 transition-colors">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-        </svg>
-        <span class="text-xs font-medium">Entrenos</span>
-      </a>
-      <a href="/mediciones" class="bottom-nav-link flex flex-col items-center justify-center gap-0.5 text-gray-400 active:bg-gray-700 transition-colors">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-        </svg>
-        <span class="text-xs font-medium">Mediciones</span>
-      </a>
-      <a href="/social" class="bottom-nav-link flex flex-col items-center justify-center gap-0.5 text-gray-400 active:bg-gray-700 transition-colors">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-        </svg>
-        <span class="text-xs font-medium">Social</span>
-      </a>
+      <!-- Page content -->
+      <div class="ft-scroll">
+        {% block content %}{% endblock %}
+      </div>
+
+      <!-- Bottom nav (mobile) -->
+      <nav class="ft-bottomnav">
+        <a href="/" class="ft-bn-item" data-nav="/">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11.5 12 4l9 7.5M5.5 10v9.5h13V10"/>
+          </svg>
+          <span>Inicio</span>
+          <div class="ft-bn-dot"></div>
+        </a>
+        <a href="/comidas" class="ft-bn-item" data-nav="/comidas">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 3v8M8 3v8M5 7h3M6.5 11v10M16 3c-1.5 1-2 3-2 6 0 2 1 3 2 3s2-1 2-3c0-3-.5-5-2-6Zm0 9v9"/>
+          </svg>
+          <span>Comidas</span>
+          <div class="ft-bn-dot"></div>
+        </a>
+        <a href="/entrenos" class="ft-bn-item" data-nav="/entrenos">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6.5 8v8M17.5 8v8M4 10v4M20 10v4M6.5 12h11"/>
+          </svg>
+          <span>Entrenos</span>
+          <div class="ft-bn-dot"></div>
+        </a>
+        <a href="/mediciones" class="ft-bn-item" data-nav="/mediciones">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 7h16M4 7v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7M4 7l1.2-2.5a1 1 0 0 1 .9-.5h11.8a1 1 0 0 1 .9.5L20 7M9 11v3M15 11v3M12 11v4"/>
+          </svg>
+          <span>Mediciones</span>
+          <div class="ft-bn-dot"></div>
+        </a>
+        <a href="/social" class="ft-bn-item" data-nav="/social">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM3 20c0-3 2.7-5 6-5s6 2 6 5M17 14c2.2.4 4 2 4 5M16 5a3 3 0 0 1 0 6"/>
+          </svg>
+          <span>Social</span>
+          <div class="ft-bn-dot"></div>
+        </a>
+      </nav>
+
+    </div><!-- /ft-main -->
+  </div><!-- /ft-shell -->
+
+  <!-- ── Appearance Panel ── -->
+  <div class="appear-overlay" id="appear-overlay" onclick="closeAppearance()"></div>
+  <div class="appear-panel" id="appear-panel">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom: 20px;">
+      <h3 style="font-size: 1.05em;">Apariencia</h3>
+      <button onclick="closeAppearance()" style="background:none; border:none; color:var(--muted); font-size:1.2em; padding:4px;">✕</button>
     </div>
-  </nav>
+
+    <!-- Theme toggle -->
+    <div style="margin-bottom: 20px;">
+      <div class="eyebrow" style="margin-bottom: 8px;">Tema</div>
+      <div class="seg" style="width: 100%;">
+        <button id="btn-light" onclick="setTheme('light')" style="flex:1;" data-on="0">Claro</button>
+        <button id="btn-dark"  onclick="setTheme('dark')"  style="flex:1;" data-on="0">Oscuro</button>
+      </div>
+    </div>
+
+    <!-- Palette -->
+    <div style="margin-bottom: 20px;">
+      <div class="eyebrow" style="margin-bottom: 10px;">Color</div>
+      <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+        <button class="swatch" data-palette-btn="acero"   style="background: #3a5ccc;" title="Acero"   onclick="setPalette('acero')"></button>
+        <button class="swatch" data-palette-btn="salvia"  style="background: #1f9d6b;" title="Salvia"  onclick="setPalette('salvia')"></button>
+        <button class="swatch" data-palette-btn="grafito" style="background: #0d8f8f;" title="Grafito" onclick="setPalette('grafito')"></button>
+        <button class="swatch" data-palette-btn="arena"   style="background: #bd6a39;" title="Arena"   onclick="setPalette('arena')"></button>
+      </div>
+    </div>
+
+    <!-- Density -->
+    <div style="margin-bottom: 20px;">
+      <div class="eyebrow" style="margin-bottom: 8px;">Densidad</div>
+      <div class="seg" style="width: 100%;">
+        <button onclick="setDensity('compacto')" data-density-btn="compacto" style="flex:1;">Compacto</button>
+        <button onclick="setDensity('normal')"   data-density-btn="normal"   style="flex:1;">Normal</button>
+        <button onclick="setDensity('amplio')"   data-density-btn="amplio"   style="flex:1;">Amplio</button>
+      </div>
+    </div>
+
+    <!-- Card style -->
+    <div style="margin-bottom: 20px;">
+      <div class="eyebrow" style="margin-bottom: 8px;">Tarjetas</div>
+      <div class="seg" style="width: 100%;">
+        <button onclick="setCardStyle('suave')"   data-card-btn="suave"   style="flex:1;">Suave</button>
+        <button onclick="setCardStyle('bordeado')" data-card-btn="bordeado" style="flex:1;">Borde</button>
+        <button onclick="setCardStyle('plano')"   data-card-btn="plano"   style="flex:1;">Plano</button>
+      </div>
+    </div>
+  </div>
 
   <script>
-    // Highlight active bottom nav + desktop nav
-    const currentPath = window.location.pathname;
-    // Map old paths to new canonical paths for active detection
-    const pathAliases = {
-      '/log': '/comidas',
-      '/workouts': '/entrenos',
-      '/measurements': '/mediciones',
+    /* ============================================================
+       APPEARANCE SYSTEM
+       ============================================================ */
+    const DENSITY_VARS = {
+      compacto: { gap: '10px', pad: '14px', radius: '13px', fs: '14.5px', control: '40px' },
+      normal:   { gap: '14px', pad: '18px', radius: '17px', fs: '15.5px', control: '44px' },
+      amplio:   { gap: '18px', pad: '22px', radius: '21px', fs: '16.5px', control: '48px' },
     };
-    const canonicalPath = pathAliases[currentPath] || currentPath;
 
-    document.querySelectorAll('.bottom-nav-link').forEach(link => {
-      const href = link.getAttribute('href');
-      if (href === canonicalPath || (href !== '/' && canonicalPath.startsWith(href))) {
-        link.classList.add('bn-active');
-        link.querySelectorAll('svg, span').forEach(el => el.style.color = '#34d399');
+    function applyDensity(d) {
+      const v = DENSITY_VARS[d] || DENSITY_VARS.normal;
+      const r = document.documentElement;
+      r.style.setProperty('--gap',     v.gap);
+      r.style.setProperty('--pad',     v.pad);
+      r.style.setProperty('--radius',  v.radius);
+      r.style.setProperty('--fs',      v.fs);
+      r.style.setProperty('--control', v.control);
+    }
+
+    function applyCardStyle(style, theme) {
+      const r = document.documentElement;
+      const isDark = theme === 'dark';
+      const shadow = isDark
+        ? '0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6)'
+        : '0 1px 2px rgba(15,23,42,.04), 0 10px 28px -16px rgba(15,23,42,.18)';
+      if (style === 'bordeado') {
+        r.style.setProperty('--card-bg',     'var(--surface)');
+        r.style.setProperty('--card-border', '1px solid var(--border)');
+        r.style.setProperty('--card-shadow', 'none');
+      } else if (style === 'plano') {
+        r.style.setProperty('--card-bg',     'var(--surface-2)');
+        r.style.setProperty('--card-border', '1px solid transparent');
+        r.style.setProperty('--card-shadow', 'none');
+      } else {
+        r.style.setProperty('--card-bg',     'var(--surface)');
+        r.style.setProperty('--card-border', '1px solid transparent');
+        r.style.setProperty('--card-shadow', shadow);
       }
-    });
-    document.querySelectorAll('.nav-link').forEach(link => {
-      const href = link.getAttribute('href');
-      if (href === canonicalPath || (href !== '/' && canonicalPath.startsWith(href))) {
-        link.classList.add('text-brand-400');
-      }
-    });
-    // Close user dropdown on outside click
+    }
+
+    function getPrefs() {
+      try { return JSON.parse(localStorage.getItem('ftPrefs') || '{}'); } catch { return {}; }
+    }
+    function savePrefs(p) { localStorage.setItem('ftPrefs', JSON.stringify(p)); }
+
+    function setTheme(t) {
+      const body = document.getElementById('ft-body');
+      if (t === 'dark') body.classList.add('dark');
+      else body.classList.remove('dark');
+      document.querySelectorAll('[data-on]').forEach(b => {
+        if (b.id === 'btn-light') b.setAttribute('data-on', t === 'light' ? '1' : '0');
+        if (b.id === 'btn-dark')  b.setAttribute('data-on', t === 'dark'  ? '1' : '0');
+      });
+      const p = getPrefs(); p.theme = t; savePrefs(p);
+      const prefs = getPrefs();
+      applyCardStyle(prefs.cardStyle || 'suave', t);
+    }
+
+    function setPalette(pal) {
+      document.getElementById('ft-body').setAttribute('data-palette', pal);
+      document.querySelectorAll('[data-palette-btn]').forEach(b => {
+        b.setAttribute('data-selected', b.getAttribute('data-palette-btn') === pal ? '1' : '0');
+      });
+      const p = getPrefs(); p.palette = pal; savePrefs(p);
+    }
+
+    function setDensity(d) {
+      applyDensity(d);
+      document.querySelectorAll('[data-density-btn]').forEach(b => {
+        b.setAttribute('data-on', b.getAttribute('data-density-btn') === d ? '1' : '0');
+      });
+      const p = getPrefs(); p.density = d; savePrefs(p);
+    }
+
+    function setCardStyle(s) {
+      const prefs = getPrefs();
+      applyCardStyle(s, prefs.theme || 'light');
+      document.querySelectorAll('[data-card-btn]').forEach(b => {
+        b.setAttribute('data-on', b.getAttribute('data-card-btn') === s ? '1' : '0');
+      });
+      const p = getPrefs(); p.cardStyle = s; savePrefs(p);
+    }
+
+    function openAppearance() {
+      document.getElementById('appear-panel').classList.add('open');
+      document.getElementById('appear-overlay').classList.add('open');
+      // close dropdowns
+      ['sidebar-user-dd','topbar-user-dd'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+      });
+    }
+    function closeAppearance() {
+      document.getElementById('appear-panel').classList.remove('open');
+      document.getElementById('appear-overlay').classList.remove('open');
+    }
+
+    function toggleSidebarUser() {
+      const dd = document.getElementById('sidebar-user-dd');
+      dd.style.display = dd.style.display === 'none' ? 'block' : 'none';
+    }
+    function toggleTopbarUser() {
+      const dd = document.getElementById('topbar-user-dd');
+      dd.style.display = dd.style.display === 'none' ? 'block' : 'none';
+    }
+
+    // Close dropdowns on outside click
     document.addEventListener('click', function(e) {
-      const wrapper = document.getElementById('user-menu-wrapper');
-      const dropdown = document.getElementById('user-dropdown');
-      if (wrapper && dropdown && !wrapper.contains(e.target)) {
-        dropdown.classList.add('hidden');
-      }
+      ['sidebar-user-wrap','topbar-user-wrap'].forEach(id => {
+        const wrap = document.getElementById(id);
+        if (wrap && !wrap.contains(e.target)) {
+          const dd = wrap.querySelector('.dropdown');
+          if (dd) dd.style.display = 'none';
+        }
+      });
     });
+
+    /* ── Apply saved preferences ASAP ── */
+    (function() {
+      const p = getPrefs();
+      const theme    = p.theme    || 'light';
+      const palette  = p.palette  || 'acero';
+      const density  = p.density  || 'normal';
+      const cardStyle= p.cardStyle|| 'suave';
+
+      const body = document.getElementById('ft-body');
+      if (theme === 'dark') body.classList.add('dark');
+      body.setAttribute('data-palette', palette);
+      applyDensity(density);
+      applyCardStyle(cardStyle, theme);
+
+      // Sync UI controls
+      document.getElementById('btn-light').setAttribute('data-on', theme === 'light' ? '1' : '0');
+      document.getElementById('btn-dark').setAttribute('data-on',  theme === 'dark'  ? '1' : '0');
+      document.querySelectorAll('[data-palette-btn]').forEach(b =>
+        b.setAttribute('data-selected', b.getAttribute('data-palette-btn') === palette ? '1' : '0'));
+      document.querySelectorAll('[data-density-btn]').forEach(b =>
+        b.setAttribute('data-on', b.getAttribute('data-density-btn') === density ? '1' : '0'));
+      document.querySelectorAll('[data-card-btn]').forEach(b =>
+        b.setAttribute('data-on', b.getAttribute('data-card-btn') === cardStyle ? '1' : '0'));
+    })();
+
+    /* ── Active nav highlighting ── */
+    (function() {
+      const path = window.location.pathname;
+      const aliases = { '/log': '/comidas', '/workouts': '/entrenos', '/measurements': '/mediciones' };
+      const canonical = aliases[path] || path;
+
+      document.querySelectorAll('[data-nav]').forEach(el => {
+        const href = el.getAttribute('data-nav');
+        const active = (href === '/' ? canonical === '/' : canonical === href || canonical.startsWith(href + '/'));
+        if (active) el.setAttribute('data-active', '1');
+      });
+    })();
   </script>
 
   {% block scripts %}{% endblock %}
