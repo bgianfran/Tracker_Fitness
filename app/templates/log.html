@@ -22,114 +22,139 @@
     </button>
   </div>
 
-  <!-- ─── Manual Mode (ingredient search) ───────────────────── -->
+  <!-- ─── Manual Mode ────────────────────────────────────────── -->
   <div id="mode-manual">
-    <form id="form-search" method="POST" action="/log">
-      <input type="hidden" name="entry_mode" value="manual">
 
-      <!-- Meal type -->
-      <div class="bg-gray-800 rounded-2xl p-5 border border-gray-700 mb-4">
-        <label class="block text-sm font-semibold text-gray-300 mb-3">Tipo de comida</label>
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          {% for value, label, icon in [("breakfast","Desayuno","☀️"),("lunch","Almuerzo","🌤️"),("dinner","Cena","🌙"),("snack","Snack","🍎")] %}
-          <label class="meal-option cursor-pointer">
-            <input type="radio" name="meal_type" value="{{ value }}" class="sr-only" {% if loop.first %}checked{% endif %}>
-            <div class="meal-btn flex flex-col items-center justify-center gap-1 py-3 px-2 rounded-xl border-2 border-gray-600 hover:border-brand-500 transition-all text-center
-              {% if loop.first %}border-brand-500 bg-brand-900/20 text-brand-400{% else %}text-gray-400{% endif %}">
-              <span class="text-xl">{{ icon }}</span>
-              <span class="text-xs font-medium">{{ label }}</span>
-            </div>
-          </label>
-          {% endfor %}
+    <!-- Meal type -->
+    <div class="bg-gray-800 rounded-2xl p-5 border border-gray-700 mb-4">
+      <label class="block text-sm font-semibold text-gray-300 mb-3">Tipo de comida</label>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2" id="meal-btns">
+        {% for value, label, icon in [("breakfast","Desayuno","☀️"),("lunch","Almuerzo","🌤️"),("dinner","Cena","🌙"),("snack","Snack","🍎")] %}
+        <button type="button" data-meal="{{ value }}" onclick="selectMeal('{{ value }}')"
+                class="meal-btn flex flex-col items-center justify-center gap-1 py-3 px-2 rounded-xl border-2 transition-all text-center
+                  {% if loop.first %}border-brand-500 bg-brand-900/20 text-brand-400{% else %}border-gray-600 text-gray-400{% endif %}">
+          <span class="text-xl">{{ icon }}</span>
+          <span class="text-xs font-medium">{{ label }}</span>
+        </button>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Search + quantity + add -->
+    <div class="bg-gray-800 rounded-2xl p-5 border border-gray-700 mb-4">
+      <label class="block text-sm font-semibold text-gray-300 mb-3">Agregar ingrediente</label>
+
+      <!-- Search box -->
+      <div class="relative mb-3">
+        <div class="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+          <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
         </div>
+        <input id="search-input" type="text" placeholder="ej: pollo, arroz, huevo..."
+               autocomplete="off"
+               class="w-full bg-gray-700 border border-gray-600 rounded-xl pl-9 pr-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 text-sm">
       </div>
 
-      <!-- Food search -->
-      <div class="bg-gray-800 rounded-2xl p-5 border border-gray-700 mb-4">
-        <label class="block text-sm font-semibold text-gray-300 mb-3">Buscar ingrediente</label>
+      <!-- Search results dropdown -->
+      <div id="search-results" class="mb-3 space-y-1 hidden"></div>
 
-        <div class="relative">
-          <div class="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-            </svg>
-          </div>
-          <input id="search-input" type="text" placeholder="ej: pollo, arroz, huevo..."
-                 autocomplete="off"
-                 class="w-full bg-gray-700 border border-gray-600 rounded-xl pl-9 pr-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 text-sm">
-        </div>
-
-        <!-- Search results dropdown -->
-        <div id="search-results" class="mt-2 space-y-1 hidden"></div>
-
-        <!-- Selected food display -->
-        <div id="selected-food" class="hidden mt-3 p-3 bg-brand-900/20 border border-brand-800 rounded-xl">
-          <div class="flex items-start justify-between gap-2">
+      <!-- Selected food + quantity + add button -->
+      <div id="selected-area" class="hidden">
+        <div class="p-3 bg-brand-900/20 border border-brand-800 rounded-xl mb-3">
+          <div class="flex items-start justify-between gap-2 mb-2">
             <div>
               <p id="selected-name" class="text-sm font-semibold text-brand-300"></p>
               <p id="selected-macros" class="text-xs text-gray-400 mt-0.5"></p>
             </div>
-            <button type="button" onclick="clearSelection()"
-                    class="text-gray-500 hover:text-gray-300 flex-shrink-0">
+            <button type="button" onclick="clearSelection()" class="text-gray-500 hover:text-gray-300 flex-shrink-0">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
               </svg>
             </button>
           </div>
-        </div>
 
-        <!-- Hidden nutritional values populated by JS -->
-        <input type="hidden" name="manual_name" id="food-name-input">
-        <input type="hidden" name="manual_calories" id="food-cal-input" value="0">
-        <input type="hidden" name="manual_protein"  id="food-prot-input" value="0">
-        <input type="hidden" name="manual_carbs"    id="food-carb-input" value="0">
-        <input type="hidden" name="manual_fat"      id="food-fat-input" value="0">
+          <!-- Quantity row -->
+          <div class="flex items-center gap-2 mb-3">
+            <div class="relative flex-1">
+              <input type="number" id="quantity-input" value="100" min="1" max="5000" step="1"
+                     oninput="updatePreview()"
+                     class="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-brand-500 text-sm">
+              <span id="unit-label" class="absolute right-3 inset-y-0 flex items-center text-gray-400 text-sm pointer-events-none">g</span>
+            </div>
+            <div id="qty-buttons" class="flex gap-1">
+              <button type="button" onclick="setQty(50)"  class="qty-btn text-xs px-2 py-2 bg-gray-700 hover:bg-brand-600 text-gray-400 hover:text-white rounded-lg transition-colors border border-gray-600">50g</button>
+              <button type="button" onclick="setQty(100)" class="qty-btn text-xs px-2 py-2 bg-gray-700 hover:bg-brand-600 text-gray-400 hover:text-white rounded-lg transition-colors border border-gray-600">100g</button>
+              <button type="button" onclick="setQty(150)" class="qty-btn text-xs px-2 py-2 bg-gray-700 hover:bg-brand-600 text-gray-400 hover:text-white rounded-lg transition-colors border border-gray-600">150g</button>
+              <button type="button" onclick="setQty(200)" class="qty-btn text-xs px-2 py-2 bg-gray-700 hover:bg-brand-600 text-gray-400 hover:text-white rounded-lg transition-colors border border-gray-600">200g</button>
+            </div>
+          </div>
+
+          <!-- Macro preview for current item -->
+          <div id="item-preview" class="grid grid-cols-4 gap-2 text-center text-xs mb-3">
+            <div class="bg-gray-700/60 rounded-lg p-2">
+              <div class="text-gray-400">Cal</div>
+              <div id="prev-cal" class="font-bold text-white text-sm">–</div>
+            </div>
+            <div class="bg-gray-700/60 rounded-lg p-2">
+              <div class="text-gray-400">Prot</div>
+              <div id="prev-prot" class="font-bold text-brand-400 text-sm">–</div>
+            </div>
+            <div class="bg-gray-700/60 rounded-lg p-2">
+              <div class="text-gray-400">Carbs</div>
+              <div id="prev-carb" class="font-bold text-blue-400 text-sm">–</div>
+            </div>
+            <div class="bg-gray-700/60 rounded-lg p-2">
+              <div class="text-gray-400">Grasas</div>
+              <div id="prev-fat" class="font-bold text-yellow-400 text-sm">–</div>
+            </div>
+          </div>
+
+          <button type="button" onclick="addIngredient()"
+                  class="w-full bg-brand-600 hover:bg-brand-500 text-white font-semibold py-2 rounded-xl transition-colors text-sm">
+            + Agregar al plato
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ingredient list + totals -->
+    <div id="plate-section" class="hidden bg-gray-800 rounded-2xl p-5 border border-gray-700 mb-6">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-sm font-semibold text-gray-300">Plato</h3>
+        <span id="plate-count" class="text-xs text-gray-500"></span>
       </div>
 
-      <!-- Quantity -->
-      <div class="bg-gray-800 rounded-2xl p-5 border border-gray-700 mb-6">
-        <label class="block text-sm font-semibold text-gray-300 mb-3">Cantidad</label>
-        <div class="flex items-center gap-3">
-          <div class="relative flex-1">
-            <input type="number" name="quantity_g" id="quantity-search" value="100" min="1" max="5000" step="1"
-                   oninput="updateSearchPreview()"
-                   class="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 text-sm">
-            <span id="unit-label" class="absolute right-3 inset-y-0 flex items-center text-gray-400 text-sm pointer-events-none">g</span>
-          </div>
-          <div id="qty-buttons" class="flex gap-1">
-            <button type="button" onclick="setQty(50)"  class="qty-btn text-xs px-2.5 py-2 bg-gray-700 hover:bg-brand-600 text-gray-400 hover:text-white rounded-lg transition-colors border border-gray-600 hover:border-brand-500">50g</button>
-            <button type="button" onclick="setQty(100)" class="qty-btn text-xs px-2.5 py-2 bg-gray-700 hover:bg-brand-600 text-gray-400 hover:text-white rounded-lg transition-colors border border-gray-600 hover:border-brand-500">100g</button>
-            <button type="button" onclick="setQty(150)" class="qty-btn text-xs px-2.5 py-2 bg-gray-700 hover:bg-brand-600 text-gray-400 hover:text-white rounded-lg transition-colors border border-gray-600 hover:border-brand-500">150g</button>
-            <button type="button" onclick="setQty(200)" class="qty-btn text-xs px-2.5 py-2 bg-gray-700 hover:bg-brand-600 text-gray-400 hover:text-white rounded-lg transition-colors border border-gray-600 hover:border-brand-500">200g</button>
-          </div>
-        </div>
-        <!-- Live macro preview -->
-        <div id="macro-preview" class="hidden mt-3 grid grid-cols-4 gap-2 text-center text-xs">
+      <div id="ingredient-list" class="space-y-2 mb-4"></div>
+
+      <!-- Totals -->
+      <div class="border-t border-gray-700 pt-3">
+        <p class="text-xs text-gray-500 uppercase tracking-wide mb-2">Total del plato</p>
+        <div class="grid grid-cols-4 gap-2 text-center text-xs">
           <div class="bg-gray-700 rounded-lg p-2">
             <div class="text-gray-400">Calorías</div>
-            <div id="prev-cal" class="font-bold text-white text-sm">–</div>
+            <div id="total-cal" class="font-bold text-white text-sm">0</div>
           </div>
           <div class="bg-gray-700 rounded-lg p-2">
             <div class="text-gray-400">Proteína</div>
-            <div id="prev-prot" class="font-bold text-brand-400 text-sm">–</div>
+            <div id="total-prot" class="font-bold text-brand-400 text-sm">0g</div>
           </div>
           <div class="bg-gray-700 rounded-lg p-2">
             <div class="text-gray-400">Carbos</div>
-            <div id="prev-carb" class="font-bold text-blue-400 text-sm">–</div>
+            <div id="total-carb" class="font-bold text-blue-400 text-sm">0g</div>
           </div>
           <div class="bg-gray-700 rounded-lg p-2">
             <div class="text-gray-400">Grasas</div>
-            <div id="prev-fat" class="font-bold text-yellow-400 text-sm">–</div>
+            <div id="total-fat" class="font-bold text-yellow-400 text-sm">0g</div>
           </div>
         </div>
       </div>
+    </div>
 
-      <button type="submit" id="submit-search"
-              class="w-full bg-brand-500 hover:bg-brand-600 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold py-3 rounded-xl transition-colors text-sm shadow-lg shadow-brand-900/30">
-        Guardar registro
-      </button>
-    </form>
+    <button type="button" id="save-btn" onclick="savePlate()"
+            class="hidden w-full bg-brand-500 hover:bg-brand-600 text-white font-bold py-3 rounded-xl transition-colors text-sm shadow-lg shadow-brand-900/30">
+      Guardar registro
+    </button>
   </div>
 
   <!-- ─── AI Mode ─────────────────────────────────────────────── -->
@@ -139,8 +164,7 @@
       <label class="block text-sm font-semibold text-gray-300 mb-3">Tipo de comida</label>
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-2" id="ai-meal-btns">
         {% for value, label, icon in [("breakfast","Desayuno","☀️"),("lunch","Almuerzo","🌤️"),("dinner","Cena","🌙"),("snack","Snack","🍎")] %}
-        <button type="button" data-meal="{{ value }}"
-          onclick="selectAIMeal('{{ value }}')"
+        <button type="button" data-meal="{{ value }}" onclick="selectAIMeal('{{ value }}')"
           class="ai-meal-btn flex flex-col items-center justify-center gap-1 py-3 px-2 rounded-xl border-2 transition-all text-center
             {% if loop.first %}border-brand-500 bg-brand-900/20 text-brand-400{% else %}border-gray-600 text-gray-400{% endif %}">
           <span class="text-xl">{{ icon }}</span>
@@ -163,7 +187,6 @@
         </div>
       </div>
 
-      <!-- Imagen -->
       <div class="mb-4">
         <label class="block text-xs font-medium text-gray-400 mb-2">Foto del plato (opcional)</label>
         <div id="drop-zone"
@@ -181,7 +204,6 @@
         <input type="file" id="food-image" accept="image/*" capture="environment" class="hidden">
       </div>
 
-      <!-- Descripción texto -->
       <div class="mb-4">
         <label class="block text-xs font-medium text-gray-400 mb-2">O describí el plato</label>
         <textarea id="food-description" rows="3"
@@ -198,7 +220,6 @@
       </button>
     </div>
 
-    <!-- Resultado IA -->
     <div id="ai-result" class="hidden bg-gray-800 rounded-2xl p-5 border border-brand-600/50 mb-4">
       <div class="flex items-center justify-between mb-4">
         <h3 class="text-sm font-semibold text-white">Resultado del análisis</h3>
@@ -260,31 +281,29 @@ function switchMode(mode) {
   document.getElementById('tab-ai').className     = `${base} ${mode === 'ai'     ? 'text-white bg-brand-600' : 'text-gray-400 hover:text-white'}`;
 }
 
-// ─── Meal type buttons ────────────────────────────────────────
-document.querySelectorAll('.meal-option').forEach(label => {
-  const radio = label.querySelector('input[type=radio]');
-  const btn = label.querySelector('.meal-btn');
-  radio.addEventListener('change', () => {
-    document.querySelectorAll('.meal-btn').forEach(b => {
-      b.className = b.className.replace(/border-brand-500|bg-brand-900\/20|text-brand-400/g, '').trim();
-      b.classList.add('border-gray-600', 'text-gray-400');
-    });
-    btn.classList.remove('border-gray-600', 'text-gray-400');
-    btn.classList.add('border-brand-500', 'bg-brand-900/20', 'text-brand-400');
+// ─── Meal selection (manual mode) ────────────────────────────
+let selectedMeal = 'breakfast';
+function selectMeal(val) {
+  selectedMeal = val;
+  document.querySelectorAll('#meal-btns .meal-btn').forEach(btn => {
+    if (btn.dataset.meal === val) {
+      btn.classList.remove('border-gray-600', 'text-gray-400');
+      btn.classList.add('border-brand-500', 'bg-brand-900/20', 'text-brand-400');
+    } else {
+      btn.classList.remove('border-brand-500', 'bg-brand-900/20', 'text-brand-400');
+      btn.classList.add('border-gray-600', 'text-gray-400');
+    }
   });
-  label.addEventListener('click', () => radio.checked = true);
-});
+}
 
-// ─── Food search ──────────────────────────────────────────────
+// ─── Ingredient list ──────────────────────────────────────────
+let ingredients = [];   // { name, quantity_g, calories, protein, carbs, fat }
 let selectedFood = null;
 let debounceTimer = null;
 
-const searchInput    = document.getElementById('search-input');
-const searchResults  = document.getElementById('search-results');
-const selectedFoodDiv = document.getElementById('selected-food');
-const selectedName   = document.getElementById('selected-name');
-const selectedMacros = document.getElementById('selected-macros');
-const macroPreview   = document.getElementById('macro-preview');
+const searchInput   = document.getElementById('search-input');
+const searchResults = document.getElementById('search-results');
+const selectedArea  = document.getElementById('selected-area');
 
 searchInput.addEventListener('input', () => {
   clearTimeout(debounceTimer);
@@ -293,11 +312,7 @@ searchInput.addEventListener('input', () => {
 
 async function doSearch() {
   const q = searchInput.value.trim();
-  if (q.length < 1) {
-    searchResults.classList.add('hidden');
-    searchResults.innerHTML = '';
-    return;
-  }
+  if (q.length < 1) { searchResults.classList.add('hidden'); searchResults.innerHTML = ''; return; }
   searchResults.innerHTML = `<p class="text-xs text-gray-500 px-2 py-2 animate-pulse">Buscando...</p>`;
   searchResults.classList.remove('hidden');
   try {
@@ -312,7 +327,7 @@ function renderFoodBtn(item) {
     : item.source === 'rnpa_generic'
       ? `<span class="text-xs text-brand-400 flex-shrink-0">genérico</span>`
       : `<span class="text-xs text-gray-500 flex-shrink-0">🇦🇷</span>`;
-  const unitLabel = item.unidad === 'ml' ? 'ml' : 'g';
+  const ul = item.unidad === 'ml' ? 'ml' : 'g';
   return `
     <button type="button" onclick='selectFood(${JSON.stringify(item)})'
             class="w-full text-left px-3 py-2.5 rounded-xl bg-gray-700 hover:bg-gray-600 transition-colors">
@@ -320,48 +335,35 @@ function renderFoodBtn(item) {
         <span class="text-sm font-medium text-white truncate">${item.name}</span>
         <div class="flex items-center gap-1.5 flex-shrink-0">${badge}<span class="text-xs text-brand-400">${item.calories} kcal</span></div>
       </div>
-      <div class="text-xs text-gray-500 mt-0.5">P: ${item.protein}g &bull; C: ${item.carbs}g &bull; G: ${item.fat}g <span class="text-gray-600">/ 100${unitLabel}</span></div>
+      <div class="text-xs text-gray-500 mt-0.5">P: ${item.protein}g &bull; C: ${item.carbs}g &bull; G: ${item.fat}g / 100${ul}</div>
     </button>`;
 }
 
 function renderResults(items) {
-  if (!items.length) {
-    searchResults.innerHTML = `<p class="text-xs text-gray-500 px-2 py-2">Sin resultados para esa búsqueda</p>`;
-  } else {
-    searchResults.innerHTML = items.map(renderFoodBtn).join('');
-  }
+  searchResults.innerHTML = items.length
+    ? items.map(renderFoodBtn).join('')
+    : `<p class="text-xs text-gray-500 px-2 py-2">Sin resultados</p>`;
   searchResults.classList.remove('hidden');
 }
 
 function selectFood(item) {
   selectedFood = item;
   const u = item.unidad === 'ml' ? 'ml' : 'g';
-
-  document.getElementById('food-name-input').value  = item.name;
-  document.getElementById('food-cal-input').value   = item.calories;
-  document.getElementById('food-prot-input').value  = item.protein;
-  document.getElementById('food-carb-input').value  = item.carbs;
-  document.getElementById('food-fat-input').value   = item.fat;
-
-  selectedName.textContent = item.name;
-  selectedMacros.textContent = `${item.calories} kcal · P: ${item.protein}g · C: ${item.carbs}g · G: ${item.fat}g por 100${u}`;
-  selectedFoodDiv.classList.remove('hidden');
+  document.getElementById('selected-name').textContent = item.name;
+  document.getElementById('selected-macros').textContent =
+    `${item.calories} kcal · P: ${item.protein}g · C: ${item.carbs}g · G: ${item.fat}g por 100${u}`;
+  document.getElementById('quantity-input').value = 100;
   searchResults.classList.add('hidden');
   searchResults.innerHTML = '';
   searchInput.value = '';
+  selectedArea.classList.remove('hidden');
   setUnit(u);
-  updateSearchPreview();
+  updatePreview();
 }
 
 function clearSelection() {
   selectedFood = null;
-  document.getElementById('food-name-input').value = '';
-  document.getElementById('food-cal-input').value  = '0';
-  document.getElementById('food-prot-input').value = '0';
-  document.getElementById('food-carb-input').value = '0';
-  document.getElementById('food-fat-input').value  = '0';
-  selectedFoodDiv.classList.add('hidden');
-  macroPreview.classList.add('hidden');
+  selectedArea.classList.add('hidden');
   searchInput.value = '';
   setUnit('g');
   searchInput.focus();
@@ -379,19 +381,108 @@ function setUnit(u) {
 }
 
 function setQty(q) {
-  document.getElementById('quantity-search').value = q;
-  updateSearchPreview();
+  document.getElementById('quantity-input').value = q;
+  updatePreview();
 }
 
-function updateSearchPreview() {
+function updatePreview() {
   if (!selectedFood) return;
-  const qty = parseFloat(document.getElementById('quantity-search').value) || 0;
+  const qty = parseFloat(document.getElementById('quantity-input').value) || 0;
   const f = qty / 100;
   document.getElementById('prev-cal').textContent  = (selectedFood.calories * f).toFixed(0);
   document.getElementById('prev-prot').textContent = (selectedFood.protein * f).toFixed(1) + 'g';
   document.getElementById('prev-carb').textContent = (selectedFood.carbs * f).toFixed(1) + 'g';
   document.getElementById('prev-fat').textContent  = (selectedFood.fat * f).toFixed(1) + 'g';
-  macroPreview.classList.remove('hidden');
+}
+
+function addIngredient() {
+  if (!selectedFood) return;
+  const qty = parseFloat(document.getElementById('quantity-input').value) || 0;
+  if (qty <= 0) return;
+  ingredients.push({
+    name: selectedFood.name,
+    quantity_g: qty,
+    calories: selectedFood.calories,
+    protein:  selectedFood.protein,
+    carbs:    selectedFood.carbs,
+    fat:      selectedFood.fat,
+    unidad:   selectedFood.unidad || 'g',
+  });
+  clearSelection();
+  renderPlate();
+}
+
+function removeIngredient(i) {
+  ingredients.splice(i, 1);
+  renderPlate();
+}
+
+function renderPlate() {
+  const section  = document.getElementById('plate-section');
+  const saveBtn  = document.getElementById('save-btn');
+  const list     = document.getElementById('ingredient-list');
+  const countEl  = document.getElementById('plate-count');
+
+  if (!ingredients.length) {
+    section.classList.add('hidden');
+    saveBtn.classList.add('hidden');
+    return;
+  }
+
+  section.classList.remove('hidden');
+  saveBtn.classList.remove('hidden');
+  countEl.textContent = `${ingredients.length} ingrediente${ingredients.length > 1 ? 's' : ''}`;
+
+  list.innerHTML = ingredients.map((ing, i) => {
+    const f = ing.quantity_g / 100;
+    const u = ing.unidad === 'ml' ? 'ml' : 'g';
+    return `
+      <div class="flex items-center justify-between gap-2 py-2 border-b border-gray-700/50 last:border-0">
+        <div class="flex-1 min-w-0">
+          <p class="text-sm text-white truncate">${ing.name}</p>
+          <p class="text-xs text-gray-500">${ing.quantity_g}${u} · ${(ing.calories*f).toFixed(0)} kcal · P: ${(ing.protein*f).toFixed(1)}g · C: ${(ing.carbs*f).toFixed(1)}g · G: ${(ing.fat*f).toFixed(1)}g</p>
+        </div>
+        <button type="button" onclick="removeIngredient(${i})" class="text-gray-600 hover:text-red-400 flex-shrink-0 ml-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>`;
+  }).join('');
+
+  // Totals
+  let totCal = 0, totProt = 0, totCarb = 0, totFat = 0;
+  ingredients.forEach(ing => {
+    const f = ing.quantity_g / 100;
+    totCal  += ing.calories * f;
+    totProt += ing.protein  * f;
+    totCarb += ing.carbs    * f;
+    totFat  += ing.fat      * f;
+  });
+  document.getElementById('total-cal').textContent  = totCal.toFixed(0);
+  document.getElementById('total-prot').textContent = totProt.toFixed(1) + 'g';
+  document.getElementById('total-carb').textContent = totCarb.toFixed(1) + 'g';
+  document.getElementById('total-fat').textContent  = totFat.toFixed(1) + 'g';
+}
+
+async function savePlate() {
+  if (!ingredients.length) return;
+  const btn = document.getElementById('save-btn');
+  btn.disabled = true;
+  btn.textContent = 'Guardando...';
+  try {
+    const res = await fetch('/api/log/batch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ meal_type: selectedMeal, items: ingredients }),
+    });
+    if (!res.ok) throw new Error('Error al guardar');
+    window.location.href = '/';
+  } catch(e) {
+    alert('Error: ' + e.message);
+    btn.disabled = false;
+    btn.textContent = 'Guardar registro';
+  }
 }
 
 // Close results on outside click
@@ -433,13 +524,8 @@ document.getElementById('food-image').addEventListener('change', function() {
 
 async function analyzeFood() {
   const desc = document.getElementById('food-description').value.trim();
-  const fileInput = document.getElementById('food-image');
-  const file = fileInput.files[0];
-
-  if (!desc && !file) {
-    alert('Describí el plato o subí una foto primero.');
-    return;
-  }
+  const file = document.getElementById('food-image').files[0];
+  if (!desc && !file) { alert('Describí el plato o subí una foto primero.'); return; }
 
   const btn = document.getElementById('analyze-btn');
   const label = document.getElementById('analyze-label');
@@ -452,10 +538,7 @@ async function analyzeFood() {
 
   try {
     const res = await fetch('/api/analyze-food', { method: 'POST', body: formData });
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.detail || 'Error del servidor');
-    }
+    if (!res.ok) { const err = await res.json(); throw new Error(err.detail || 'Error del servidor'); }
     const data = await res.json();
 
     document.getElementById('ai-nombre').value    = data.nombre || '';
@@ -464,9 +547,7 @@ async function analyzeFood() {
     document.getElementById('ai-carbos').value    = data.carbohidratos || '';
     document.getElementById('ai-grasas').value    = data.grasas || '';
     document.getElementById('ai-meal-type-input').value = selectedAIMeal;
-
-    const notaEl = document.getElementById('ai-nota');
-    notaEl.textContent = data.nota || '';
+    document.getElementById('ai-nota').textContent = data.nota || '';
 
     const badge = document.getElementById('ai-confianza');
     const conf = data.confianza || 'media';
@@ -480,7 +561,6 @@ async function analyzeFood() {
 
     document.getElementById('ai-result').classList.remove('hidden');
     document.getElementById('ai-result').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-
   } catch(e) {
     alert('Error al analizar: ' + e.message);
   } finally {

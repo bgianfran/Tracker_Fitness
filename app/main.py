@@ -1,4 +1,5 @@
-from fastapi import FastAPI, Request, Depends, Form, HTTPException, UploadFile, File
+from fastapi import FastAPI, Request, Depends, Form, HTTPException, UploadFile, File, Body
+from typing import List
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
@@ -407,6 +408,34 @@ def add_food(
     db.add(entry)
     db.commit()
     return RedirectResponse(url="/", status_code=303)
+
+
+@app.post("/api/log/batch")
+def add_food_batch(request: Request, db: Session = Depends(get_db), payload: dict = Body(...)):
+    current_user, redirect = get_user_from_request(request, db)
+    if not current_user:
+        raise HTTPException(status_code=401)
+    today = date.today()
+    meal_type = payload.get("meal_type", "lunch")
+    items = payload.get("items", [])
+    if not items:
+        raise HTTPException(status_code=400, detail="Sin ingredientes")
+    for item in items:
+        factor = float(item.get("quantity_g", 100)) / 100.0
+        entry = FoodEntry(
+            user_id=current_user.id,
+            date=today,
+            meal_type=meal_type,
+            food_name=item.get("name", "Alimento"),
+            quantity_g=float(item.get("quantity_g", 100)),
+            calories=round(float(item.get("calories", 0)) * factor, 1),
+            protein=round(float(item.get("protein", 0)) * factor, 1),
+            carbs=round(float(item.get("carbs", 0)) * factor, 1),
+            fat=round(float(item.get("fat", 0)) * factor, 1),
+        )
+        db.add(entry)
+    db.commit()
+    return {"ok": True, "saved": len(items)}
 
 
 @app.delete("/log/{entry_id}")
