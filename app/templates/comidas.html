@@ -1,0 +1,767 @@
+{% extends "base.html" %}
+{% block title %}Comidas – FitTracker{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+  <!-- Header -->
+  <div class="mb-4">
+    <h1 class="text-2xl font-bold text-white">Comidas</h1>
+    <p class="text-gray-400 text-sm">Registrá tus comidas, revisá tu historial y pedile ayuda a la IA</p>
+  </div>
+
+  <!-- Top-level tabs -->
+  <div class="flex bg-gray-800 rounded-xl p-1 mb-6 border border-gray-700">
+    <button id="main-tab-registrar" onclick="switchMainTab('registrar')" class="flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-colors text-white bg-brand-600">
+      📝 Registrar
+    </button>
+    <button id="main-tab-registros" onclick="switchMainTab('registros')" class="flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-colors text-gray-400 hover:text-white">
+      📋 Registros
+    </button>
+    <button id="main-tab-cocina" onclick="switchMainTab('cocina')" class="flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-colors text-gray-400 hover:text-white">
+      👨‍🍳 Cocina IA
+    </button>
+  </div>
+
+  <!-- TAB 1: REGISTRAR -->
+  <div id="tab-registrar">
+
+    <!-- Mode Tabs -->
+    <div class="flex bg-gray-800 rounded-xl p-1 mb-6 border border-gray-700">
+      <button id="tab-manual" onclick="switchMode('manual')"
+              class="flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-colors text-white bg-brand-600">
+        🥗 Manual
+      </button>
+      <button id="tab-ai" onclick="switchMode('ai')"
+              class="flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-colors text-gray-400 hover:text-white">
+        ✨ IA
+      </button>
+    </div>
+
+    <!-- ─── Manual Mode ────────────────────────────────────────── -->
+    <div id="mode-manual">
+
+      <!-- Time + Meal type -->
+      <div class="bg-gray-800 rounded-2xl p-5 border border-gray-700 mb-4">
+        <!-- Time input -->
+        <div class="flex items-center justify-between mb-4">
+          <label class="text-sm font-semibold text-gray-300">Horario</label>
+          <div class="flex items-center gap-2">
+            <input type="time" id="eaten-at-input" value="{{ default_time }}"
+                   class="bg-gray-700 border border-gray-600 rounded-xl px-3 py-1.5 text-white text-sm focus:outline-none focus:border-brand-500"
+                   onchange="autoSelectMealFromTime()">
+            <span class="text-xs text-gray-500">hs</span>
+          </div>
+        </div>
+        <label class="block text-sm font-semibold text-gray-300 mb-3">Tipo de comida</label>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2" id="meal-btns">
+          {% for value, label, icon in [("lunch_dinner","Almuerzo / Cena","🍽️"),("breakfast_snack","Desayuno / Merienda","☀️"),("snack","Snack","🍎"),("drink","Bebida","🥤")] %}
+          <button type="button" data-meal="{{ value }}" onclick="selectMeal('{{ value }}')"
+                  class="meal-btn flex flex-col items-center justify-center gap-1 py-3 px-2 rounded-xl border-2 transition-all text-center
+                    {{ 'border-brand-500 bg-brand-900/20 text-brand-400' if value == suggested_meal else 'border-gray-600 text-gray-400' }}">
+            <span class="text-xl">{{ icon }}</span>
+            <span class="text-xs font-medium">{{ label }}</span>
+          </button>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Search + quantity + add -->
+      <div class="bg-gray-800 rounded-2xl p-5 border border-gray-700 mb-4">
+        <label class="block text-sm font-semibold text-gray-300 mb-3">Agregar ingrediente</label>
+
+        <!-- Search box -->
+        <div class="relative mb-3">
+          <div class="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+          </div>
+          <input id="search-input" type="text" placeholder="ej: pollo, arroz, huevo..."
+                 autocomplete="off"
+                 class="w-full bg-gray-700 border border-gray-600 rounded-xl pl-9 pr-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 text-sm">
+        </div>
+
+        <!-- Search results dropdown -->
+        <div id="search-results" class="mb-3 space-y-1 hidden"></div>
+
+        <!-- Selected food + quantity + add button -->
+        <div id="selected-area" class="hidden">
+          <div class="p-3 bg-brand-900/20 border border-brand-800 rounded-xl mb-3">
+            <div class="flex items-start justify-between gap-2 mb-2">
+              <div>
+                <p id="selected-name" class="text-sm font-semibold text-brand-300"></p>
+                <p id="selected-macros" class="text-xs text-gray-400 mt-0.5"></p>
+              </div>
+              <button type="button" onclick="clearSelection()" class="text-gray-500 hover:text-gray-300 flex-shrink-0">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+              </button>
+            </div>
+
+            <!-- Quantity row -->
+            <div class="flex items-center gap-2 mb-3">
+              <div class="relative flex-1">
+                <input type="number" id="quantity-input" value="100" min="1" max="5000" step="1"
+                       oninput="updatePreview()"
+                       class="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-brand-500 text-sm">
+                <span id="unit-label" class="absolute right-3 inset-y-0 flex items-center text-gray-400 text-sm pointer-events-none">g</span>
+              </div>
+              <div id="qty-buttons" class="flex gap-1">
+                <button type="button" onclick="setQty(50)"  class="qty-btn text-xs px-2 py-2 bg-gray-700 hover:bg-brand-600 text-gray-400 hover:text-white rounded-lg transition-colors border border-gray-600">50g</button>
+                <button type="button" onclick="setQty(100)" class="qty-btn text-xs px-2 py-2 bg-gray-700 hover:bg-brand-600 text-gray-400 hover:text-white rounded-lg transition-colors border border-gray-600">100g</button>
+                <button type="button" onclick="setQty(150)" class="qty-btn text-xs px-2 py-2 bg-gray-700 hover:bg-brand-600 text-gray-400 hover:text-white rounded-lg transition-colors border border-gray-600">150g</button>
+                <button type="button" onclick="setQty(200)" class="qty-btn text-xs px-2 py-2 bg-gray-700 hover:bg-brand-600 text-gray-400 hover:text-white rounded-lg transition-colors border border-gray-600">200g</button>
+              </div>
+            </div>
+
+            <!-- Macro preview for current item -->
+            <div id="item-preview" class="grid grid-cols-4 gap-2 text-center text-xs mb-3">
+              <div class="bg-gray-700/60 rounded-lg p-2">
+                <div class="text-gray-400">Cal</div>
+                <div id="prev-cal" class="font-bold text-white text-sm">–</div>
+              </div>
+              <div class="bg-gray-700/60 rounded-lg p-2">
+                <div class="text-gray-400">Prot</div>
+                <div id="prev-prot" class="font-bold text-brand-400 text-sm">–</div>
+              </div>
+              <div class="bg-gray-700/60 rounded-lg p-2">
+                <div class="text-gray-400">Carbs</div>
+                <div id="prev-carb" class="font-bold text-blue-400 text-sm">–</div>
+              </div>
+              <div class="bg-gray-700/60 rounded-lg p-2">
+                <div class="text-gray-400">Grasas</div>
+                <div id="prev-fat" class="font-bold text-yellow-400 text-sm">–</div>
+              </div>
+            </div>
+
+            <button type="button" onclick="addIngredient()"
+                    class="w-full bg-brand-600 hover:bg-brand-500 text-white font-semibold py-2 rounded-xl transition-colors text-sm">
+              + Agregar al plato
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ingredient list + totals -->
+      <div id="plate-section" class="hidden bg-gray-800 rounded-2xl p-5 border border-gray-700 mb-6">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-sm font-semibold text-gray-300">Plato</h3>
+          <span id="plate-count" class="text-xs text-gray-500"></span>
+        </div>
+
+        <div id="ingredient-list" class="space-y-2 mb-4"></div>
+
+        <!-- Totals -->
+        <div class="border-t border-gray-700 pt-3">
+          <p class="text-xs text-gray-500 uppercase tracking-wide mb-2">Total del plato</p>
+          <div class="grid grid-cols-4 gap-2 text-center text-xs">
+            <div class="bg-gray-700 rounded-lg p-2">
+              <div class="text-gray-400">Calorías</div>
+              <div id="total-cal" class="font-bold text-white text-sm">0</div>
+            </div>
+            <div class="bg-gray-700 rounded-lg p-2">
+              <div class="text-gray-400">Proteína</div>
+              <div id="total-prot" class="font-bold text-brand-400 text-sm">0g</div>
+            </div>
+            <div class="bg-gray-700 rounded-lg p-2">
+              <div class="text-gray-400">Carbos</div>
+              <div id="total-carb" class="font-bold text-blue-400 text-sm">0g</div>
+            </div>
+            <div class="bg-gray-700 rounded-lg p-2">
+              <div class="text-gray-400">Grasas</div>
+              <div id="total-fat" class="font-bold text-yellow-400 text-sm">0g</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button type="button" id="save-btn" onclick="savePlate()"
+              class="hidden w-full bg-brand-500 hover:bg-brand-600 text-white font-bold py-3 rounded-xl transition-colors text-sm shadow-lg shadow-brand-900/30">
+        Guardar registro
+      </button>
+    </div>
+
+    <!-- ─── AI Mode ─────────────────────────────────────────────── -->
+    <div id="mode-ai" class="hidden">
+
+      <div class="bg-gray-800 rounded-2xl p-5 border border-gray-700 mb-4">
+        <div class="flex items-center justify-between mb-4">
+          <label class="text-sm font-semibold text-gray-300">Horario</label>
+          <div class="flex items-center gap-2">
+            <input type="time" id="ai-eaten-at-input" value="{{ default_time }}"
+                   class="bg-gray-700 border border-gray-600 rounded-xl px-3 py-1.5 text-white text-sm focus:outline-none focus:border-brand-500">
+            <span class="text-xs text-gray-500">hs</span>
+          </div>
+        </div>
+        <label class="block text-sm font-semibold text-gray-300 mb-3">Tipo de comida</label>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2" id="ai-meal-btns">
+          {% for value, label, icon in [("lunch_dinner","Almuerzo / Cena","🍽️"),("breakfast_snack","Desayuno / Merienda","☀️"),("snack","Snack","🍎"),("drink","Bebida","🥤")] %}
+          <button type="button" data-meal="{{ value }}" onclick="selectAIMeal('{{ value }}')"
+            class="ai-meal-btn flex flex-col items-center justify-center gap-1 py-3 px-2 rounded-xl border-2 transition-all text-center
+              {{ 'border-brand-500 bg-brand-900/20 text-brand-400' if value == suggested_meal else 'border-gray-600 text-gray-400' }}">
+            <span class="text-xl">{{ icon }}</span>
+            <span class="text-xs font-medium">{{ label }}</span>
+          </button>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="bg-gray-800 rounded-2xl p-5 border border-gray-700 mb-4">
+        <div class="flex items-center gap-2 mb-4">
+          <div class="bg-brand-500/20 p-2 rounded-lg">
+            <svg class="w-5 h-5 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-sm font-semibold text-white">Analizar con IA</h3>
+            <p class="text-xs text-gray-400">Describí el plato o sacale una foto</p>
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <label class="block text-xs font-medium text-gray-400 mb-2">Foto del plato (opcional)</label>
+          <div id="drop-zone"
+               class="border-2 border-dashed border-gray-600 rounded-xl p-5 text-center cursor-pointer hover:border-brand-500 transition-colors"
+               onclick="document.getElementById('food-image').click()">
+            <div id="drop-placeholder">
+              <svg class="w-7 h-7 text-gray-500 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+              </svg>
+              <p class="text-sm text-gray-400">Tocá para sacar foto o elegir imagen</p>
+            </div>
+            <img id="image-preview" class="hidden max-h-40 mx-auto rounded-lg" />
+          </div>
+          <input type="file" id="food-image" accept="image/*" capture="environment" class="hidden">
+        </div>
+
+        <div class="mb-4">
+          <label class="block text-xs font-medium text-gray-400 mb-2">O describí el plato</label>
+          <textarea id="food-description" rows="3"
+            placeholder="Ej: Plato de arroz con pollo grillado y ensalada. Porción mediana."
+            class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-brand-500 resize-none"></textarea>
+        </div>
+
+        <button type="button" onclick="analyzeFood()" id="analyze-btn"
+          class="w-full bg-brand-500 hover:bg-brand-600 text-white font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2">
+          <svg id="analyze-icon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+          </svg>
+          <span id="analyze-label">Analizar con IA</span>
+        </button>
+      </div>
+
+      <div id="ai-result" class="hidden bg-gray-800 rounded-2xl p-5 border border-brand-600/50 mb-4">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-sm font-semibold text-white">Resultado del análisis</h3>
+          <span id="ai-confianza" class="text-xs px-2 py-1 rounded-lg font-medium"></span>
+        </div>
+        <form method="POST" action="/log" id="ai-save-form">
+          <input type="hidden" name="entry_mode" value="manual">
+          <input type="hidden" name="meal_type" id="ai-meal-type-input" value="{{ suggested_meal }}">
+          <input type="hidden" name="quantity_g" value="100">
+          <input type="hidden" name="eaten_at_str" id="ai-eaten-at-hidden" value="{{ default_time }}">
+          <div class="mb-3">
+            <label class="block text-xs font-medium text-gray-400 mb-1">Nombre del plato</label>
+            <input type="text" name="manual_name" id="ai-nombre"
+              class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brand-500">
+          </div>
+          <div class="grid grid-cols-2 gap-3 mb-3">
+            <div>
+              <label class="block text-xs font-medium text-gray-400 mb-1">Calorías (kcal)</label>
+              <input type="number" name="manual_calories" id="ai-calorias" step="1"
+                class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brand-500">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-400 mb-1">Proteínas (g)</label>
+              <input type="number" name="manual_protein" id="ai-proteinas" step="0.1"
+                class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brand-500">
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-3 mb-4">
+            <div>
+              <label class="block text-xs font-medium text-gray-400 mb-1">Carbohidratos (g)</label>
+              <input type="number" name="manual_carbs" id="ai-carbos" step="0.1"
+                class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brand-500">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-400 mb-1">Grasas (g)</label>
+              <input type="number" name="manual_fat" id="ai-grasas" step="0.1"
+                class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brand-500">
+            </div>
+          </div>
+          <p id="ai-nota" class="text-xs text-yellow-400 italic mb-4"></p>
+          <button type="submit"
+            class="w-full bg-brand-500 hover:bg-brand-600 text-white font-semibold py-3 rounded-xl transition-colors">
+            Guardar en el registro
+          </button>
+        </form>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- TAB 2: REGISTROS -->
+  <div id="tab-registros" class="hidden">
+    <div class="space-y-4">
+      {% if food_history %}
+        {% set ns = namespace(current_date=none) %}
+        {% for entry in food_history %}
+          {% if entry.date != ns.current_date %}
+            {% if not loop.first %}</div></div>{% endif %}
+            {% set ns.current_date = entry.date %}
+            <div class="bg-gray-800 rounded-2xl border border-gray-700 overflow-hidden">
+              <div class="px-4 py-3 bg-gray-700/40 border-b border-gray-700">
+                <span class="text-sm font-semibold text-gray-200">{{ entry.date.strftime('%d/%m/%Y') }}</span>
+              </div>
+              <div class="divide-y divide-gray-700/50">
+          {% endif %}
+              <div class="flex items-center justify-between px-4 py-2.5">
+                <div>
+                  <p class="text-sm text-white">{{ entry.food_name }}</p>
+                  <p class="text-xs text-gray-500">{{ entry.quantity_g|round(0)|int }}g · <span class="text-brand-400">{{ entry.calories }} kcal</span> · P: {{ entry.protein }}g</p>
+                </div>
+                {% if entry.eaten_at %}
+                <span class="text-xs text-gray-600">{{ entry.eaten_at.strftime('%H:%M') }}</span>
+                {% endif %}
+              </div>
+        {% endfor %}
+        </div></div>
+      {% else %}
+        <div class="text-center py-16">
+          <p class="text-gray-400">No hay registros en los últimos 30 días</p>
+          <button onclick="switchMainTab('registrar')" class="mt-3 text-brand-400 text-sm">Registrar ahora</button>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- TAB 3: COCINA IA -->
+  <div id="tab-cocina" class="hidden">
+    <!-- Meal type selector -->
+    <div class="bg-gray-800 rounded-2xl p-5 border border-gray-700 mb-4">
+      <h3 class="text-sm font-semibold text-white mb-2">¿Qué tenés disponible?</h3>
+      <p class="text-xs text-gray-400 mb-3">Contale a la IA qué ingredientes tenés o subí una foto de tu heladera/despensa</p>
+
+      <!-- Photo upload -->
+      <div class="mb-3">
+        <div id="cocina-drop" onclick="document.getElementById('cocina-file').click()"
+             class="border-2 border-dashed border-gray-600 hover:border-brand-500 rounded-xl p-4 text-center cursor-pointer transition-colors">
+          <div id="cocina-drop-placeholder">
+            <p class="text-sm text-gray-400">📷 Subí foto de tu heladera o despensa (opcional)</p>
+          </div>
+          <img id="cocina-preview" class="hidden max-h-32 mx-auto rounded-lg"/>
+        </div>
+        <input type="file" id="cocina-file" accept="image/*" capture="environment" class="hidden">
+      </div>
+
+      <textarea id="cocina-description" rows="3"
+        placeholder="Ej: Tengo pechuga de pollo, arroz, cebolla, tomate, ajo y un poco de queso..."
+        class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-brand-500 resize-none mb-3"></textarea>
+
+      <button onclick="askCocinaAI()" id="cocina-btn"
+              class="w-full bg-brand-500 hover:bg-brand-600 text-white font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2">
+        <span id="cocina-btn-label">✨ Sugerirme recetas</span>
+      </button>
+    </div>
+
+    <!-- Results -->
+    <div id="cocina-results" class="hidden space-y-4"></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Main tab switching
+function switchMainTab(tab) {
+  ['registrar', 'registros', 'cocina'].forEach(t => {
+    document.getElementById(`tab-${t}`).classList.toggle('hidden', t !== tab);
+    const btn = document.getElementById(`main-tab-${t}`);
+    const base = 'flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-colors';
+    btn.className = base + (t === tab ? ' text-white bg-brand-600' : ' text-gray-400 hover:text-white');
+  });
+}
+
+// Cocina IA
+document.getElementById('cocina-file').addEventListener('change', function() {
+  const file = this.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('cocina-preview').src = e.target.result;
+    document.getElementById('cocina-preview').classList.remove('hidden');
+    document.getElementById('cocina-drop-placeholder').classList.add('hidden');
+  };
+  reader.readAsDataURL(file);
+});
+
+async function askCocinaAI() {
+  const desc = document.getElementById('cocina-description').value.trim();
+  const file = document.getElementById('cocina-file').files[0];
+  if (!desc && !file) { alert('Describí qué tenés o subí una foto primero'); return; }
+
+  const btn = document.getElementById('cocina-btn');
+  const label = document.getElementById('cocina-btn-label');
+  btn.disabled = true;
+  label.textContent = 'Pensando recetas...';
+
+  const formData = new FormData();
+  if (desc) formData.append('description', desc);
+  if (file) formData.append('file', file);
+
+  try {
+    const res = await fetch('/api/cooking-ai', { method: 'POST', body: formData });
+    if (!res.ok) { const e = await res.json(); throw new Error(e.detail || 'Error'); }
+    const data = await res.json();
+    renderRecipes(data.recetas || []);
+  } catch(e) {
+    alert('Error: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    label.textContent = '✨ Sugerirme recetas';
+  }
+}
+
+function renderRecipes(recetas) {
+  const container = document.getElementById('cocina-results');
+  container.innerHTML = recetas.map((r, i) => `
+    <div class="bg-gray-800 rounded-2xl border border-gray-700 p-5">
+      <h3 class="text-base font-bold text-white mb-1">${r.nombre}</h3>
+      <div class="grid grid-cols-4 gap-2 text-center text-xs mb-3">
+        <div class="bg-gray-700 rounded-lg p-2"><div class="text-gray-400">Cal</div><div class="font-bold text-white">${r.macros?.calorias || '–'}</div></div>
+        <div class="bg-gray-700 rounded-lg p-2"><div class="text-gray-400">Prot</div><div class="font-bold text-brand-400">${r.macros?.proteinas || '–'}g</div></div>
+        <div class="bg-gray-700 rounded-lg p-2"><div class="text-gray-400">Carbs</div><div class="font-bold text-blue-400">${r.macros?.carbos || '–'}g</div></div>
+        <div class="bg-gray-700 rounded-lg p-2"><div class="text-gray-400">Grasa</div><div class="font-bold text-yellow-400">${r.macros?.grasas || '–'}g</div></div>
+      </div>
+      ${r.necesita_comprar?.length ? `<p class="text-xs text-yellow-400 mb-2">🛒 Necesitás comprar: ${r.necesita_comprar.join(', ')}</p>` : ''}
+      <details class="mt-2">
+        <summary class="text-xs text-brand-400 cursor-pointer">Ver ingredientes y preparación</summary>
+        <div class="mt-2 text-xs text-gray-300 space-y-2">
+          <p><strong class="text-gray-400">Ingredientes:</strong> ${(r.ingredientes || []).join(', ')}</p>
+          <ol class="list-decimal list-inside space-y-1">${(r.pasos || []).map(p => `<li>${p}</li>`).join('')}</ol>
+        </div>
+      </details>
+    </div>
+  `).join('');
+  container.classList.remove('hidden');
+  container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// ─── Mode switching ───────────────────────────────────────────
+function switchMode(mode) {
+  document.getElementById('mode-manual').classList.toggle('hidden', mode !== 'manual');
+  document.getElementById('mode-ai').classList.toggle('hidden', mode !== 'ai');
+  const base = 'flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-colors';
+  document.getElementById('tab-manual').className = `${base} ${mode === 'manual' ? 'text-white bg-brand-600' : 'text-gray-400 hover:text-white'}`;
+  document.getElementById('tab-ai').className     = `${base} ${mode === 'ai'     ? 'text-white bg-brand-600' : 'text-gray-400 hover:text-white'}`;
+}
+
+// ─── Meal selection (manual mode) ────────────────────────────
+let selectedMeal = '{{ suggested_meal }}';
+
+function selectMeal(val) {
+  selectedMeal = val;
+  document.querySelectorAll('#meal-btns .meal-btn').forEach(btn => {
+    if (btn.dataset.meal === val) {
+      btn.classList.remove('border-gray-600', 'text-gray-400');
+      btn.classList.add('border-brand-500', 'bg-brand-900/20', 'text-brand-400');
+    } else {
+      btn.classList.remove('border-brand-500', 'bg-brand-900/20', 'text-brand-400');
+      btn.classList.add('border-gray-600', 'text-gray-400');
+    }
+  });
+}
+
+function autoSelectMealFromTime() {
+  const val = document.getElementById('eaten-at-input').value;  // "HH:MM"
+  if (!val) return;
+  const h = parseInt(val.split(':')[0], 10);
+  let meal;
+  if (h >= 6  && h < 11) meal = 'breakfast_snack';
+  else if (h >= 11 && h < 16) meal = 'lunch_dinner';
+  else if (h >= 16 && h < 20) meal = 'snack';
+  else meal = 'lunch_dinner';
+  selectMeal(meal);
+}
+
+// ─── Ingredient list ──────────────────────────────────────────
+let ingredients = [];   // { name, quantity_g, calories, protein, carbs, fat }
+let selectedFood = null;
+let debounceTimer = null;
+
+const searchInput   = document.getElementById('search-input');
+const searchResults = document.getElementById('search-results');
+const selectedArea  = document.getElementById('selected-area');
+
+searchInput.addEventListener('input', () => {
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(doSearch, 200);
+});
+
+async function doSearch() {
+  const q = searchInput.value.trim();
+  if (q.length < 1) { searchResults.classList.add('hidden'); searchResults.innerHTML = ''; return; }
+  searchResults.innerHTML = `<p class="text-xs text-gray-500 px-2 py-2 animate-pulse">Buscando...</p>`;
+  searchResults.classList.remove('hidden');
+  try {
+    const results = await fetch(`/api/search?q=${encodeURIComponent(q)}`).then(r => r.json()).catch(() => []);
+    renderResults(results);
+  } catch(e) { console.error(e); }
+}
+
+function renderFoodBtn(item) {
+  const badge = (item.source === 'basico' || item.source === 'argenfood_unlu')
+    ? `<span class="text-xs text-emerald-500 flex-shrink-0">básico</span>`
+    : item.source === 'rnpa_generic'
+      ? `<span class="text-xs text-brand-400 flex-shrink-0">genérico</span>`
+      : `<span class="text-xs text-gray-500 flex-shrink-0">🇦🇷</span>`;
+  const ul = item.unidad === 'ml' ? 'ml' : 'g';
+  return `
+    <button type="button" onclick='selectFood(${JSON.stringify(item)})'
+            class="w-full text-left px-3 py-2.5 rounded-xl bg-gray-700 hover:bg-gray-600 transition-colors">
+      <div class="flex items-center justify-between gap-2">
+        <span class="text-sm font-medium text-white truncate">${item.name}</span>
+        <div class="flex items-center gap-1.5 flex-shrink-0">${badge}<span class="text-xs text-brand-400">${item.calories} kcal</span></div>
+      </div>
+      <div class="text-xs text-gray-500 mt-0.5">P: ${item.protein}g &bull; C: ${item.carbs}g &bull; G: ${item.fat}g / 100${ul}</div>
+    </button>`;
+}
+
+function renderResults(items) {
+  searchResults.innerHTML = items.length
+    ? items.map(renderFoodBtn).join('')
+    : `<p class="text-xs text-gray-500 px-2 py-2">Sin resultados</p>`;
+  searchResults.classList.remove('hidden');
+}
+
+function selectFood(item) {
+  selectedFood = item;
+  const u = item.unidad === 'ml' ? 'ml' : 'g';
+  document.getElementById('selected-name').textContent = item.name;
+  document.getElementById('selected-macros').textContent =
+    `${item.calories} kcal · P: ${item.protein}g · C: ${item.carbs}g · G: ${item.fat}g por 100${u}`;
+  document.getElementById('quantity-input').value = 100;
+  searchResults.classList.add('hidden');
+  searchResults.innerHTML = '';
+  searchInput.value = '';
+  selectedArea.classList.remove('hidden');
+  setUnit(u);
+  updatePreview();
+}
+
+function clearSelection() {
+  selectedFood = null;
+  selectedArea.classList.add('hidden');
+  searchInput.value = '';
+  setUnit('g');
+  searchInput.focus();
+}
+
+function setUnit(u) {
+  document.getElementById('unit-label').textContent = u;
+  const liquidQtys = [100, 200, 330, 500];
+  const solidQtys  = [50, 100, 150, 200];
+  const qtys = u === 'ml' ? liquidQtys : solidQtys;
+  document.querySelectorAll('#qty-buttons .qty-btn').forEach((btn, i) => {
+    btn.textContent = qtys[i] + u;
+    btn.onclick = () => setQty(qtys[i]);
+  });
+}
+
+function setQty(q) {
+  document.getElementById('quantity-input').value = q;
+  updatePreview();
+}
+
+function updatePreview() {
+  if (!selectedFood) return;
+  const qty = parseFloat(document.getElementById('quantity-input').value) || 0;
+  const f = qty / 100;
+  document.getElementById('prev-cal').textContent  = (selectedFood.calories * f).toFixed(0);
+  document.getElementById('prev-prot').textContent = (selectedFood.protein * f).toFixed(1) + 'g';
+  document.getElementById('prev-carb').textContent = (selectedFood.carbs * f).toFixed(1) + 'g';
+  document.getElementById('prev-fat').textContent  = (selectedFood.fat * f).toFixed(1) + 'g';
+}
+
+function addIngredient() {
+  if (!selectedFood) return;
+  const qty = parseFloat(document.getElementById('quantity-input').value) || 0;
+  if (qty <= 0) return;
+  ingredients.push({
+    name: selectedFood.name,
+    quantity_g: qty,
+    calories: selectedFood.calories,
+    protein:  selectedFood.protein,
+    carbs:    selectedFood.carbs,
+    fat:      selectedFood.fat,
+    unidad:   selectedFood.unidad || 'g',
+  });
+  clearSelection();
+  renderPlate();
+}
+
+function removeIngredient(i) {
+  ingredients.splice(i, 1);
+  renderPlate();
+}
+
+function renderPlate() {
+  const section  = document.getElementById('plate-section');
+  const saveBtn  = document.getElementById('save-btn');
+  const list     = document.getElementById('ingredient-list');
+  const countEl  = document.getElementById('plate-count');
+
+  if (!ingredients.length) {
+    section.classList.add('hidden');
+    saveBtn.classList.add('hidden');
+    return;
+  }
+
+  section.classList.remove('hidden');
+  saveBtn.classList.remove('hidden');
+  countEl.textContent = `${ingredients.length} ingrediente${ingredients.length > 1 ? 's' : ''}`;
+
+  list.innerHTML = ingredients.map((ing, i) => {
+    const f = ing.quantity_g / 100;
+    const u = ing.unidad === 'ml' ? 'ml' : 'g';
+    return `
+      <div class="flex items-center justify-between gap-2 py-2 border-b border-gray-700/50 last:border-0">
+        <div class="flex-1 min-w-0">
+          <p class="text-sm text-white truncate">${ing.name}</p>
+          <p class="text-xs text-gray-500">${ing.quantity_g}${u} · ${(ing.calories*f).toFixed(0)} kcal · P: ${(ing.protein*f).toFixed(1)}g · C: ${(ing.carbs*f).toFixed(1)}g · G: ${(ing.fat*f).toFixed(1)}g</p>
+        </div>
+        <button type="button" onclick="removeIngredient(${i})" class="text-gray-600 hover:text-red-400 flex-shrink-0 ml-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>`;
+  }).join('');
+
+  // Totals
+  let totCal = 0, totProt = 0, totCarb = 0, totFat = 0;
+  ingredients.forEach(ing => {
+    const f = ing.quantity_g / 100;
+    totCal  += ing.calories * f;
+    totProt += ing.protein  * f;
+    totCarb += ing.carbs    * f;
+    totFat  += ing.fat      * f;
+  });
+  document.getElementById('total-cal').textContent  = totCal.toFixed(0);
+  document.getElementById('total-prot').textContent = totProt.toFixed(1) + 'g';
+  document.getElementById('total-carb').textContent = totCarb.toFixed(1) + 'g';
+  document.getElementById('total-fat').textContent  = totFat.toFixed(1) + 'g';
+}
+
+async function savePlate() {
+  if (!ingredients.length) return;
+  const btn = document.getElementById('save-btn');
+  btn.disabled = true;
+  btn.textContent = 'Guardando...';
+  const eaten_at = document.getElementById('eaten-at-input').value || '';
+  try {
+    const res = await fetch('/api/log/batch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ meal_type: selectedMeal, items: ingredients, eaten_at }),
+    });
+    if (!res.ok) throw new Error('Error al guardar');
+    window.location.href = '/';
+  } catch(e) {
+    alert('Error: ' + e.message);
+    btn.disabled = false;
+    btn.textContent = 'Guardar registro';
+  }
+}
+
+// Close results on outside click
+document.addEventListener('click', e => {
+  if (!e.target.closest('#search-results') && !e.target.closest('#search-input')) {
+    searchResults.classList.add('hidden');
+  }
+});
+
+// ─── AI Mode ──────────────────────────────────────────────────
+let selectedAIMeal = '{{ suggested_meal }}';
+document.getElementById('ai-eaten-at-input').addEventListener('change', function() {
+  document.getElementById('ai-eaten-at-hidden').value = this.value;
+});
+
+function selectAIMeal(val) {
+  selectedAIMeal = val;
+  document.querySelectorAll('.ai-meal-btn').forEach(btn => {
+    if (btn.dataset.meal === val) {
+      btn.classList.remove('border-gray-600', 'text-gray-400');
+      btn.classList.add('border-brand-500', 'bg-brand-900/20', 'text-brand-400');
+    } else {
+      btn.classList.remove('border-brand-500', 'bg-brand-900/20', 'text-brand-400');
+      btn.classList.add('border-gray-600', 'text-gray-400');
+    }
+  });
+  document.getElementById('ai-meal-type-input').value = val;
+}
+
+document.getElementById('food-image').addEventListener('change', function() {
+  const file = this.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const preview = document.getElementById('image-preview');
+    preview.src = e.target.result;
+    preview.classList.remove('hidden');
+    document.getElementById('drop-placeholder').classList.add('hidden');
+  };
+  reader.readAsDataURL(file);
+});
+
+async function analyzeFood() {
+  const desc = document.getElementById('food-description').value.trim();
+  const file = document.getElementById('food-image').files[0];
+  if (!desc && !file) { alert('Describí el plato o subí una foto primero.'); return; }
+
+  const btn = document.getElementById('analyze-btn');
+  const label = document.getElementById('analyze-label');
+  btn.disabled = true;
+  label.textContent = 'Analizando...';
+
+  const formData = new FormData();
+  if (desc) formData.append('description', desc);
+  if (file) formData.append('file', file);
+
+  try {
+    const res = await fetch('/api/analyze-food', { method: 'POST', body: formData });
+    if (!res.ok) { const err = await res.json(); throw new Error(err.detail || 'Error del servidor'); }
+    const data = await res.json();
+
+    document.getElementById('ai-nombre').value    = data.nombre || '';
+    document.getElementById('ai-calorias').value  = data.calorias || '';
+    document.getElementById('ai-proteinas').value = data.proteinas || '';
+    document.getElementById('ai-carbos').value    = data.carbohidratos || '';
+    document.getElementById('ai-grasas').value    = data.grasas || '';
+    document.getElementById('ai-meal-type-input').value = selectedAIMeal;
+    document.getElementById('ai-nota').textContent = data.nota || '';
+
+    const badge = document.getElementById('ai-confianza');
+    const conf = data.confianza || 'media';
+    const confStyles = {
+      alta:  'bg-brand-900/50 text-brand-400 border border-brand-700',
+      media: 'bg-yellow-900/40 text-yellow-400 border border-yellow-800',
+      baja:  'bg-red-900/40 text-red-400 border border-red-800'
+    };
+    badge.className = 'text-xs px-2 py-1 rounded-lg font-medium ' + (confStyles[conf] || confStyles.media);
+    badge.textContent = 'Confianza: ' + conf;
+
+    document.getElementById('ai-result').classList.remove('hidden');
+    document.getElementById('ai-result').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  } catch(e) {
+    alert('Error al analizar: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    label.textContent = 'Analizar con IA';
+  }
+}
+</script>
+{% endblock %}

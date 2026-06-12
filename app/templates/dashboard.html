@@ -8,13 +8,49 @@
     <h1 class="text-2xl font-bold text-white">¡Hola, {{ profile.name }}! 👋</h1>
     <p class="text-gray-400 text-sm mt-0.5 capitalize">{{ today_str }}</p>
   </div>
-  <a href="/log"
+  <a href="/comidas"
      class="inline-flex items-center gap-2 bg-brand-500 hover:bg-brand-600 text-white font-semibold px-5 py-2.5 rounded-xl shadow-lg shadow-brand-900/30 transition-colors text-sm">
     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
     </svg>
     Registrar comida
   </a>
+</div>
+
+<!-- Time window selector -->
+<div class="flex items-center gap-2 mb-6 overflow-x-auto pb-1">
+  <button onclick="setWindow('day')" id="win-day"
+          class="win-btn flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-colors bg-brand-600 text-white">
+    Hoy
+  </button>
+  <button onclick="setWindow('week')" id="win-week"
+          class="win-btn flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-colors bg-gray-700 text-gray-400 hover:text-white">
+    7 días
+  </button>
+  <button onclick="setWindow('month')" id="win-month"
+          class="win-btn flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-colors bg-gray-700 text-gray-400 hover:text-white">
+    30 días
+  </button>
+</div>
+
+<!-- Window stats (shown when week/month selected) -->
+<div id="window-stats" class="hidden mb-6 grid grid-cols-2 lg:grid-cols-4 gap-4">
+  <div class="bg-gray-800 rounded-2xl p-4 border border-gray-700">
+    <p class="text-xs text-gray-400 uppercase mb-1">Calorías prom/día</p>
+    <p id="ws-cal" class="text-2xl font-bold text-white">–</p>
+  </div>
+  <div class="bg-gray-800 rounded-2xl p-4 border border-gray-700">
+    <p class="text-xs text-gray-400 uppercase mb-1">Proteína prom/día</p>
+    <p id="ws-prot" class="text-2xl font-bold text-brand-400">–</p>
+  </div>
+  <div class="bg-gray-800 rounded-2xl p-4 border border-gray-700">
+    <p class="text-xs text-gray-400 uppercase mb-1">Carbos prom/día</p>
+    <p id="ws-carb" class="text-2xl font-bold text-blue-400">–</p>
+  </div>
+  <div class="bg-gray-800 rounded-2xl p-4 border border-gray-700">
+    <p class="text-xs text-gray-400 uppercase mb-1">Grasas prom/día</p>
+    <p id="ws-fat" class="text-2xl font-bold text-yellow-400">–</p>
+  </div>
 </div>
 
 <!-- Macro Cards -->
@@ -263,7 +299,7 @@
           d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
       </svg>
       <p class="text-gray-500 text-sm">Sin datos aún hoy</p>
-      <a href="/log" class="mt-2 text-brand-400 text-xs hover:underline">Registrar comida</a>
+      <a href="/comidas" class="mt-2 text-brand-400 text-xs hover:underline">Registrar comida</a>
     </div>
     {% endif %}
   </div>
@@ -327,7 +363,7 @@
         </svg>
         <p class="text-gray-400 font-medium">No hay registros hoy</p>
         <p class="text-gray-600 text-sm mt-1">Empezá registrando tu primera comida</p>
-        <a href="/log"
+        <a href="/comidas"
            class="mt-4 bg-brand-500 hover:bg-brand-600 text-white text-sm font-semibold px-5 py-2 rounded-xl transition-colors">
           Registrar ahora
         </a>
@@ -429,6 +465,29 @@ async function deleteEntry(id) {
   } catch(e) {
     alert('Error al eliminar la entrada');
   }
+}
+
+// Time window
+let currentWindow = 'day';
+async function setWindow(w) {
+  currentWindow = w;
+  document.querySelectorAll('.win-btn').forEach(btn => {
+    btn.className = 'win-btn flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-colors '
+      + (btn.id === `win-${w}` ? 'bg-brand-600 text-white' : 'bg-gray-700 text-gray-400 hover:text-white');
+  });
+  if (w === 'day') {
+    document.getElementById('window-stats').classList.add('hidden');
+    return;
+  }
+  try {
+    const data = await fetch(`/api/stats?window=${w}`).then(r => r.json());
+    const days = data.days || 1;
+    document.getElementById('ws-cal').textContent = Math.round(data.totals.calories / days);
+    document.getElementById('ws-prot').textContent = Math.round(data.totals.protein / days) + 'g';
+    document.getElementById('ws-carb').textContent = Math.round(data.totals.carbs / days) + 'g';
+    document.getElementById('ws-fat').textContent = Math.round(data.totals.fat / days) + 'g';
+    document.getElementById('window-stats').classList.remove('hidden');
+  } catch(e) { console.error(e); }
 }
 </script>
 {% endblock %}

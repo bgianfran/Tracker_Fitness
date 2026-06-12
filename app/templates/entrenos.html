@@ -1,0 +1,645 @@
+{% extends "base.html" %}
+{% block title %}Entrenos – FitTracker{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto space-y-5">
+
+  <!-- Header -->
+  <div class="flex items-center justify-between mb-4">
+    <div>
+      <h1 class="text-2xl font-bold text-white">Entrenos</h1>
+      <p class="text-gray-400 text-sm">Tus actividades, conexiones y rutinas</p>
+    </div>
+  </div>
+
+  <!-- Top-level tabs -->
+  <div class="flex bg-gray-800 rounded-xl p-1 mb-6 border border-gray-700">
+    <button id="main-tab-registrar" onclick="switchMainTab('registrar')" class="flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-colors text-white bg-brand-600">
+      ➕ Registrar
+    </button>
+    <button id="main-tab-rutinas" onclick="switchMainTab('rutinas')" class="flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-colors text-gray-400 hover:text-white">
+      📋 Mis Rutinas
+    </button>
+    <button id="main-tab-historial" onclick="switchMainTab('historial')" class="flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-colors text-gray-400 hover:text-white">
+      📊 Historial
+    </button>
+  </div>
+
+  <!-- TAB 1: REGISTRAR -->
+  <div id="tab-registrar">
+
+    <!-- Flash: Strava connected -->
+    {% if flash_strava_connected %}
+    <div class="bg-orange-900/30 border border-orange-600/50 rounded-xl p-3 flex items-center gap-2 text-sm text-orange-300 mb-4">
+      <span class="text-lg">🎉</span>
+      <span>¡Strava conectado! Tus actividades ya aparecen en el timeline.</span>
+    </div>
+    {% endif %}
+    {% if flash_strava_error %}
+    <div class="bg-red-900/30 border border-red-700/50 rounded-xl p-3 flex items-center gap-2 text-sm text-red-300 mb-4">
+      <span>❌ Error al conectar Strava. Intentá de nuevo.</span>
+    </div>
+    {% endif %}
+
+    <!-- Strava + Hevy connection bar -->
+    <div class="flex flex-wrap gap-2 mb-4">
+      {% if strava_connected %}
+      <div class="flex items-center gap-2 bg-orange-900/20 border border-orange-700/50 rounded-xl px-3 py-2 text-sm">
+        <span class="text-orange-400 font-medium">🟠 Strava conectado</span>
+        <form action="/strava/disconnect" method="post" class="inline">
+          <button type="submit" class="text-xs text-gray-500 hover:text-red-400 transition-colors ml-1">Desconectar</button>
+        </form>
+      </div>
+      {% else %}
+      <a href="/strava/connect"
+         class="flex items-center gap-2 bg-orange-600 hover:bg-orange-500 active:bg-orange-700 text-white font-semibold px-4 py-2 rounded-xl transition-colors text-sm">
+        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/>
+        </svg>
+        Conectar Strava
+      </a>
+      {% endif %}
+      {% if strava_error %}
+      <div class="flex items-center gap-1 text-xs text-yellow-400 bg-yellow-900/20 border border-yellow-700/50 rounded-xl px-3 py-2">
+        ⚠️ {{ strava_error }}
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Hevy notice if no key -->
+    {% if hevy_error %}
+    <div class="bg-yellow-900/30 border border-yellow-700/50 rounded-xl p-3 flex items-start gap-2 text-sm text-yellow-300 mb-4">
+      <svg class="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+      </svg>
+      <span>{{ hevy_error }}</span>
+    </div>
+    {% endif %}
+
+    <!-- Weekly stats -->
+    {% if week_sessions > 0 or week_minutes > 0 or week_kcal > 0 %}
+    <div class="grid grid-cols-3 gap-3 mb-4">
+      <div class="bg-gray-800 rounded-xl p-4 text-center border border-gray-700">
+        <div class="text-2xl font-bold text-brand-400">{{ week_sessions }}</div>
+        <div class="text-xs text-gray-400 mt-1">Sesiones<br>esta semana</div>
+      </div>
+      <div class="bg-gray-800 rounded-xl p-4 text-center border border-gray-700">
+        <div class="text-2xl font-bold text-brand-400">{{ week_minutes }}</div>
+        <div class="text-xs text-gray-400 mt-1">Minutos<br>esta semana</div>
+      </div>
+      <div class="bg-gray-800 rounded-xl p-4 text-center border border-gray-700">
+        <div class="text-2xl font-bold text-orange-400">{{ week_kcal }}</div>
+        <div class="text-xs text-gray-400 mt-1">kcal<br>quemadas</div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- New workout form (always visible in this tab) -->
+    <div class="bg-gray-800 border border-gray-700 rounded-2xl overflow-hidden">
+      <div class="bg-gray-700/50 px-5 py-3">
+        <h2 class="font-semibold text-white">Registrar actividad</h2>
+      </div>
+
+      <form action="/workouts" method="post" class="p-5 space-y-6">
+
+        <!-- 1. Fecha + Tipo de actividad -->
+        <div class="space-y-3">
+          <div>
+            <label class="block text-sm font-medium text-gray-300 mb-1.5">Fecha</label>
+            <input type="date" name="workout_date" id="workout_date"
+              value="{{ today.isoformat() }}"
+              class="w-full sm:w-auto bg-gray-700 border border-gray-600 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-brand-400 focus:ring-1 focus:ring-brand-400"/>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-300 mb-2">Tipo de actividad</label>
+            <input type="hidden" name="activity_type" id="activity_type_input" required/>
+            <div class="grid grid-cols-4 gap-2">
+              {% set activities = [
+                ("Fútbol", "⚽"),
+                ("MMA / Boxeo", "🥊"),
+                ("Correr", "🏃"),
+                ("Bici / Cardio", "🚴"),
+                ("Circuito / Funcional", "🤸"),
+                ("Natación", "🏊"),
+                ("Deporte (otro)", "🎾"),
+                ("Personalizado", "✏️"),
+              ] %}
+              {% for act, icon in activities %}
+              <button type="button" onclick="selectActivity('{{ act }}', this)"
+                class="activity-btn flex flex-col items-center gap-1 bg-gray-700 hover:bg-gray-600 border-2 border-transparent rounded-xl p-3 transition-all">
+                <span class="text-2xl">{{ icon }}</span>
+                <span class="text-xs text-gray-300 text-center leading-tight">{{ act }}</span>
+              </button>
+              {% endfor %}
+            </div>
+            <!-- Custom type input -->
+            <div id="custom_type_wrapper" class="hidden mt-2">
+              <input type="text" name="custom_type" id="custom_type_input"
+                placeholder="Ej: CrossFit, Pilates, Yoga..."
+                class="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-brand-400 focus:ring-1 focus:ring-brand-400"/>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Duración + Intensidad -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-300 mb-1.5">Duración (minutos)</label>
+            <input type="number" name="duration_min" id="duration_min" min="1" max="600"
+              placeholder="Ej: 90"
+              class="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-brand-400 focus:ring-1 focus:ring-brand-400"/>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-300 mb-2">Intensidad</label>
+            <input type="hidden" name="intensity" id="intensity_input"/>
+            <div class="flex gap-2">
+              <button type="button" onclick="selectIntensity('baja', this)"
+                class="intensity-btn flex-1 py-2 rounded-full text-sm font-medium border-2 border-green-600 text-green-400 hover:bg-green-900/40 transition-all">
+                Baja
+              </button>
+              <button type="button" onclick="selectIntensity('media', this)"
+                class="intensity-btn flex-1 py-2 rounded-full text-sm font-medium border-2 border-yellow-600 text-yellow-400 hover:bg-yellow-900/40 transition-all">
+                Media
+              </button>
+              <button type="button" onclick="selectIntensity('alta', this)"
+                class="intensity-btn flex-1 py-2 rounded-full text-sm font-medium border-2 border-orange-600 text-orange-400 hover:bg-orange-900/40 transition-all">
+                Alta
+              </button>
+              <button type="button" onclick="selectIntensity('maxima', this)"
+                class="intensity-btn flex-1 py-2 rounded-full text-sm font-medium border-2 border-red-600 text-red-400 hover:bg-red-900/40 transition-all">
+                Máxima
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Calorías -->
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-gray-300">Calorías quemadas</label>
+          <div class="flex gap-2 items-start flex-wrap">
+            <div class="flex-1 min-w-[140px]">
+              <input type="number" name="calories_burned" id="calories_input" min="0" max="5000"
+                placeholder="Ej: 450"
+                class="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-brand-400 focus:ring-1 focus:ring-brand-400"
+                oninput="onCaloriesManualInput()"/>
+            </div>
+            <input type="hidden" name="calories_source" id="calories_source_input" value="manual"/>
+            <button type="button" id="estimate-btn"
+              onclick="estimateCalories()"
+              {% if not anthropic_configured %}disabled title="ANTHROPIC_API_KEY no configurada"{% endif %}
+              class="flex items-center gap-1.5 bg-purple-700 hover:bg-purple-600 disabled:bg-gray-700 disabled:text-gray-500 disabled:cursor-not-allowed text-white text-sm font-medium px-4 py-2.5 rounded-xl transition-colors">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+              </svg>
+              <span id="estimate-btn-text">Estimar con IA</span>
+            </button>
+          </div>
+          <div id="calories-source-badge" class="hidden">
+            <span id="calories-source-text" class="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-gray-700 text-gray-300"></span>
+          </div>
+          <div id="ai-explanation" class="hidden text-xs text-purple-300 bg-purple-900/20 border border-purple-800/50 rounded-lg px-3 py-2"></div>
+        </div>
+
+        <!-- 4. Opcionales -->
+        <details class="group">
+          <summary class="cursor-pointer text-sm font-medium text-gray-400 hover:text-gray-200 transition-colors flex items-center gap-1 select-none">
+            <svg class="w-4 h-4 transition-transform group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+            Datos opcionales (FC, distancia, notas)
+          </summary>
+          <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-medium text-gray-400 mb-1.5">FC promedio (bpm)</label>
+              <input type="number" name="heart_rate_avg" min="40" max="220" placeholder="Ej: 155"
+                class="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-brand-400 focus:ring-1 focus:ring-brand-400"/>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-400 mb-1.5">Distancia (km)</label>
+              <input type="number" name="distance_km" step="0.01" min="0" placeholder="Ej: 5.2"
+                class="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-brand-400 focus:ring-1 focus:ring-brand-400"/>
+            </div>
+            <div class="sm:col-span-2">
+              <label class="block text-xs font-medium text-gray-400 mb-1.5">Notas</label>
+              <textarea name="notes" rows="2" id="notes_input"
+                placeholder="Ej: Partido de 90 min, gané 3-1, sentí bien las piernas..."
+                class="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-brand-400 focus:ring-1 focus:ring-brand-400 resize-none"></textarea>
+            </div>
+          </div>
+        </details>
+
+        <!-- Submit -->
+        <button type="submit"
+          class="w-full bg-brand-500 hover:bg-brand-600 active:bg-brand-700 text-white font-bold py-3 rounded-xl transition-colors text-base">
+          Guardar actividad
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- TAB 2: MIS RUTINAS -->
+  <div id="tab-rutinas" class="hidden">
+    <div class="text-center py-16 space-y-4">
+      <div class="text-5xl">📋</div>
+      <h3 class="text-lg font-semibold text-white">Mis Rutinas</h3>
+      <p class="text-gray-400 text-sm max-w-xs mx-auto">Próximamente podrás crear y organizar tus rutinas de gym, separadas en carpetas</p>
+      <div class="bg-gray-800 rounded-2xl p-5 border border-dashed border-gray-600 max-w-sm mx-auto text-left">
+        <p class="text-xs text-gray-500 font-semibold uppercase mb-2">Lo que viene</p>
+        <ul class="text-sm text-gray-400 space-y-1.5">
+          <li>📁 Carpetas por bloque de entrenamiento</li>
+          <li>💪 Rutinas predefinidas o personalizadas</li>
+          <li>🔄 Progresión de cargas automática</li>
+          <li>📊 Historial por ejercicio</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 3: HISTORIAL -->
+  <div id="tab-historial" class="hidden">
+
+    <!-- Combined workout timeline -->
+    <div class="space-y-3">
+      <h2 class="text-lg font-semibold text-gray-200">Actividades recientes</h2>
+
+      {% set intensity_border = {"baja": "border-green-500", "media": "border-yellow-500", "alta": "border-orange-500", "maxima": "border-red-500"} %}
+      {% set intensity_badge = {"baja": "bg-green-900/50 text-green-300", "media": "bg-yellow-900/50 text-yellow-300", "alta": "bg-orange-900/50 text-orange-300", "maxima": "bg-red-900/50 text-red-300"} %}
+      {% set intensity_label = {"baja": "Baja", "media": "Media", "alta": "Alta", "maxima": "Máxima"} %}
+
+      {% set days_es = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"] %}
+      {% set months_es = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"] %}
+
+      {# Build combined list: manual + hevy + strava #}
+      {% set ns = namespace(all_items=[]) %}
+      {% for mw in manual_workouts %}
+        {% set ns.all_items = ns.all_items + [{"type": "manual", "data": mw, "sort_date": mw.date.isoformat()}] %}
+      {% endfor %}
+      {% for hw in hevy_workouts %}
+        {% set hw_date = hw.get("sort_date", hw.get("start_time", "")[:10]) %}
+        {% set ns.all_items = ns.all_items + [{"type": "hevy", "data": hw, "sort_date": hw_date}] %}
+      {% endfor %}
+      {% for sw in strava_workouts %}
+        {% set ns.all_items = ns.all_items + [{"type": "strava", "data": sw, "sort_date": sw.get("sort_date", "")}] %}
+      {% endfor %}
+      {% set ns.all_items = ns.all_items | sort(attribute="sort_date", reverse=True) %}
+
+      {% if ns.all_items %}
+      <div class="space-y-2">
+        {% for item in ns.all_items %}
+
+          {% if item.type == "manual" %}
+          {% set mw = item.data %}
+          {% set border_class = intensity_border.get(mw.intensity, "border-gray-600") %}
+          <div class="bg-gray-800 border border-gray-700 border-l-4 {{ border_class }} rounded-xl p-4 relative">
+            <div class="flex items-start justify-between gap-3">
+              <div class="flex items-start gap-3 flex-1 min-w-0">
+                <!-- Icon -->
+                <div class="text-2xl flex-shrink-0">
+                  {% if mw.activity_type == "Fútbol" %}⚽
+                  {% elif mw.activity_type == "MMA / Boxeo" %}🥊
+                  {% elif mw.activity_type == "Correr" %}🏃
+                  {% elif mw.activity_type == "Bici / Cardio" %}🚴
+                  {% elif mw.activity_type == "Circuito / Funcional" %}🤸
+                  {% elif mw.activity_type == "Natación" %}🏊
+                  {% elif mw.activity_type == "Deporte (otro)" %}🎾
+                  {% else %}✏️{% endif %}
+                </div>
+                <div class="flex-1 min-w-0">
+                  <!-- Title row -->
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <span class="font-semibold text-white">
+                      {% if mw.activity_type == "Personalizado" and mw.custom_type %}{{ mw.custom_type }}
+                      {% else %}{{ mw.activity_type }}{% endif %}
+                    </span>
+                    {% if mw.intensity %}
+                    <span class="text-xs px-2 py-0.5 rounded-full font-medium {{ intensity_badge.get(mw.intensity, 'bg-gray-700 text-gray-300') }}">
+                      {{ intensity_label.get(mw.intensity, mw.intensity) }}
+                    </span>
+                    {% endif %}
+                  </div>
+                  <!-- Date -->
+                  <div class="text-xs text-gray-400 mt-0.5">
+                    {{ days_es[mw.date.weekday()] }}, {{ mw.date.day }} {{ months_es[mw.date.month - 1] }} {{ mw.date.year }}
+                  </div>
+                  <!-- Stats row -->
+                  <div class="flex items-center gap-3 mt-2 flex-wrap text-sm text-gray-300">
+                    {% if mw.duration_min %}
+                    <span class="flex items-center gap-1">
+                      <svg class="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                      </svg>
+                      {{ mw.duration_min }} min
+                    </span>
+                    {% endif %}
+                    {% if mw.calories_burned %}
+                    <span class="flex items-center gap-1 text-orange-300">
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"/>
+                      </svg>
+                      {{ mw.calories_burned }} kcal
+                      {% if mw.calories_source == "ai" %}<span class="text-xs text-purple-400">(IA)</span>{% endif %}
+                    </span>
+                    {% endif %}
+                    {% if mw.heart_rate_avg %}
+                    <span class="flex items-center gap-1 text-red-300">
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                      </svg>
+                      {{ mw.heart_rate_avg }} bpm
+                    </span>
+                    {% endif %}
+                    {% if mw.distance_km %}
+                    <span class="flex items-center gap-1 text-blue-300">
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                      </svg>
+                      {{ mw.distance_km }} km
+                    </span>
+                    {% endif %}
+                  </div>
+                  {% if mw.notes %}
+                  <p class="text-xs text-gray-400 mt-2 leading-relaxed">{{ mw.notes }}</p>
+                  {% endif %}
+                </div>
+              </div>
+              <!-- Delete button -->
+              <button onclick="deleteWorkout({{ mw.id }}, this)"
+                class="flex-shrink-0 p-2 text-gray-600 hover:text-red-400 rounded-lg hover:bg-red-900/20 transition-colors touch-target">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          {% elif item.type == "hevy" %}
+          {% set hw = item.data %}
+          <div class="bg-gray-800 border border-gray-700 border-l-4 border-brand-600 rounded-xl p-4">
+            <div class="flex items-start gap-3">
+              <div class="text-2xl flex-shrink-0">💪</div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="font-semibold text-white">{{ hw.get("title", "Entrenamiento") }}</span>
+                  <span class="text-xs px-2 py-0.5 rounded-full bg-brand-900/50 text-brand-300 font-medium">Hevy</span>
+                </div>
+                <div class="text-xs text-gray-400 mt-0.5">
+                  {% set hw_date_str = hw.get("sort_date", "") %}
+                  {% if hw_date_str %}{{ hw_date_str }}{% endif %}
+                </div>
+                <!-- Stats -->
+                <div class="flex items-center gap-3 mt-2 flex-wrap text-sm text-gray-300">
+                  {% if hw.get("duration_seconds") %}
+                  <span class="flex items-center gap-1">
+                    <svg class="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    {{ (hw.get("duration_seconds", 0) // 60) }} min
+                  </span>
+                  {% endif %}
+                  {% if hw.get("exercise_count") %}
+                  <span class="text-gray-400">{{ hw.get("exercise_count") }} ejercicios</span>
+                  {% endif %}
+                  {% if hw.get("total_volume_kg") %}
+                  <span class="text-gray-400">{{ hw.get("total_volume_kg") | round(0) | int }} kg vol.</span>
+                  {% endif %}
+                </div>
+                <!-- Exercises -->
+                {% if hw.get("exercises") %}
+                <div class="mt-2 flex flex-wrap gap-1.5">
+                  {% for ex in hw.get("exercises", [])[:6] %}
+                  <span class="text-xs bg-gray-700 text-gray-300 px-2 py-0.5 rounded-full">{{ ex.get("name", ex) if ex is mapping else ex }}</span>
+                  {% endfor %}
+                  {% if hw.get("exercises") | length > 6 %}
+                  <span class="text-xs text-gray-500">+{{ hw.get("exercises") | length - 6 }} más</span>
+                  {% endif %}
+                </div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          {% elif item.type == "strava" %}
+          {% set sw = item.data %}
+          <div class="bg-gray-800 border border-gray-700 border-l-4 border-orange-500 rounded-xl p-4">
+            <div class="flex items-start gap-3">
+              <div class="text-2xl flex-shrink-0">{{ sw.get("emoji", "🏅") }}</div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="font-semibold text-white">{{ sw.get("title", sw.get("sport_type", "Actividad")) }}</span>
+                  <span class="text-xs px-2 py-0.5 rounded-full bg-orange-900/50 text-orange-300 font-medium">Strava</span>
+                </div>
+                <div class="text-xs text-gray-400 mt-0.5">{{ sw.get("sort_date", "") }}</div>
+                <div class="flex items-center gap-3 mt-2 flex-wrap text-sm text-gray-300">
+                  {% if sw.get("duration_seconds") %}
+                  <span class="flex items-center gap-1">
+                    <svg class="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    {{ (sw.get("duration_seconds", 0) // 60) }} min
+                  </span>
+                  {% endif %}
+                  {% if sw.get("distance_km") %}
+                  <span class="flex items-center gap-1 text-blue-300">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                    </svg>
+                    {{ sw.get("distance_km") }} km
+                  </span>
+                  {% endif %}
+                  {% if sw.get("calories") %}
+                  <span class="flex items-center gap-1 text-orange-300">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"/>
+                    </svg>
+                    {{ sw.get("calories") }} kcal
+                  </span>
+                  {% endif %}
+                  {% if sw.get("avg_heart_rate") %}
+                  <span class="flex items-center gap-1 text-red-300">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                    </svg>
+                    {{ sw.get("avg_heart_rate") | round(0) | int }} bpm
+                  </span>
+                  {% endif %}
+                  {% if sw.get("elevation_gain") %}
+                  <span class="flex items-center gap-1 text-green-300">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
+                    </svg>
+                    {{ sw.get("elevation_gain") | round(0) | int }} m
+                  </span>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+          {% endif %}
+
+        {% endfor %}
+      </div>
+
+      {% else %}
+      <!-- Empty state -->
+      <div class="text-center py-16 space-y-3">
+        <div class="text-5xl">🏋️</div>
+        <p class="text-gray-400 text-lg font-medium">Sin actividades registradas</p>
+        <p class="text-gray-500 text-sm">Registrá tu primer entrenamiento en la pestaña "Registrar".</p>
+        <button onclick="switchMainTab('registrar')"
+          class="mt-2 inline-flex items-center gap-2 bg-brand-500 hover:bg-brand-600 text-white font-semibold px-5 py-2.5 rounded-xl transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+          </svg>
+          Registrar actividad
+        </button>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Main tab switching
+function switchMainTab(tab) {
+  ['registrar', 'rutinas', 'historial'].forEach(t => {
+    document.getElementById(`tab-${t}`).classList.toggle('hidden', t !== tab);
+    const btn = document.getElementById(`main-tab-${t}`);
+    const base = 'flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-colors';
+    btn.className = base + (t === tab ? ' text-white bg-brand-600' : ' text-gray-400 hover:text-white');
+  });
+}
+
+function selectActivity(name, btn) {
+  // Deselect all
+  document.querySelectorAll('.activity-btn').forEach(b => {
+    b.classList.remove('border-brand-400', 'bg-brand-900/30');
+    b.classList.add('border-transparent');
+  });
+  // Select this
+  btn.classList.remove('border-transparent');
+  btn.classList.add('border-brand-400', 'bg-brand-900/30');
+  // Set input value
+  document.getElementById('activity_type_input').value = name;
+  // Show/hide custom input
+  const wrapper = document.getElementById('custom_type_wrapper');
+  if (name === 'Personalizado') {
+    wrapper.classList.remove('hidden');
+    document.getElementById('custom_type_input').focus();
+  } else {
+    wrapper.classList.add('hidden');
+  }
+}
+
+function selectIntensity(value, btn) {
+  const colorMap = {
+    baja: { border: 'border-green-600', text: 'text-green-400', bg: 'bg-green-900/40' },
+    media: { border: 'border-yellow-600', text: 'text-yellow-400', bg: 'bg-yellow-900/40' },
+    alta: { border: 'border-orange-600', text: 'text-orange-400', bg: 'bg-orange-900/40' },
+    maxima: { border: 'border-red-600', text: 'text-red-400', bg: 'bg-red-900/40' },
+  };
+  // Reset all
+  document.querySelectorAll('.intensity-btn').forEach(b => {
+    b.classList.remove('bg-green-900/40', 'bg-yellow-900/40', 'bg-orange-900/40', 'bg-red-900/40', 'font-bold');
+  });
+  // Activate
+  const c = colorMap[value];
+  if (c) btn.classList.add(c.bg, 'font-bold');
+  document.getElementById('intensity_input').value = value;
+}
+
+function onCaloriesManualInput() {
+  const val = document.getElementById('calories_input').value;
+  document.getElementById('calories_source_input').value = 'manual';
+  const badge = document.getElementById('calories-source-badge');
+  const aiExp = document.getElementById('ai-explanation');
+  if (val) {
+    badge.classList.remove('hidden');
+    document.getElementById('calories-source-text').textContent = '✏️ ingresado manual';
+    document.getElementById('calories-source-text').className = 'inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-gray-700 text-gray-300';
+    aiExp.classList.add('hidden');
+  } else {
+    badge.classList.add('hidden');
+  }
+}
+
+async function estimateCalories() {
+  const activityType = document.getElementById('activity_type_input').value;
+  if (!activityType) {
+    alert('Primero seleccioná el tipo de actividad');
+    return;
+  }
+  const durationMin = document.getElementById('duration_min').value;
+  const intensity = document.getElementById('intensity_input').value;
+  const notes = document.getElementById('notes_input') ? document.getElementById('notes_input').value : '';
+
+  const btn = document.getElementById('estimate-btn');
+  const btnText = document.getElementById('estimate-btn-text');
+  btn.disabled = true;
+  btnText.textContent = 'Estimando...';
+
+  try {
+    const formData = new FormData();
+    formData.append('activity_type', activityType);
+    formData.append('duration_min', durationMin);
+    formData.append('intensity', intensity);
+    formData.append('notes', notes);
+
+    const resp = await fetch('/api/workouts/estimate-calories', { method: 'POST', body: formData });
+    if (!resp.ok) {
+      const err = await resp.json();
+      throw new Error(err.detail || 'Error desconocido');
+    }
+    const data = await resp.json();
+
+    // Fill in calories
+    document.getElementById('calories_input').value = data.calories;
+    document.getElementById('calories_source_input').value = 'ai';
+
+    // Show badge
+    const badge = document.getElementById('calories-source-badge');
+    const sourceText = document.getElementById('calories-source-text');
+    badge.classList.remove('hidden');
+    sourceText.textContent = '🤖 estimado por IA';
+    sourceText.className = 'inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-purple-900/50 text-purple-300';
+
+    // Show explanation
+    if (data.explanation) {
+      const aiExp = document.getElementById('ai-explanation');
+      aiExp.textContent = data.explanation;
+      aiExp.classList.remove('hidden');
+    }
+  } catch (e) {
+    alert('Error al estimar: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btnText.textContent = 'Estimar con IA';
+  }
+}
+
+async function deleteWorkout(id, btn) {
+  if (!confirm('¿Eliminar esta actividad?')) return;
+  try {
+    const resp = await fetch(`/workouts/${id}`, { method: 'DELETE' });
+    if (resp.ok) {
+      // Remove the card from DOM
+      const card = btn.closest('.bg-gray-800');
+      card.style.transition = 'opacity 0.3s, transform 0.3s';
+      card.style.opacity = '0';
+      card.style.transform = 'translateX(20px)';
+      setTimeout(() => {
+        card.remove();
+        // Reload to refresh stats
+        window.location.reload();
+      }, 300);
+    } else {
+      alert('Error al eliminar la actividad');
+    }
+  } catch (e) {
+    alert('Error de red: ' + e.message);
+  }
+}
+</script>
+{% endblock %}

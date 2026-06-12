@@ -124,11 +124,10 @@
         <!-- Desktop nav (oculto en mobile — se usa bottom nav) -->
         <div class="hidden md:flex items-center gap-1">
           <a href="/" class="nav-link px-3 py-2 rounded-lg text-sm font-medium text-gray-300 hover:text-brand-400 hover:bg-gray-700 transition-colors">Dashboard</a>
-          <a href="/log" class="nav-link px-3 py-2 rounded-lg text-sm font-medium text-gray-300 hover:text-brand-400 hover:bg-gray-700 transition-colors">Registrar</a>
-          <a href="/history" class="nav-link px-3 py-2 rounded-lg text-sm font-medium text-gray-300 hover:text-brand-400 hover:bg-gray-700 transition-colors">Historial</a>
-          <a href="/measurements" class="nav-link px-3 py-2 rounded-lg text-sm font-medium text-gray-300 hover:text-brand-400 hover:bg-gray-700 transition-colors">Mediciones</a>
-          <a href="/workouts" class="nav-link px-3 py-2 rounded-lg text-sm font-medium text-gray-300 hover:text-brand-400 hover:bg-gray-700 transition-colors">Entrenos</a>
-          <a href="/coach" class="nav-link px-3 py-2 rounded-lg text-sm font-medium text-gray-300 hover:text-brand-400 hover:bg-gray-700 transition-colors">Coach</a>
+          <a href="/comidas" class="nav-link px-3 py-2 rounded-lg text-sm font-medium text-gray-300 hover:text-brand-400 hover:bg-gray-700 transition-colors">Comidas</a>
+          <a href="/entrenos" class="nav-link px-3 py-2 rounded-lg text-sm font-medium text-gray-300 hover:text-brand-400 hover:bg-gray-700 transition-colors">Entrenos</a>
+          <a href="/mediciones" class="nav-link px-3 py-2 rounded-lg text-sm font-medium text-gray-300 hover:text-brand-400 hover:bg-gray-700 transition-colors">Mediciones</a>
+          <a href="/social" class="nav-link px-3 py-2 rounded-lg text-sm font-medium text-gray-300 hover:text-brand-400 hover:bg-gray-700 transition-colors">Social</a>
           <!-- User menu -->
           {% if current_user is defined and current_user %}
           <div class="relative ml-2" id="user-menu-wrapper">
@@ -154,6 +153,12 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
                 </svg>
                 Recordatorios
+              </a>
+              <a href="/coach" class="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-gray-700">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                </svg>
+                Coach IA
               </a>
               <div class="border-t border-gray-700 my-1"></div>
               <form action="/logout" method="post">
@@ -193,29 +198,29 @@
         </svg>
         <span class="text-xs font-medium">Inicio</span>
       </a>
-      <a href="/log" class="bottom-nav-link flex flex-col items-center justify-center gap-0.5 text-gray-400 active:bg-gray-700 transition-colors">
+      <a href="/comidas" class="bottom-nav-link flex flex-col items-center justify-center gap-0.5 text-gray-400 active:bg-gray-700 transition-colors">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
         </svg>
-        <span class="text-xs font-medium">Registrar</span>
+        <span class="text-xs font-medium">Comidas</span>
       </a>
-      <a href="/workouts" class="bottom-nav-link flex flex-col items-center justify-center gap-0.5 text-gray-400 active:bg-gray-700 transition-colors">
+      <a href="/entrenos" class="bottom-nav-link flex flex-col items-center justify-center gap-0.5 text-gray-400 active:bg-gray-700 transition-colors">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064"/>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
         </svg>
         <span class="text-xs font-medium">Entrenos</span>
       </a>
-      <a href="/measurements" class="bottom-nav-link flex flex-col items-center justify-center gap-0.5 text-gray-400 active:bg-gray-700 transition-colors">
+      <a href="/mediciones" class="bottom-nav-link flex flex-col items-center justify-center gap-0.5 text-gray-400 active:bg-gray-700 transition-colors">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
         </svg>
         <span class="text-xs font-medium">Mediciones</span>
       </a>
-      <a href="/coach" class="bottom-nav-link flex flex-col items-center justify-center gap-0.5 text-gray-400 active:bg-gray-700 transition-colors">
+      <a href="/social" class="bottom-nav-link flex flex-col items-center justify-center gap-0.5 text-gray-400 active:bg-gray-700 transition-colors">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
         </svg>
-        <span class="text-xs font-medium">Coach</span>
+        <span class="text-xs font-medium">Social</span>
       </a>
     </div>
   </nav>
@@ -223,16 +228,24 @@
   <script>
     // Highlight active bottom nav + desktop nav
     const currentPath = window.location.pathname;
+    // Map old paths to new canonical paths for active detection
+    const pathAliases = {
+      '/log': '/comidas',
+      '/workouts': '/entrenos',
+      '/measurements': '/mediciones',
+    };
+    const canonicalPath = pathAliases[currentPath] || currentPath;
+
     document.querySelectorAll('.bottom-nav-link').forEach(link => {
       const href = link.getAttribute('href');
-      if (href === currentPath || (href !== '/' && currentPath.startsWith(href))) {
+      if (href === canonicalPath || (href !== '/' && canonicalPath.startsWith(href))) {
         link.classList.add('bn-active');
         link.querySelectorAll('svg, span').forEach(el => el.style.color = '#34d399');
       }
     });
     document.querySelectorAll('.nav-link').forEach(link => {
       const href = link.getAttribute('href');
-      if (href === currentPath || (href !== '/' && currentPath.startsWith(href))) {
+      if (href === canonicalPath || (href !== '/' && canonicalPath.startsWith(href))) {
         link.classList.add('text-brand-400');
       }
     });

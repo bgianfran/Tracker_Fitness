@@ -335,19 +335,30 @@ def dashboard(request: Request, db: Session = Depends(get_db)):
 # ─── Food Log ───────────────────────────────────────────────────────────────
 
 @app.get("/log", response_class=HTMLResponse)
-def log_page(request: Request, db: Session = Depends(get_db)):
+def log_redirect():
+    return RedirectResponse(url="/comidas", status_code=301)
+
+
+@app.get("/comidas", response_class=HTMLResponse)
+def comidas_page(request: Request, db: Session = Depends(get_db)):
     current_user, redirect = get_user_from_request(request, db)
     if redirect:
         return redirect
     profile = db.query(UserProfile).filter(UserProfile.user_id == current_user.id).first()
     now = datetime.now()
-    return templates.TemplateResponse("log.html", {
+    thirty_days_ago = date.today() - timedelta(days=30)
+    food_history = db.query(FoodEntry).filter(
+        FoodEntry.user_id == current_user.id,
+        FoodEntry.date >= thirty_days_ago,
+    ).order_by(FoodEntry.date.desc()).all()
+    return templates.TemplateResponse("comidas.html", {
         "request": request,
         "current_user": current_user,
         "profile": profile,
         "food_names": [],
         "default_time": now.strftime("%H:%M"),
         "suggested_meal": _meal_from_hour(now.hour),
+        "food_history": food_history,
     })
 
 
@@ -907,7 +918,12 @@ def _parse_optional_int(v):
 
 
 @app.get("/measurements", response_class=HTMLResponse)
-def measurements_page(request: Request, db: Session = Depends(get_db)):
+def measurements_redirect():
+    return RedirectResponse(url="/mediciones", status_code=301)
+
+
+@app.get("/mediciones", response_class=HTMLResponse)
+def mediciones_page(request: Request, db: Session = Depends(get_db)):
     current_user, redirect = get_user_from_request(request, db)
     if redirect:
         return redirect
@@ -947,7 +963,7 @@ async def save_measurement(request: Request, db: Session = Depends(get_db)):
 
     db.add(BodyMeasurement(**kwargs))
     db.commit()
-    return RedirectResponse(url="/measurements", status_code=303)
+    return RedirectResponse(url="/mediciones", status_code=303)
 
 
 @app.delete("/measurements/{measurement_id}")
@@ -1036,7 +1052,7 @@ def strava_callback(
     if redirect:
         return redirect
     if error or not code:
-        return RedirectResponse(url="/workouts?strava_error=denied", status_code=303)
+        return RedirectResponse(url="/entrenos?strava_error=denied", status_code=303)
     try:
         data = exchange_code(code, STRAVA_REDIRECT_URI)
         athlete_id = data.get("athlete", {}).get("id", 0)
@@ -1055,9 +1071,9 @@ def strava_callback(
                 expires_at=data["expires_at"],
             ))
         db.commit()
-        return RedirectResponse(url="/workouts?strava_connected=1", status_code=303)
+        return RedirectResponse(url="/entrenos?strava_connected=1", status_code=303)
     except Exception:
-        return RedirectResponse(url="/workouts?strava_error=1", status_code=303)
+        return RedirectResponse(url="/entrenos?strava_error=1", status_code=303)
 
 
 @app.post("/strava/disconnect")
@@ -1067,15 +1083,16 @@ def strava_disconnect(request: Request, db: Session = Depends(get_db)):
         return redirect
     db.query(StravaToken).filter(StravaToken.user_id == current_user.id).delete()
     db.commit()
-    return RedirectResponse(url="/workouts", status_code=303)
+    return RedirectResponse(url="/entrenos", status_code=303)
 
 
 @app.get("/workouts", response_class=HTMLResponse)
-def workouts_page(request: Request, db: Session = Depends(get_db)):
-    current_user, redirect = get_user_from_request(request, db)
-    if redirect:
-        return redirect
+def workouts_redirect():
+    return RedirectResponse(url="/entrenos", status_code=301)
 
+
+def _build_workouts_context(request: Request, db: Session, current_user):
+    """Shared logic for workouts/entrenos page context."""
     profile = db.query(UserProfile).filter(UserProfile.user_id == current_user.id).first()
     today = date.today()
     week_start = today - timedelta(days=today.weekday())
@@ -1129,7 +1146,7 @@ def workouts_page(request: Request, db: Session = Depends(get_db)):
         except Exception as e:
             strava_error = f"Error Strava: {str(e)}"
 
-    return templates.TemplateResponse("workouts.html", {
+    return {
         "request": request,
         "current_user": current_user,
         "profile": profile,
@@ -1146,7 +1163,16 @@ def workouts_page(request: Request, db: Session = Depends(get_db)):
         "anthropic_configured": bool(os.environ.get("ANTHROPIC_API_KEY")),
         "flash_strava_connected": request.query_params.get("strava_connected") == "1",
         "flash_strava_error": request.query_params.get("strava_error"),
-    })
+    }
+
+
+@app.get("/entrenos", response_class=HTMLResponse)
+def entrenos_page(request: Request, db: Session = Depends(get_db)):
+    current_user, redirect = get_user_from_request(request, db)
+    if redirect:
+        return redirect
+    ctx = _build_workouts_context(request, db, current_user)
+    return templates.TemplateResponse("entrenos.html", ctx)
 
 
 @app.post("/workouts")
@@ -1194,7 +1220,7 @@ async def save_manual_workout(
         notes=notes.strip() or None,
     ))
     db.commit()
-    return RedirectResponse(url="/workouts", status_code=303)
+    return RedirectResponse(url="/entrenos", status_code=303)
 
 
 @app.delete("/workouts/{workout_id}")
@@ -1285,3 +1311,102 @@ def api_all_workouts(request: Request, db: Session = Depends(get_db)):
     all_workouts = manual_list + hevy_list
     all_workouts.sort(key=lambda x: x.get("date", x.get("start_time", "")), reverse=True)
     return JSONResponse(content={"workouts": all_workouts[:30]})
+
+
+# ─── Social ─────────────────────────────────────────────────────────────────
+
+@app.get("/social", response_class=HTMLResponse)
+def social_page(request: Request, db: Session = Depends(get_db)):
+    current_user, redirect = get_user_from_request(request, db)
+    if redirect:
+        return redirect
+    return templates.TemplateResponse("social.html", {
+        "request": request,
+        "current_user": current_user,
+    })
+
+
+# ─── Cooking AI ─────────────────────────────────────────────────────────────
+
+@app.post("/api/cooking-ai")
+async def cooking_ai(
+    request: Request,
+    description: str = Form(""),
+    file: UploadFile = File(None),
+    db: Session = Depends(get_db),
+):
+    current_user, _ = get_user_from_request(request, db)
+    if not current_user:
+        raise HTTPException(status_code=401)
+    api_key = os.environ.get("ANTHROPIC_API_KEY")
+    if not api_key:
+        raise HTTPException(status_code=503, detail="IA no configurada")
+    import anthropic
+    client = anthropic.Anthropic(api_key=api_key)
+
+    content = []
+    if file and file.filename:
+        img_data = await file.read()
+        import base64 as b64
+        content.append({
+            "type": "image",
+            "source": {"type": "base64", "media_type": file.content_type or "image/jpeg", "data": b64.b64encode(img_data).decode()}
+        })
+
+    prompt = f"""Sos un chef y nutricionista argentino. El usuario tiene estos ingredientes disponibles: {description or 'ver imagen'}.
+Sugerí 3 recetas saludables y fáciles de preparar. Para cada una incluí:
+- Nombre de la receta
+- Ingredientes necesarios (y si falta alguno para comprar)
+- Preparación paso a paso (breve)
+- Macros estimados por porción (calorías, proteínas, carbohidratos, grasas)
+Respondé en JSON con este formato exacto:
+{{"recetas": [{{"nombre": "", "ingredientes": [], "pasos": [], "necesita_comprar": [], "macros": {{"calorias": 0, "proteinas": 0, "carbos": 0, "grasas": 0}}}}]}}"""
+    content.append({"type": "text", "text": prompt})
+
+    try:
+        response = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=2000,
+            messages=[{"role": "user", "content": content}]
+        )
+        raw = response.content[0].text.strip()
+        start, end = raw.find("{"), raw.rfind("}") + 1
+        return JSONResponse(content=json.loads(raw[start:end]))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error IA: {str(e)}")
+
+
+# ─── Stats API ───────────────────────────────────────────────────────────────
+
+@app.get("/api/stats")
+def api_stats(request: Request, window: str = "week", db: Session = Depends(get_db)):
+    current_user, _ = get_user_from_request(request, db)
+    if not current_user:
+        raise HTTPException(status_code=401)
+    today = date.today()
+    if window == "week":
+        from_date = today - timedelta(days=6)
+    elif window == "month":
+        from_date = today - timedelta(days=29)
+    else:
+        from_date = today
+    entries = db.query(FoodEntry).filter(
+        FoodEntry.user_id == current_user.id,
+        FoodEntry.date >= from_date,
+        FoodEntry.date <= today,
+    ).all()
+    # Group by date
+    from collections import defaultdict
+    by_date = defaultdict(lambda: {"calories": 0, "protein": 0, "carbs": 0, "fat": 0})
+    for e in entries:
+        d = str(e.date)
+        by_date[d]["calories"] += e.calories
+        by_date[d]["protein"] += e.protein
+        by_date[d]["carbs"] += e.carbs
+        by_date[d]["fat"] += e.fat
+    totals = {"calories": round(sum(e.calories for e in entries), 1),
+              "protein": round(sum(e.protein for e in entries), 1),
+              "carbs": round(sum(e.carbs for e in entries), 1),
+              "fat": round(sum(e.fat for e in entries), 1)}
+    daily = [{"date": d, **{k: round(v, 1) for k, v in vals.items()}} for d, vals in sorted(by_date.items())]
+    return JSONResponse(content={"totals": totals, "daily": daily, "days": len(daily)})
