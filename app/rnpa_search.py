@@ -16,10 +16,56 @@ _branded: list[dict] = []
 # Removes trailing (Brand Name) from RNPA product names
 _PAREN_BRAND = re.compile(r"\s*\([^)]+\)\s*$")
 
+# Leading legal/category prefixes to strip  (order matters: longer first)
+_LEADING_NOISE = re.compile(
+    r"^(snack\.|postre congelado|producto de confiter[ií]a[^,]*,|producto de copet[ií]n[^,]*,|"
+    r"producto alimenticio[^,]*,|alimento[^,]*,|conserva de|preparado[^,]*,)\s*",
+    re.IGNORECASE,
+)
+
+# Verbose phrases → compact equivalents  (applied in order)
+_SUBSTITUTIONS: list[tuple[re.Pattern, str]] = [
+    # "con relleno sabor a X" / "relleno con sabor a X" / "con relleno de X"
+    (re.compile(r"con relleno sabor a\s+", re.I), "relleno "),
+    (re.compile(r"rellenos? con sabor a\s+", re.I), "relleno "),
+    (re.compile(r"con relleno de\s+", re.I), "relleno "),
+    # "con sabor a X" / "sabor a X"
+    (re.compile(r"con sabor a\s+", re.I), "sabor "),
+    (re.compile(r"sabor a\s+", re.I), "sabor "),
+    # "a base de" → "de" (keeps the ingredient, removes the legal phrase)
+    (re.compile(r"\ba base de\b\s*", re.I), "de "),
+    # "adicionado/enriquecido/vitaminizado con X" at end or before comma → drop
+    (re.compile(r",?\s*(adicionad[ao]|enriquecid[ao]|vitaminizad[ao]|fortif?icad[ao]) con [^,]+", re.I), ""),
+    # "de mesa. " prefix remnants
+    (re.compile(r"^de mesa\.\s*", re.I), ""),
+    # "dulces?" adjacent to galletitas / bizcochos → redundant
+    (re.compile(r"\bdulces?\s+(?=galletitas?|bizcochos?|obleas?|cereales?)", re.I), ""),
+    (re.compile(r"(galletitas?)\s+dulces?\b", re.I), r"\1"),
+    # "con relleno sabor X" (without "a")
+    (re.compile(r"con relleno sabor\s+", re.I), "relleno "),
+    # "producto de" as standalone prefix
+    (re.compile(r"^producto de\s+", re.I), ""),
+    # collapse multiple spaces / stray commas / trailing punctuation
+    (re.compile(r",\s*,"), ","),
+    (re.compile(r",\s*$"), ""),
+    (re.compile(r"\s{2,}"), " "),
+]
+
 
 def _clean_name(raw: str) -> str:
-    """Remove trailing (brand) from name and convert to title case."""
-    return _PAREN_BRAND.sub("", raw).strip().title()
+    """Strip legal boilerplate from an RNPA product name and title-case it."""
+    name = _PAREN_BRAND.sub("", raw).strip()
+    name = _LEADING_NOISE.sub("", name)
+    for pattern, repl in _SUBSTITUTIONS:
+        name = pattern.sub(repl, name)
+    return name.strip().title()
+
+
+def _short_desc(name: str) -> str:
+    """Return a compact descriptor for branded items: drop the main noun group,
+    keep flavor/variant info (≤ 60 chars)."""
+    # After _clean_name the name is already simplified; just trim to 60 chars
+    return name[:60].strip()
 
 
 def _load():

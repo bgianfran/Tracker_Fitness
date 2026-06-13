@@ -422,19 +422,27 @@ function renderFoodBtn(item) {
   const u = item.unidad === 'ml' ? 'ml' : 'g';
   const isBasic   = item.source === 'basico' || item.source === 'argenfood_unlu';
   const isGeneric = item.source === 'rnpa_generic';
+  const isBranded = item.source === 'rnpa' && item.marca;
+
   const badgeColor = isBasic ? 'var(--good)' : isGeneric ? 'var(--accent)' : 'var(--faint)';
   const badgeLabel = isBasic ? 'básico' : isGeneric ? 'genérico' : '🇦🇷';
-  const marcaHtml = item.marca
-    ? `<span style="font-size:.75em; color:var(--muted); font-weight:500;">${item.marca}</span>`
+
+  // Branded: marca = título principal, name = descripción corta
+  // Básico/genérico: name = título principal, sin subtítulo de marca
+  const titleText   = isBranded ? item.marca : item.name;
+  const subtitleText = isBranded ? item.name : '';
+  const subtitleHtml = subtitleText
+    ? `<div style="font-size:.75em; color:var(--muted); margin-top:1px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:240px;">${subtitleText}</div>`
     : '';
+
   const data = JSON.stringify(item).replace(/'/g, '&#39;');
   return `
     <button type="button" onclick='selectFood(${data})'
             class="search-result-btn">
       <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:8px;">
-        <div style="min-width:0;">
-          <div style="font-weight:600; font-size:.9em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:240px;">${item.name}</div>
-          ${marcaHtml}
+        <div style="min-width:0; flex:1;">
+          <div style="font-weight:700; font-size:.9em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${titleText}</div>
+          ${subtitleHtml}
         </div>
         <div style="display:flex; align-items:center; gap:8px; flex-shrink:0; padding-top:1px;">
           <span style="font-size:.74em; font-weight:700; color:${badgeColor};">${badgeLabel}</span>
@@ -455,7 +463,13 @@ function renderResults(items) {
 function selectFood(item) {
   selectedFood = item;
   const u = item.unidad === 'ml' ? 'ml' : 'g';
-  document.getElementById('selected-name').textContent = item.name;
+  // Display: "Marca — descripción" for branded, just name for basics/generics
+  const displayName = (item.source === 'rnpa' && item.marca)
+    ? `${item.marca} — ${item.name}`
+    : item.name;
+  document.getElementById('selected-name').textContent = displayName;
+  // Store the display name as food_name so it reads well in the food log
+  selectedFood = { ...item, food_name_display: displayName };
   document.getElementById('selected-macros').textContent =
     `${item.calories} kcal · P: ${item.protein}g · C: ${item.carbs}g · G: ${item.fat}g por 100${u}`;
   document.getElementById('quantity-input').value = 100;
@@ -506,7 +520,7 @@ function addIngredient() {
   const qty = parseFloat(document.getElementById('quantity-input').value) || 0;
   if (qty <= 0) return;
   ingredients.push({
-    name: selectedFood.name, quantity_g: qty,
+    name: selectedFood.food_name_display || selectedFood.name, quantity_g: qty,
     calories: selectedFood.calories, protein: selectedFood.protein,
     carbs: selectedFood.carbs, fat: selectedFood.fat,
     unidad: selectedFood.unidad || 'g',
