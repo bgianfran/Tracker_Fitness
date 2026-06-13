@@ -420,17 +420,23 @@ async function doSearch() {
 
 function renderFoodBtn(item) {
   const u = item.unidad === 'ml' ? 'ml' : 'g';
-  const badgeColor = (item.source === 'basico' || item.source === 'argenfood_unlu')
-    ? 'var(--good)' : item.source === 'rnpa_generic' ? 'var(--accent)' : 'var(--faint)';
-  const badgeLabel = (item.source === 'basico' || item.source === 'argenfood_unlu')
-    ? 'básico' : item.source === 'rnpa_generic' ? 'genérico' : '🇦🇷';
+  const isBasic   = item.source === 'basico' || item.source === 'argenfood_unlu';
+  const isGeneric = item.source === 'rnpa_generic';
+  const badgeColor = isBasic ? 'var(--good)' : isGeneric ? 'var(--accent)' : 'var(--faint)';
+  const badgeLabel = isBasic ? 'básico' : isGeneric ? 'genérico' : '🇦🇷';
+  const marcaHtml = item.marca
+    ? `<span style="font-size:.75em; color:var(--muted); font-weight:500;">${item.marca}</span>`
+    : '';
   const data = JSON.stringify(item).replace(/'/g, '&#39;');
   return `
     <button type="button" onclick='selectFood(${data})'
             class="search-result-btn">
-      <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
-        <span style="font-weight:600; font-size:.9em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:260px;">${item.name}</span>
-        <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
+      <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:8px;">
+        <div style="min-width:0;">
+          <div style="font-weight:600; font-size:.9em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:240px;">${item.name}</div>
+          ${marcaHtml}
+        </div>
+        <div style="display:flex; align-items:center; gap:8px; flex-shrink:0; padding-top:1px;">
           <span style="font-size:.74em; font-weight:700; color:${badgeColor};">${badgeLabel}</span>
           <span style="font-size:.8em; font-weight:700; color:var(--accent);">${item.calories} kcal</span>
         </div>
