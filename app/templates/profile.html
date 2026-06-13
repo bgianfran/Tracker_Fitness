@@ -2,68 +2,58 @@
 {% block title %}Perfil – FitTracker{% endblock %}
 
 {% block content %}
-<div class="max-w-2xl mx-auto space-y-5">
+<div style="max-width:640px; margin:0 auto;" class="stack">
 
-  <!-- Welcome banner for new users -->
   {% if new_user %}
-  <div class="bg-brand-900/30 border border-brand-600/50 rounded-2xl p-4 flex items-start gap-3">
-    <span class="text-2xl">🎉</span>
+  <div class="card" style="background:var(--accent-soft); border-color:color-mix(in srgb, var(--accent) 30%, var(--border)); display:flex; align-items:flex-start; gap:12px;">
+    <span style="font-size:1.6em; flex-shrink:0;">🎉</span>
     <div>
-      <p class="font-semibold text-white">¡Bienvenido a FitTracker!</p>
-      <p class="text-sm text-gray-300 mt-0.5">Completá tu perfil con tus datos reales para que la app pueda calcular tus objetivos correctamente.</p>
+      <div style="font-weight:700; margin-bottom:4px;">¡Bienvenido a FitTracker!</div>
+      <p class="muted" style="font-size:.88em;">Completá tu perfil con tus datos reales para que la app calcule tus objetivos correctamente.</p>
     </div>
   </div>
   {% endif %}
 
   <!-- Header -->
-  <div class="flex items-center justify-between">
+  <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
     <div>
-      <h1 class="text-2xl font-bold text-white">Mi perfil</h1>
-      <p class="text-sm text-gray-400 mt-0.5">{{ current_user.email }}</p>
+      <h1 style="font-size:1.4em; margin-bottom:4px;">Mi perfil</h1>
+      <p class="faint" style="font-size:.88em;">{{ current_user.email }}</p>
     </div>
-    <!-- Mobile logout -->
-    <form action="/logout" method="post" class="md:hidden">
-      <button type="submit" class="flex items-center gap-1.5 text-sm text-red-400 hover:text-red-300 bg-red-900/20 px-3 py-2 rounded-xl transition-colors">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-        </svg>
-        Salir
+    <form action="/logout" method="post">
+      <button type="submit" class="btn btn-sm" style="color:var(--bad); background:color-mix(in srgb, var(--bad) 12%, var(--surface)); border:1px solid color-mix(in srgb, var(--bad) 25%, var(--border));">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+        Cerrar sesión
       </button>
     </form>
   </div>
 
-  <!-- Edit form -->
-  <form action="/profile" method="post" class="space-y-5">
+  <form action="/profile" method="post" class="stack">
 
-    <!-- Personal data -->
-    <div class="bg-gray-800 border border-gray-700 rounded-2xl p-5 space-y-4">
-      <h2 class="font-semibold text-white">Datos personales</h2>
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <!-- Datos personales -->
+    <div class="card stack" style="gap:14px;">
+      <h2 style="font-size:1em; font-weight:700;">Datos personales</h2>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(160px,1fr)); gap:var(--gap);">
         <div>
-          <label class="block text-sm font-medium text-gray-300 mb-1.5">Nombre</label>
-          <input type="text" name="name" value="{{ profile.name if profile else current_user.name }}" required
-            class="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-brand-400 focus:ring-1 focus:ring-brand-400"/>
+          <div class="label" style="margin-bottom:6px; display:block;">Nombre</div>
+          <input type="text" name="name" value="{{ profile.name if profile else current_user.name }}" required class="input">
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-300 mb-1.5">Edad</label>
-          <input type="number" name="age" value="{{ profile.age if profile else '' }}" min="10" max="100" required
-            class="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-brand-400 focus:ring-1 focus:ring-brand-400"/>
+          <div class="label" style="margin-bottom:6px; display:block;">Edad</div>
+          <input type="number" name="age" value="{{ profile.age if profile else '' }}" min="10" max="100" required class="input">
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-300 mb-1.5">Peso (kg)</label>
-          <input type="number" name="weight_kg" value="{{ profile.weight_kg if profile else '' }}" step="0.1" min="30" max="300" required
-            class="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-brand-400 focus:ring-1 focus:ring-brand-400"/>
+          <div class="label" style="margin-bottom:6px; display:block;">Peso (kg)</div>
+          <input type="number" name="weight_kg" value="{{ profile.weight_kg if profile else '' }}" step="0.1" min="30" max="300" required class="input">
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-300 mb-1.5">Altura (cm)</label>
-          <input type="number" name="height_cm" value="{{ profile.height_cm if profile else '' }}" step="0.5" min="100" max="250" required
-            class="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-brand-400 focus:ring-1 focus:ring-brand-400"/>
+          <div class="label" style="margin-bottom:6px; display:block;">Altura (cm)</div>
+          <input type="number" name="height_cm" value="{{ profile.height_cm if profile else '' }}" step="0.5" min="100" max="250" required class="input">
         </div>
       </div>
       <div>
-        <label class="block text-sm font-medium text-gray-300 mb-1.5">Nivel de actividad</label>
-        <select name="activity_level"
-          class="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-brand-400 focus:ring-1 focus:ring-brand-400">
+        <div class="label" style="margin-bottom:6px; display:block;">Nivel de actividad</div>
+        <select name="activity_level" class="input select">
           {% set al = profile.activity_level if profile else '' %}
           <option value="Sedentario (poco o sin ejercicio)" {% if al == 'Sedentario (poco o sin ejercicio)' %}selected{% endif %}>Sedentario (poco o sin ejercicio)</option>
           <option value="Ligera (1-3x/semana)" {% if al == 'Ligera (1-3x/semana)' %}selected{% endif %}>Ligera (1-3x/semana)</option>
@@ -73,120 +63,105 @@
         </select>
       </div>
       <div>
-        <label class="block text-sm font-medium text-gray-300 mb-1.5">Objetivo</label>
+        <div class="label" style="margin-bottom:6px; display:block;">Objetivo</div>
         <input type="text" name="goal" value="{{ profile.goal if profile else '' }}"
-          placeholder="Ej: Perder grasa, ganar músculo, mejorar rendimiento..."
-          class="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-brand-400 focus:ring-1 focus:ring-brand-400"/>
+          placeholder="Ej: Perder grasa, ganar músculo, mejorar rendimiento..." class="input">
       </div>
     </div>
 
-    <!-- Daily targets -->
-    <div class="bg-gray-800 border border-gray-700 rounded-2xl p-5 space-y-4">
-      <div class="flex items-center justify-between">
-        <h2 class="font-semibold text-white">Objetivos diarios</h2>
-        <button type="button" onclick="openAITargets()"
-          class="flex items-center gap-1.5 text-xs bg-brand-900/40 hover:bg-brand-800/60 border border-brand-700/50 text-brand-400 px-3 py-1.5 rounded-lg transition-colors">
+    <!-- Objetivos diarios -->
+    <div class="card stack" style="gap:14px;">
+      <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+        <h2 style="font-size:1em; font-weight:700;">Objetivos diarios</h2>
+        <button type="button" onclick="openAITargets()" class="btn btn-soft btn-sm">
           ✨ Calcular con IA
         </button>
       </div>
 
-      <!-- AI targets modal -->
-      <div id="ai-targets-modal" class="hidden bg-gray-700/60 border border-brand-700/40 rounded-xl p-4 space-y-3">
-        <p class="text-xs text-gray-300">La IA va a estimar tus objetivos según los datos que cargaste arriba. Podés darle más contexto si querés.</p>
-        <textarea id="ai-targets-context" rows="2" placeholder="Opcional: agregá info extra (ej: quiero bajar 5kg, entreno fuerza 4x semana, como poco en el desayuno...)"
-          class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 text-white placeholder-gray-500 text-sm focus:outline-none focus:border-brand-400 resize-none"></textarea>
-        <div class="flex gap-2">
-          <button type="button" onclick="estimateTargets()" id="ai-targets-btn"
-            class="flex-1 bg-brand-500 hover:bg-brand-600 text-white text-sm font-semibold py-2 rounded-xl transition-colors">
+      <!-- AI modal -->
+      <div id="ai-targets-modal" style="display:none; background:var(--surface-2); border:1px solid color-mix(in srgb, var(--accent) 25%, var(--border)); border-radius:calc(var(--radius) - 4px); padding:14px;" class="stack" style2="gap:10px;">
+        <p class="muted" style="font-size:.85em;">La IA estimará tus objetivos según los datos de arriba. Podés dar más contexto.</p>
+        <textarea id="ai-targets-context" rows="2" placeholder="Opcional: quiero bajar 5kg, entreno fuerza 4x semana..."
+          class="input" style="min-height:60px; padding:10px 14px; resize:vertical;"></textarea>
+        <div style="display:flex; gap:8px;">
+          <button type="button" onclick="estimateTargets()" id="ai-targets-btn" class="btn btn-primary" style="flex:1;">
             Estimar objetivos
           </button>
-          <button type="button" onclick="closeAITargets()"
-            class="px-4 py-2 text-sm text-gray-400 hover:text-white bg-gray-700 rounded-xl transition-colors">
-            Cancelar
-          </button>
+          <button type="button" onclick="closeAITargets()" class="btn btn-ghost">Cancelar</button>
         </div>
-        <div id="ai-targets-result" class="hidden text-xs text-gray-300 bg-gray-800 rounded-lg p-3 leading-relaxed"></div>
+        <div id="ai-targets-result" style="display:none; font-size:.82em; color:var(--muted); background:var(--surface); border-radius:8px; padding:10px; line-height:1.5;"></div>
       </div>
 
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(120px,1fr)); gap:var(--gap);">
         <div>
-          <label class="block text-xs font-medium text-gray-400 mb-1.5">Calorías (kcal)</label>
-          <input type="number" name="target_calories" id="target_calories" value="{{ profile.target_calories if profile else 2500 }}" min="500" max="10000" required
-            class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-brand-400 focus:ring-1 focus:ring-brand-400"/>
+          <div class="label" style="margin-bottom:6px; display:block;">Calorías (kcal)</div>
+          <input type="number" name="target_calories" id="target_calories" value="{{ profile.target_calories if profile else 2500 }}" min="500" max="10000" required class="input">
         </div>
         <div>
-          <label class="block text-xs font-medium text-gray-400 mb-1.5">Proteínas (g)</label>
-          <input type="number" name="target_protein" id="target_protein" value="{{ profile.target_protein if profile else 150 }}" min="0" max="1000" required
-            class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-brand-400 focus:ring-1 focus:ring-brand-400"/>
+          <div class="label" style="margin-bottom:6px; display:block;">Proteínas (g)</div>
+          <input type="number" name="target_protein" id="target_protein" value="{{ profile.target_protein if profile else 150 }}" min="0" max="1000" required class="input">
         </div>
         <div>
-          <label class="block text-xs font-medium text-gray-400 mb-1.5">Carbos (g)</label>
-          <input type="number" name="target_carbs" id="target_carbs" value="{{ profile.target_carbs if profile else 300 }}" min="0" max="2000" required
-            class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-brand-400 focus:ring-1 focus:ring-brand-400"/>
+          <div class="label" style="margin-bottom:6px; display:block;">Carbos (g)</div>
+          <input type="number" name="target_carbs" id="target_carbs" value="{{ profile.target_carbs if profile else 300 }}" min="0" max="2000" required class="input">
         </div>
         <div>
-          <label class="block text-xs font-medium text-gray-400 mb-1.5">Grasas (g)</label>
-          <input type="number" name="target_fat" id="target_fat" value="{{ profile.target_fat if profile else 80 }}" min="0" max="500" required
-            class="w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-brand-400 focus:ring-1 focus:ring-brand-400"/>
+          <div class="label" style="margin-bottom:6px; display:block;">Grasas (g)</div>
+          <input type="number" name="target_fat" id="target_fat" value="{{ profile.target_fat if profile else 80 }}" min="0" max="500" required class="input">
         </div>
       </div>
+
       {% if profile and bmi %}
-      <div class="grid grid-cols-3 gap-3 pt-2 border-t border-gray-700">
-        <div class="text-center">
-          <div class="text-xs text-gray-500 mb-0.5">IMC</div>
-          <div class="font-bold {% if bmi < 25 %}text-brand-400{% elif bmi < 30 %}text-yellow-400{% else %}text-red-400{% endif %}">{{ bmi }}</div>
+      <hr class="divider">
+      <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:var(--gap); text-align:center;">
+        <div>
+          <div class="faint" style="font-size:.75em; margin-bottom:4px;">IMC</div>
+          <div style="font-weight:700; font-size:1.1em; color:{% if bmi < 25 %}var(--good){% elif bmi < 30 %}var(--warn){% else %}var(--bad){% endif %};">{{ bmi }}</div>
         </div>
-        <div class="text-center">
-          <div class="text-xs text-gray-500 mb-0.5">TMB</div>
-          <div class="font-bold text-white">{{ bmr }}</div>
+        <div>
+          <div class="faint" style="font-size:.75em; margin-bottom:4px;">TMB</div>
+          <div style="font-weight:700; font-size:1.1em;">{{ bmr }}</div>
         </div>
-        <div class="text-center">
-          <div class="text-xs text-gray-500 mb-0.5">TDEE</div>
-          <div class="font-bold text-brand-400">{{ tdee }}</div>
+        <div>
+          <div class="faint" style="font-size:.75em; margin-bottom:4px;">TDEE</div>
+          <div style="font-weight:700; font-size:1.1em; color:var(--accent);">{{ tdee }}</div>
         </div>
       </div>
       {% endif %}
     </div>
 
-    <!-- Integrations -->
-    <div class="bg-gray-800 border border-gray-700 rounded-2xl p-5 space-y-4">
-      <h2 class="font-semibold text-white">Integraciones</h2>
+    <!-- Integraciones -->
+    <div class="card stack" style="gap:14px;">
+      <h2 style="font-size:1em; font-weight:700;">Integraciones</h2>
 
-      <!-- Hevy -->
       <div>
-        <label class="block text-sm font-medium text-gray-300 mb-1.5">
-          💪 Hevy API Key
-        </label>
+        <div class="label" style="margin-bottom:6px; display:block;">💪 Hevy API Key</div>
         <input type="text" name="hevy_api_key"
           value="{{ current_user.hevy_api_key or '' }}"
           placeholder="Pegá tu API key de Hevy (Settings → API en la app)"
           autocomplete="off"
-          class="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-brand-400 focus:ring-1 focus:ring-brand-400 font-mono text-sm"/>
-        <p class="text-xs text-gray-500 mt-1">
-          En la app Hevy → Perfil → Ajustes → API. La key queda guardada solo para vos.
-        </p>
+          class="input" style="font-family: monospace; font-size:13px !important;">
+        <div class="faint" style="font-size:.78em; margin-top:5px;">En la app Hevy → Perfil → Ajustes → API. La key queda guardada solo para vos.</div>
         {% if current_user.hevy_api_key %}
-        <p class="text-xs text-brand-400 mt-1">✓ Hevy vinculado</p>
+        <div style="font-size:.8em; color:var(--good); margin-top:4px; font-weight:600;">✓ Hevy vinculado</div>
         {% endif %}
       </div>
 
-      <!-- Strava status -->
-      <div class="flex items-center justify-between bg-gray-700/40 rounded-xl p-3">
-        <div class="flex items-center gap-2">
-          <svg class="w-5 h-5 text-orange-400" fill="currentColor" viewBox="0 0 24 24">
+      <div style="display:flex; align-items:center; justify-content:space-between; background:var(--surface-2); border-radius:calc(var(--radius) - 4px); padding:12px 14px;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <svg width="20" height="20" fill="#f97316" viewBox="0 0 24 24">
             <path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/>
           </svg>
           <div>
-            <div class="text-sm font-medium text-white">Strava</div>
-            <div class="text-xs text-gray-400">Se vincula desde la sección Entrenos</div>
+            <div style="font-weight:600; font-size:.9em;">Strava</div>
+            <div class="faint" style="font-size:.78em;">Se vincula desde la sección Entrenos</div>
           </div>
         </div>
-        <a href="/workouts" class="text-xs text-orange-400 hover:text-orange-300">Ir →</a>
+        <a href="/entrenos" style="font-size:.82em; color:var(--accent); text-decoration:none; font-weight:600;">Ir →</a>
       </div>
     </div>
 
-    <button type="submit"
-      class="w-full bg-brand-500 hover:bg-brand-600 active:bg-brand-700 text-white font-bold py-3 rounded-xl transition-colors text-base">
+    <button type="submit" class="btn btn-primary btn-block" style="font-size:1em;">
       Guardar cambios
     </button>
   </form>
@@ -197,49 +172,42 @@
 {% block scripts %}
 <script>
 function openAITargets() {
-  document.getElementById('ai-targets-modal').classList.remove('hidden');
+  document.getElementById('ai-targets-modal').style.display = '';
   document.getElementById('ai-targets-context').focus();
 }
 function closeAITargets() {
-  document.getElementById('ai-targets-modal').classList.add('hidden');
-  document.getElementById('ai-targets-result').classList.add('hidden');
-  document.getElementById('ai-targets-result').textContent = '';
+  document.getElementById('ai-targets-modal').style.display = 'none';
+  document.getElementById('ai-targets-result').style.display = 'none';
 }
 
 async function estimateTargets() {
   const btn = document.getElementById('ai-targets-btn');
-  btn.disabled = true;
-  btn.textContent = 'Calculando...';
-
-  const age = document.querySelector('input[name=age]').value;
-  const weight = document.querySelector('input[name=weight_kg]').value;
-  const height = document.querySelector('input[name=height_cm]').value;
+  btn.disabled = true; btn.textContent = 'Calculando...';
+  const age      = document.querySelector('input[name=age]').value;
+  const weight   = document.querySelector('input[name=weight_kg]').value;
+  const height   = document.querySelector('input[name=height_cm]').value;
   const activity = document.querySelector('select[name=activity_level]').value;
-  const goal = document.querySelector('input[name=goal]').value;
-  const extra = document.getElementById('ai-targets-context').value.trim();
-
+  const goal     = document.querySelector('input[name=goal]').value;
+  const extra    = document.getElementById('ai-targets-context').value.trim();
   try {
     const res = await fetch('/api/profile/estimate-targets', {
       method: 'POST',
-      headers: {'Content-Type': 'application/json'},
+      headers: {'Content-Type':'application/json'},
       body: JSON.stringify({ age, weight_kg: weight, height_cm: height, activity_level: activity, goal, extra })
     });
     const data = await res.json();
     if (data.error) throw new Error(data.error);
-
     document.getElementById('target_calories').value = data.calories;
-    document.getElementById('target_protein').value = data.protein;
-    document.getElementById('target_carbs').value = data.carbs;
-    document.getElementById('target_fat').value = data.fat;
-
+    document.getElementById('target_protein').value  = data.protein;
+    document.getElementById('target_carbs').value    = data.carbs;
+    document.getElementById('target_fat').value      = data.fat;
     const resultEl = document.getElementById('ai-targets-result');
     resultEl.textContent = data.explanation;
-    resultEl.classList.remove('hidden');
+    resultEl.style.display = '';
     btn.textContent = '✓ Valores aplicados — guardá el perfil para confirmar';
   } catch(e) {
     alert('Error: ' + e.message);
-    btn.disabled = false;
-    btn.textContent = 'Estimar objetivos';
+    btn.disabled = false; btn.textContent = 'Estimar objetivos';
   }
 }
 </script>

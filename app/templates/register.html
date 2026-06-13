@@ -1,73 +1,130 @@
 <!DOCTYPE html>
-<html lang="es" class="dark">
+<html lang="es" id="ft-body">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
   <title>Crear cuenta — FitTracker</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>tailwind.config = { darkMode: 'class' }</script>
-  <style>input { font-size: 16px !important; }</style>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    :root {
+      --bg: hsl(222 14% 95.5%); --surface: hsl(218 10% 100%); --surface-2: hsl(222 14% 97.5%);
+      --border: hsl(222 14% 89%); --text: hsl(230 22% 16%); --muted: hsl(224 16% 40%); --faint: hsl(222 14% 58%);
+      --accent: #3a5ccc; --accent-soft: color-mix(in srgb, #3a5ccc 12%, hsl(218 10% 100%)); --on-accent: #fff;
+      --bad: #d2503f;
+      --gap: 14px; --pad: 18px; --radius: 17px; --control: 44px; --fs: 15.5px;
+      --font: 'Hanken Grotesk', system-ui, sans-serif;
+      --card-bg: var(--surface); --card-border: 1px solid transparent;
+      --card-shadow: 0 1px 2px rgba(15,23,42,.04), 0 10px 28px -16px rgba(15,23,42,.18);
+    }
+    .dark {
+      --bg: hsl(222 12% 8%); --surface: hsl(222 12% 12.5%); --surface-2: hsl(222 12% 17%);
+      --border: hsl(222 12% 23%); --text: hsl(220 10% 93%); --muted: hsl(220 10% 66%); --faint: hsl(220 10% 48%);
+      --accent: #7a93f5; --accent-soft: color-mix(in srgb, #7a93f5 22%, hsl(222 12% 12.5%)); --on-accent: #0c1016;
+      --card-shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
+    }
+    body {
+      font-family: var(--font); background: var(--bg); color: var(--text); font-size: var(--fs);
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      padding: 24px 16px; margin: 0; -webkit-font-smoothing: antialiased;
+      transition: background .35s ease, color .35s ease;
+    }
+    h1, h2, h3 { margin: 0; font-weight: 700; letter-spacing: -.01em; }
+    p { margin: 0; }
+    .card {
+      background: var(--card-bg); border: var(--card-border);
+      box-shadow: var(--card-shadow); border-radius: var(--radius); padding: var(--pad);
+    }
+    .input {
+      width: 100%; background: var(--surface-2); border: 1px solid var(--border); color: var(--text);
+      border-radius: calc(var(--radius) - 6px); padding: 0 14px; min-height: var(--control); font: inherit;
+      font-size: 16px !important; outline: none; transition: border-color .15s;
+    }
+    .input:focus { border-color: var(--accent); }
+    .btn-primary {
+      display: flex; align-items: center; justify-content: center; width: 100%;
+      background: var(--accent); color: var(--on-accent); border: none;
+      border-radius: calc(var(--radius) - 5px); font-weight: 700; font-size: 1em;
+      min-height: var(--control); cursor: pointer; font-family: inherit;
+      transition: filter .15s; letter-spacing: -.01em;
+    }
+    .btn-primary:hover { filter: brightness(1.06); }
+    .btn-primary:active { transform: translateY(1px); }
+    .label { font-size: .8em; font-weight: 600; color: var(--muted); display: block; margin-bottom: 6px; }
+    .muted { color: var(--muted); }
+    .faint { color: var(--faint); }
+    .logo-mark {
+      width: 44px; height: 44px; border-radius: 14px; background: var(--accent); color: var(--on-accent);
+      display: grid; place-items: center; margin: 0 auto 12px;
+    }
+    .error-box {
+      background: color-mix(in srgb, var(--bad) 12%, var(--surface));
+      border: 1px solid color-mix(in srgb, var(--bad) 30%, var(--border));
+      border-radius: calc(var(--radius) - 6px); padding: 12px 14px;
+      font-size: .88em; color: var(--bad);
+    }
+  </style>
 </head>
-<body class="bg-gray-900 text-gray-100 min-h-screen flex items-center justify-center px-4 py-8">
-  <div class="w-full max-w-sm space-y-6">
+<body>
+  <div style="width:100%; max-width:380px;">
 
     <!-- Logo -->
-    <div class="text-center space-y-2">
-      <div class="flex items-center justify-center gap-2">
-        <svg class="w-8 h-8 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+    <div style="text-align:center; margin-bottom:28px;">
+      <div class="logo-mark">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M13 3 5 13h6l-1 8 8-10h-6l1-8Z"/>
         </svg>
-        <span class="text-2xl font-bold text-emerald-400">FitTracker</span>
       </div>
-      <p class="text-gray-400 text-sm">Creá tu cuenta y empezá a trackear</p>
+      <div style="font-size:1.4em; font-weight:800; letter-spacing:-.02em;">FitTracker</div>
+      <div class="faint" style="font-size:.88em; margin-top:4px;">Creá tu cuenta y empezá a trackear</div>
     </div>
 
-    <!-- Card -->
-    <div class="bg-gray-800 border border-gray-700 rounded-2xl p-6 space-y-5">
-      <h1 class="text-xl font-bold text-white text-center">Crear cuenta</h1>
+    <div class="card" style="display:flex; flex-direction:column; gap:16px;">
+      <h1 style="font-size:1.15em; text-align:center;">Crear cuenta</h1>
 
       {% if error %}
-      <div class="bg-red-900/40 border border-red-700/50 rounded-xl px-4 py-3 text-sm text-red-300">
-        {{ error }}
-      </div>
+      <div class="error-box">{{ error }}</div>
       {% endif %}
 
-      <form action="/register" method="post" class="space-y-4">
+      <form action="/register" method="post" style="display:flex; flex-direction:column; gap:14px;">
         <div>
-          <label class="block text-sm font-medium text-gray-300 mb-1.5">Nombre</label>
-          <input type="text" name="name" required autocomplete="name"
-            placeholder="Tu nombre"
-            class="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400"/>
+          <label class="label" for="name">Nombre</label>
+          <input type="text" name="name" id="name" required autocomplete="name"
+            placeholder="Tu nombre" class="input">
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-300 mb-1.5">Email</label>
-          <input type="email" name="email" required autocomplete="email"
-            placeholder="tu@email.com"
-            class="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400"/>
+          <label class="label" for="email">Email</label>
+          <input type="email" name="email" id="email" required autocomplete="email"
+            placeholder="tu@email.com" class="input">
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-300 mb-1.5">Contraseña</label>
-          <input type="password" name="password" required autocomplete="new-password"
-            placeholder="Mínimo 6 caracteres"
-            class="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400"/>
+          <label class="label" for="password">Contraseña</label>
+          <input type="password" name="password" id="password" required autocomplete="new-password"
+            placeholder="Mínimo 6 caracteres" class="input">
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-300 mb-1.5">Repetir contraseña</label>
-          <input type="password" name="password_confirm" required autocomplete="new-password"
-            placeholder="••••••••"
-            class="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400"/>
+          <label class="label" for="password_confirm">Repetir contraseña</label>
+          <input type="password" name="password_confirm" id="password_confirm" required autocomplete="new-password"
+            placeholder="••••••••" class="input">
         </div>
-        <button type="submit"
-          class="w-full bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white font-bold py-3 rounded-xl transition-colors">
-          Crear cuenta
-        </button>
+        <button type="submit" class="btn-primary">Crear cuenta</button>
       </form>
     </div>
 
-    <p class="text-center text-sm text-gray-400">
+    <p style="text-align:center; font-size:.88em; margin-top:20px; color:var(--muted);">
       ¿Ya tenés cuenta?
-      <a href="/login" class="text-emerald-400 hover:text-emerald-300 font-medium">Iniciá sesión</a>
+      <a href="/login" style="color:var(--accent); font-weight:600; text-decoration:none;">Iniciá sesión</a>
     </p>
+
   </div>
+
+  <script>
+    try {
+      const p = JSON.parse(localStorage.getItem('ftPrefs') || '{}');
+      if (p.theme === 'dark') document.getElementById('ft-body').classList.add('dark');
+    } catch(e) {}
+  </script>
 </body>
 </html>
