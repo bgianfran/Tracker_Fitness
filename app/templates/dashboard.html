@@ -221,6 +221,18 @@
     {% endif %}
   </div>
 
+  <!-- 7-day calorie trend -->
+  <div class="card" id="trend-card">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
+      <h2 style="font-size:1em;">Tendencia calórica (7 días)</h2>
+      <span id="trend-avg" class="faint" style="font-size:.78em;"></span>
+    </div>
+    <div style="position:relative; height:80px;" id="trend-wrap">
+      <svg id="trend-svg" width="100%" height="80" viewBox="0 0 400 80" preserveAspectRatio="none" style="display:block;"></svg>
+      <div id="trend-labels" style="display:flex; justify-content:space-between; margin-top:4px; padding:0 2px;"></div>
+    </div>
+  </div>
+
   <!-- Macro donut -->
   {% if totals.calories > 0 %}
   <div class="card" style="display:flex; flex-direction:column; align-items:center;">
@@ -303,6 +315,66 @@ async function deleteEntry(id) {
     }
   } catch(e) { alert('Error al eliminar'); }
 }
+
+// 7-day calorie trend
+(async function() {
+  try {
+    const data = await fetch('/api/stats?window=week').then(r => r.json());
+    const daily = data.daily || [];
+    if (!daily.length) { document.getElementById('trend-card').style.display = 'none'; return; }
+    const vals = daily.map(d => d.calories);
+    const max  = Math.max(...vals, 1);
+    const W = 400, H = 72, pad = 6;
+    const xs = daily.map((_, i) => pad + i * (W - pad*2) / Math.max(daily.length - 1, 1));
+    const ys = vals.map(v => H - pad - (v / max) * (H - pad*2));
+    const svg = document.getElementById('trend-svg');
+    const accent = getVar('--accent');
+    const areaColor = `color-mix(in srgb, ${accent} 18%, transparent)`;
+
+    // Area path
+    let area = `M ${xs[0]} ${H} L ${xs[0]} ${ys[0]}`;
+    xs.forEach((x, i) => { if (i > 0) area += ` L ${x} ${ys[i]}`; });
+    area += ` L ${xs[xs.length-1]} ${H} Z`;
+    const areaEl = document.createElementNS('http://www.w3.org/2000/svg','path');
+    areaEl.setAttribute('d', area);
+    areaEl.setAttribute('fill', areaColor);
+    svg.appendChild(areaEl);
+
+    // Line path
+    let line = `M ${xs[0]} ${ys[0]}`;
+    xs.forEach((x, i) => { if (i > 0) line += ` L ${x} ${ys[i]}`; });
+    const lineEl = document.createElementNS('http://www.w3.org/2000/svg','path');
+    lineEl.setAttribute('d', line);
+    lineEl.setAttribute('fill', 'none');
+    lineEl.setAttribute('stroke', accent);
+    lineEl.setAttribute('stroke-width', '2');
+    lineEl.setAttribute('stroke-linecap', 'round');
+    lineEl.setAttribute('stroke-linejoin', 'round');
+    svg.appendChild(lineEl);
+
+    // Dots
+    xs.forEach((x, i) => {
+      const dot = document.createElementNS('http://www.w3.org/2000/svg','circle');
+      dot.setAttribute('cx', x); dot.setAttribute('cy', ys[i]);
+      dot.setAttribute('r', '3'); dot.setAttribute('fill', accent);
+      svg.appendChild(dot);
+    });
+
+    // Labels
+    const labelsEl = document.getElementById('trend-labels');
+    daily.forEach(d => {
+      const dt = new Date(d.date + 'T00:00:00');
+      const span = document.createElement('span');
+      span.style.cssText = 'font-size:.68em; color:var(--faint); text-align:center;';
+      span.textContent = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'][dt.getDay()];
+      labelsEl.appendChild(span);
+    });
+
+    // Average
+    const avg = Math.round(vals.reduce((a,b)=>a+b,0) / vals.length);
+    document.getElementById('trend-avg').textContent = `Prom. ${avg} kcal/día`;
+  } catch(e) { document.getElementById('trend-card').style.display = 'none'; }
+})();
 
 let currentWindow = 'day';
 async function setWindow(w) {
