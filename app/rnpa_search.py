@@ -45,11 +45,29 @@ _SUBSTITUTIONS: list[tuple[re.Pattern, str]] = [
     (re.compile(r"con relleno sabor\s+", re.I), "relleno "),
     # "producto de" as standalone prefix
     (re.compile(r"^producto de\s+", re.I), ""),
+    # "cubierto/bañado/recubierto con baño de repostería X" → "bañado X"
+    (re.compile(r",?\s*(cubierto|bañado|recubierto) con baño de repostería?\s*", re.I), " bañado "),
+    (re.compile(r",?\s*(cubierto|bañado|recubierto) con baño\s+", re.I), " bañado "),
+    (re.compile(r",?\s*(cubierto|bañado|recubierto) con\s+", re.I), " bañado "),
+    # "bañado de repostería X" / "bañado en X" → keep just "bañado X"
+    (re.compile(r"\bbañado de repostería?\s*", re.I), "bañado "),
+    (re.compile(r"\bbañado en\s+", re.I), "bañado "),
+    # trailing "recubierto/a con X" descriptions (candy coatings, etc.)
+    (re.compile(r",?\s*recubiertos? con .+$", re.I), ""),
+    # "con trozos/chips/pedacitos de X" → "con X"
+    (re.compile(r"con (trozos?|chips?|pedacitos?|copos?) de\s+", re.I), "con "),
+    # trailing long flavor lists: "sabores a X, Y, Z..."
+    (re.compile(r",?\s*sabores? (surtidos?|a\s+\w+(?:,\s*\w+){2,}).*$", re.I), ""),
+    # trailing "sabores surtidos"
+    (re.compile(r",?\s*sabores? surtidos?.*$", re.I), ""),
     # collapse multiple spaces / stray commas / trailing punctuation
     (re.compile(r",\s*,"), ","),
     (re.compile(r",\s*$"), ""),
     (re.compile(r"\s{2,}"), " "),
 ]
+
+
+_MAX_NAME_LEN = 60
 
 
 def _clean_name(raw: str) -> str:
@@ -58,7 +76,12 @@ def _clean_name(raw: str) -> str:
     name = _LEADING_NOISE.sub("", name)
     for pattern, repl in _SUBSTITUTIONS:
         name = pattern.sub(repl, name)
-    return name.strip().title()
+    name = name.strip()
+    # Hard cap: trim at last word boundary before _MAX_NAME_LEN
+    if len(name) > _MAX_NAME_LEN:
+        cut = name[:_MAX_NAME_LEN].rsplit(" ", 1)[0].rstrip(",")
+        name = cut + "…"
+    return name.title()
 
 
 def _short_desc(name: str) -> str:
