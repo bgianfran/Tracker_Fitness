@@ -413,7 +413,7 @@ async function doSearch() {
   searchResults.innerHTML = `<p class="muted" style="font-size:.82em; padding:8px;">Buscando...</p>`;
   searchResults.style.display = 'flex';
   try {
-    const results = await fetch(`/api/search?q=${encodeURIComponent(q)}`).then(r=>r.json()).catch(()=>[]);
+    const results = await fetch(`/api/search?q=${encodeURIComponent(q)}&meal=${encodeURIComponent(selectedMeal)}`).then(r=>r.json()).catch(()=>[]);
     renderResults(results);
   } catch(e) { console.error(e); }
 }

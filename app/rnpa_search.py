@@ -214,8 +214,53 @@ def _score(name: str, marca: str, words: list[str]) -> int:
 
 _MAX_GENERICS = 3  # cap generic (no-brand) entries per search
 
+# Categories allowed per meal_type filter (RNPA category names, uppercase)
+_MEAL_CATEGORIES: dict[str, set[str]] = {
+    "drink": {
+        "BEBIDAS ANALCOHÓLICAS", "BEBIDAS ALCOHOLICAS", "BEBIDAS ALCOHÓLICAS",
+        "JUGOS", "TÉ E INFUSIONES", "CAFÉ Y SUCEDÁNEOS", "AGUAS",
+        "JARABES Y SIROPES",
+    },
+    "snack": {
+        "GALLETITAS Y BARRAS", "CARAMELOS Y GOLOSINAS", "CACAO Y CHOCOLATE",
+        "ALFAJORES", "CONFITURAS Y DULCES", "REPOSTERÍA Y CONFITERÍA",
+        "MASAS Y PANADERÍA", "HELADOS", "POSTRES",
+        "AZÚCARES Y EDULCORANTES",
+    },
+}
 
-def search_rnpa(query: str, limit: int = 15) -> list[dict]:
+# Categories that belong to basics/generics (used for mapping básicos)
+_DRINK_NAMES = {"bebida", "jugo", "agua", "gaseosa", "té", "cafe", "infusion", "cerveza", "vino", "alcohol"}
+_SNACK_NAMES = {"galletita", "chocolate", "alfajor", "caramelo", "golosina", "helado", "postre", "dulce", "oblea", "barrita"}
+
+
+def _item_matches_meal(item: dict, meal_type: str) -> bool:
+    """Return True if the item is appropriate for the given meal type."""
+    if not meal_type or meal_type not in _MEAL_CATEGORIES:
+        return True
+
+    allowed_cats = _MEAL_CATEGORIES[meal_type]
+    cat = item.get("categoria", "").strip().upper()
+
+    # RNPA items: filter strictly by category
+    if item["source"] == "rnpa":
+        return cat in allowed_cats
+
+    # Generics: also by category
+    if item["source"] == "rnpa_generic":
+        return cat in allowed_cats
+
+    # Basics: use name heuristic (they have human category names)
+    name_l = item["name"].lower()
+    if meal_type == "drink":
+        return any(w in name_l for w in _DRINK_NAMES)
+    if meal_type == "snack":
+        return any(w in name_l for w in _SNACK_NAMES)
+
+    return True
+
+
+def search_rnpa(query: str, limit: int = 15, meal_type: str = "") -> list[dict]:
     q = _normalize(query.strip())
     if not q:
         return []
@@ -226,16 +271,22 @@ def search_rnpa(query: str, limit: int = 15) -> list[dict]:
     branded_hits: list[tuple[int, dict]] = []
 
     for item in _basics:
+        if not _item_matches_meal(item, meal_type):
+            continue
         s = _score(item["name"], item["marca"], words)
         if s:
             basics_hits.append((s + 2000, item))
 
     for item in _generics:
+        if not _item_matches_meal(item, meal_type):
+            continue
         s = _score(item["name"], item["marca"], words)
         if s:
             generic_hits.append((s + 1000, item))
 
     for item in _branded:
+        if not _item_matches_meal(item, meal_type):
+            continue
         s = _score(item["name"], item["marca"], words)
         if s:
             branded_hits.append((s, item))

@@ -240,11 +240,11 @@ async def estimate_targets(request: Request, db: Session = Depends(get_db)):
         return JSONResponse(status_code=500, content={"error": str(e)})
 
 @app.get("/api/search")
-def api_search(q: str = ""):
+def api_search(q: str = "", meal: str = ""):
     q = q.strip()
     if not q:
         return JSONResponse(content=[])
-    return JSONResponse(content=search_rnpa(q, limit=15))
+    return JSONResponse(content=search_rnpa(q, limit=15, meal_type=meal))
 
 
 # ─── Dashboard ──────────────────────────────────────────────────────────────
