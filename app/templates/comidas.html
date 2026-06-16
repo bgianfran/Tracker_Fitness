@@ -10,6 +10,9 @@
   .qty-btn { padding:8px 10px; border-radius:8px; border:1px solid var(--border);
     background:var(--surface-2); color:var(--muted); font-size:.8em; font-weight:600; cursor:pointer; transition:all .15s; }
   .qty-btn:hover { border-color:var(--accent); color:var(--accent); }
+  .portion-chip { display:inline-flex; align-items:baseline; gap:4px; }
+  .portion-chip[data-on="1"] { border-color:var(--accent); background:var(--accent-soft); color:var(--accent); }
+  .portion-chip .pg { opacity:.6; font-size:.85em; font-weight:500; }
   .search-result-btn { width:100%; text-align:left; padding:10px 14px; border-radius:calc(var(--radius) - 6px);
     border:1px solid var(--border); background:var(--surface-2); cursor:pointer; transition:background .15s; }
   .search-result-btn:hover { background:var(--accent-soft); border-color:var(--accent); }
@@ -93,19 +96,16 @@
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
               </button>
             </div>
-            <!-- Quantity -->
-            <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px; flex-wrap:wrap;">
+            <!-- Portion chips -->
+            <div id="portion-chips" style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px;"></div>
+            <!-- Custom quantity -->
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
               <div style="position:relative; flex:1; min-width:100px;">
                 <input type="number" id="quantity-input" value="100" min="1" max="5000" step="1"
-                       oninput="updatePreview()" class="input" style="padding-right:32px;">
+                       oninput="onQtyInput()" class="input" style="padding-right:32px;">
                 <span id="unit-label" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); color:var(--muted); font-size:.85em; pointer-events:none;">g</span>
               </div>
-              <div id="qty-buttons" style="display:flex; gap:4px; flex-wrap:wrap;">
-                <button type="button" onclick="setQty(50)"  class="qty-btn">50g</button>
-                <button type="button" onclick="setQty(100)" class="qty-btn">100g</button>
-                <button type="button" onclick="setQty(150)" class="qty-btn">150g</button>
-                <button type="button" onclick="setQty(200)" class="qty-btn">200g</button>
-              </div>
+              <span class="faint" style="font-size:.72em; white-space:nowrap;">o cantidad exacta</span>
             </div>
             <!-- Preview -->
             <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin-bottom:10px;" id="item-preview">
@@ -461,47 +461,64 @@ function renderResults(items) {
 }
 
 function selectFood(item) {
-  selectedFood = item;
   const u = item.unidad === 'ml' ? 'ml' : 'g';
   // Display: "Marca — descripción" for branded, just name for basics/generics
   const displayName = (item.source === 'rnpa' && item.marca)
     ? `${item.marca} — ${item.name}`
     : item.name;
-  document.getElementById('selected-name').textContent = displayName;
   // Store the display name as food_name so it reads well in the food log
   selectedFood = { ...item, food_name_display: displayName };
+  document.getElementById('selected-name').textContent = displayName;
   document.getElementById('selected-macros').textContent =
     `${item.calories} kcal · P: ${item.protein}g · C: ${item.carbs}g · G: ${item.fat}g por 100${u}`;
-  document.getElementById('quantity-input').value = 100;
+  document.getElementById('unit-label').textContent = u;
+  renderPortions(item, u);
   searchResults.style.display = 'none';
   searchResults.innerHTML = '';
   searchInput.value = '';
   selectedArea.style.display = '';
-  setUnit(u);
   updatePreview();
 }
 
 function clearSelection() {
   selectedFood = null;
   selectedArea.style.display = 'none';
+  document.getElementById('portion-chips').innerHTML = '';
+  document.getElementById('unit-label').textContent = 'g';
   searchInput.value = '';
-  setUnit('g');
   searchInput.focus();
 }
 
-function setUnit(u) {
-  document.getElementById('unit-label').textContent = u;
-  const liquidQtys = [100, 200, 330, 500];
-  const solidQtys  = [50, 100, 150, 200];
-  const qtys = u === 'ml' ? liquidQtys : solidQtys;
-  document.querySelectorAll('#qty-buttons .qty-btn').forEach((btn, i) => {
-    btn.textContent = qtys[i] + u;
-    btn.onclick = () => setQty(qtys[i]);
-  });
+function renderPortions(item, u) {
+  // Use engine portions, or fall back to plain gram/ml buttons
+  let ports = (item.portions && item.portions.length) ? item.portions : (u === 'ml'
+    ? [{label:'100 ml',grams:100,default:true},{label:'200 ml',grams:200},{label:'330 ml',grams:330},{label:'500 ml',grams:500}]
+    : [{label:'50 g',grams:50},{label:'100 g',grams:100,default:true},{label:'150 g',grams:150},{label:'200 g',grams:200}]);
+
+  const hasSize = lbl => new RegExp('\\d+\\s*(g|ml)$').test(lbl);  // label already shows weight?
+  const cont = document.getElementById('portion-chips');
+  cont.innerHTML = ports.map(p => {
+    const sub = hasSize(p.label) ? '' : `<span class="pg">${p.grams}${u}</span>`;
+    return `<button type="button" class="qty-btn portion-chip" data-grams="${p.grams}" data-on="${p.default?1:0}"
+             onclick="selectPortion(${p.grams}, this)"><span>${p.label}</span>${sub}</button>`;
+  }).join('');
+
+  const def = ports.find(p => p.default) || ports[0];
+  document.getElementById('quantity-input').value = def.grams;
 }
 
-function setQty(q) {
-  document.getElementById('quantity-input').value = q;
+function selectPortion(grams, btn) {
+  document.querySelectorAll('#portion-chips .portion-chip').forEach(b => b.setAttribute('data-on','0'));
+  if (btn) btn.setAttribute('data-on','1');
+  document.getElementById('quantity-input').value = grams;
+  updatePreview();
+}
+
+function onQtyInput() {
+  const q = parseFloat(document.getElementById('quantity-input').value) || 0;
+  document.querySelectorAll('#portion-chips .portion-chip').forEach(b => {
+    b.setAttribute('data-on', Math.abs(parseFloat(b.dataset.grams) - q) < 0.01 ? '1' : '0');
+  });
   updatePreview();
 }
 

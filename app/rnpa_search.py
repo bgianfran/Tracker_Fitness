@@ -7,6 +7,8 @@ import csv
 import re
 from pathlib import Path
 
+from app.portions import get_portions
+
 _DATA_DIR = Path(__file__).parent.parent / "data"
 
 _basics: list[dict] = []
@@ -298,7 +300,13 @@ def search_rnpa(query: str, limit: int = 15, meal_type: str = "") -> list[dict]:
     # Always include all basics, cap generics, fill remainder with branded
     combined = basics_hits + generic_hits[:_MAX_GENERICS] + branded_hits
     combined.sort(key=lambda x: -x[0])
-    return [r[1] for r in combined[:limit]]
+
+    results = []
+    for _, item in combined[:limit]:
+        it = dict(item)
+        it["portions"] = get_portions(it["name"], it.get("categoria", ""), it.get("unidad", "g"))
+        results.append(it)
+    return results
 
 
 # Load on import
