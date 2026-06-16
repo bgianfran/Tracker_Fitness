@@ -87,10 +87,10 @@ _NAME_RULES_RAW: list[tuple[str, list]] = [
 
     # ---- Cereales, harinas, panes ----
     (r"arroz.*cocid",        [_p("1 taza", 160, True), _p("½ taza", 80), _p("1 tazón", 250)]),
-    (r"\barroz\b",           [_p("1 taza", 185, True), _p("½ taza", 92), _p("1 cucharada", 12)]),
+    (r"(?<!de )\barroz\b",   [_p("1 taza", 185, True), _p("½ taza", 92), _p("1 cucharada", 12)]),
     (r"quinoa.*cocid",       [_p("1 taza", 185, True), _p("½ taza", 92)]),
-    (r"quinoa",              [_p("¼ taza", 42, True), _p("1 cucharada", 11)]),
-    (r"avena",               [_p("½ taza", 40, True), _p("1 taza", 80), _p("1 cucharada", 10)]),
+    (r"(?<!de )quinoa",      [_p("¼ taza", 42, True), _p("1 cucharada", 11)]),
+    (r"(?<!de )avena",       [_p("½ taza", 40, True), _p("1 taza", 80), _p("1 cucharada", 10)]),
     (r"harina",              [_p("1 taza", 120, True), _p("1 cucharada", 8)]),
     (r"fideos.*cocid",       [_p("1 plato", 220, True), _p("1 taza", 140)]),
     (r"\bfideos\b|\bpastas?\b",[_p("1 porción", 80, True), _p("1 plato", 100)]),
@@ -333,4 +333,8 @@ def get_portions(name: str, categoria: str = "", unidad: str = "g") -> list:
     if rule:
         return _finalize(rule(u), u)
 
+    # Final fallback: liquids (typically drinks) get standard beverage portions;
+    # uncategorised solids return [] so the UI shows plain gram buttons.
+    if u == "ml":
+        return _finalize([_p("1 vaso", 200, True), _p("1 lata", 354), _p("1 botella", 500)], u)
     return []

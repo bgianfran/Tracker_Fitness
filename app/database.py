@@ -154,6 +154,30 @@ class StravaToken(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
+class CommunityFood(Base):
+    """Barcode-indexed foods, sourced from Open Food Facts or contributed by users.
+    Macros are stored per 100 g / 100 ml, like the rest of the food data."""
+    __tablename__ = "community_foods"
+
+    id = Column(Integer, primary_key=True)
+    barcode = Column(String, unique=True, nullable=False, index=True)
+    name = Column(String, nullable=False)
+    marca = Column(String, nullable=True)
+    categoria = Column(String, nullable=True)
+    calories = Column(Float, nullable=False)
+    protein = Column(Float, nullable=False)
+    carbs = Column(Float, nullable=False)
+    fat = Column(Float, nullable=False)
+    fiber = Column(Float, nullable=True)
+    sodium = Column(Float, nullable=True)
+    unidad = Column(String, nullable=False, default="g")  # "g" or "ml"
+    source = Column(String, nullable=False, default="user")  # "openfoodfacts" | "user"
+    contributed_by = Column(Integer, ForeignKey("users.id"), nullable=True)
+    times_used = Column(Integer, default=0)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
 def get_db():
     db = SessionLocal()
     try:

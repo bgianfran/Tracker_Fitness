@@ -13,9 +13,11 @@ import json
 from app.database import (
     get_db, init_db,
     User, FoodEntry, UserProfile, DayScore, ChatMessage,
-    BodyMeasurement, ManualWorkout, StravaToken,
+    BodyMeasurement, ManualWorkout, StravaToken, CommunityFood,
 )
 from app.rnpa_search import search_rnpa
+from app.portions import get_portions
+from app.openfoodfacts import lookup as off_lookup
 from app.hevy import fetch_recent_workouts, format_workout_summary, get_workout_display_data
 from app.strava_api import get_auth_url, exchange_code, get_valid_token, fetch_activities, format_activity
 from app.auth import (
@@ -245,6 +247,96 @@ def api_search(q: str = "", meal: str = ""):
     if not q:
         return JSONResponse(content=[])
     return JSONResponse(content=search_rnpa(q, limit=15, meal_type=meal))
+
+
+def _cf_to_food(cf: CommunityFood) -> dict:
+    """Convert a CommunityFood row into the same shape as search results."""
+    food = {
+        "name": cf.name,
+        "marca": cf.marca or "",
+        "categoria": cf.categoria or "",
+        "calories": cf.calories,
+        "protein": cf.protein,
+        "carbs": cf.carbs,
+        "fat": cf.fat,
+        "fiber": cf.fiber,
+        "sodium": cf.sodium,
+        "unidad": cf.unidad or "g",
+        "source": "community",
+        "barcode": cf.barcode,
+    }
+    food["portions"] = get_portions(cf.name, cf.categoria or "", cf.unidad or "g")
+    return food
+
+
+@app.get("/api/barcode/{barcode}")
+def api_barcode_lookup(barcode: str, db: Session = Depends(get_db)):
+    """Resolve a barcode: own DB first, then Open Food Facts (caching the hit)."""
+    code = "".join(c for c in barcode if c.isdigit())
+    if len(code) < 8:
+        return JSONResponse({"found": False, "barcode": code})
+
+    # 1. Community database (instant)
+    cf = db.query(CommunityFood).filter(CommunityFood.barcode == code).first()
+    if cf:
+        cf.times_used = (cf.times_used or 0) + 1
+        db.commit()
+        return JSONResponse({"found": True, "food": _cf_to_food(cf)})
+
+    # 2. Open Food Facts → cache into community DB for next time
+    off = off_lookup(code)
+    if off:
+        cf = CommunityFood(
+            barcode=code, name=off["name"], marca=off["marca"],
+            categoria=off["categoria"], calories=off["calories"],
+            protein=off["protein"], carbs=off["carbs"], fat=off["fat"],
+            fiber=off.get("fiber"), sodium=off.get("sodium"),
+            unidad=off["unidad"], source="openfoodfacts", times_used=1,
+        )
+        db.add(cf)
+        db.commit()
+        db.refresh(cf)
+        return JSONResponse({"found": True, "food": _cf_to_food(cf)})
+
+    # 3. Not found anywhere → caller shows manual entry
+    return JSONResponse({"found": False, "barcode": code})
+
+
+@app.post("/api/barcode")
+def api_barcode_save(request: Request, db: Session = Depends(get_db), payload: dict = Body(...)):
+    """Save a user-contributed product to the community database (per 100 g/ml)."""
+    current_user, _ = get_user_from_request(request, db)
+    if not current_user:
+        raise HTTPException(status_code=401)
+
+    code = "".join(c for c in str(payload.get("barcode", "")) if c.isdigit())
+    name = str(payload.get("name", "")).strip()
+    if len(code) < 8 or not name:
+        raise HTTPException(status_code=400, detail="Código o nombre inválido")
+
+    # If it already exists, just return it (don't overwrite community data)
+    cf = db.query(CommunityFood).filter(CommunityFood.barcode == code).first()
+    if cf:
+        return JSONResponse({"ok": True, "food": _cf_to_food(cf)})
+
+    def _num(key):
+        try:
+            return round(float(payload.get(key, 0) or 0), 1)
+        except (TypeError, ValueError):
+            return 0.0
+
+    cf = CommunityFood(
+        barcode=code, name=name.title(),
+        marca=str(payload.get("marca", "")).strip().title(),
+        categoria="", calories=_num("calories"), protein=_num("protein"),
+        carbs=_num("carbs"), fat=_num("fat"),
+        unidad="ml" if str(payload.get("unidad", "g")).lower() == "ml" else "g",
+        source="user", contributed_by=current_user.id, times_used=1,
+    )
+    db.add(cf)
+    db.commit()
+    db.refresh(cf)
+    return JSONResponse({"ok": True, "food": _cf_to_food(cf)})
 
 
 # ─── Dashboard ──────────────────────────────────────────────────────────────
