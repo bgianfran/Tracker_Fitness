@@ -11,35 +11,36 @@
   {% if foods %}
   <div class="stack" style="gap:8px;" id="food-list">
     {% for f in foods %}
-    <div class="card" id="food-{{ f.id }}" style="padding:14px 16px;">
+    <div class="card" id="food-{{ f.id }}" style="padding:14px 16px; transition:opacity .3s;">
       <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px;">
         <div style="flex:1; min-width:0;">
-          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:4px;">
+          <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:4px;">
             <span style="font-weight:700; font-size:.95em;">{{ f.name }}</span>
             {% if f.marca %}<span class="chip" style="padding:2px 8px; font-size:.75em;">{{ f.marca }}</span>{% endif %}
-            <span class="chip" style="padding:2px 8px; font-size:.72em; color:var(--faint);">{{ f.unidad or 'g' }}</span>
+            <span class="chip" style="padding:2px 8px; font-size:.72em;">{{ f.unidad or 'g' }}</span>
             {% if f.source == 'openfoodfacts' %}
               <span style="font-size:.7em; color:var(--accent); font-weight:600;">Open Food Facts</span>
             {% else %}
               <span style="font-size:.7em; color:var(--good); font-weight:600;">Contribuido</span>
             {% endif %}
           </div>
-          <div class="faint" style="font-size:.78em; margin-bottom:6px;">
+          <div class="faint" style="font-size:.78em; margin-bottom:4px;">
             {{ f.calories }} kcal &bull; P: {{ f.protein }}g &bull; C: {{ f.carbs }}g &bull; G: {{ f.fat }}g
-            {% if f.fiber %}&bull; Fibra: {{ f.fiber }}g{% endif %}
-            {% if f.sodium %}&bull; Na: {{ f.sodium }}mg{% endif %}
-            <span style="margin-left:4px;">/ 100{{ f.unidad or 'g' }}</span>
+            {%- if f.fiber %} &bull; Fibra: {{ f.fiber }}g{% endif %}
+            {%- if f.sodium %} &bull; Na: {{ f.sodium }}mg{% endif %}
+            <span> / 100{{ f.unidad or 'g' }}</span>
           </div>
           <div class="faint" style="font-size:.72em;">
             Código: <span style="font-family:monospace;">{{ f.barcode }}</span>
-            {% if f.times_used %}&bull; Usado {{ f.times_used }}x{% endif %}
+            {%- if f.times_used %} &bull; Usado {{ f.times_used }}x{% endif %}
           </div>
         </div>
-        <div style="display:flex; gap:4px; flex-shrink:0;">
-          <button type="button" onclick="openEdit({{ f.id }}, {name:'{{ f.name|replace("'","\\'")|replace('"','\\"') }}',marca:'{{ (f.marca or '')|replace("'","\\'")|replace('"','\\"') }}',calories:{{ f.calories }},protein:{{ f.protein }},carbs:{{ f.carbs }},fat:{{ f.fat }},fiber:{{ f.fiber or 'null' }},sodium:{{ f.sodium or 'null' }},unidad:'{{ f.unidad or 'g' }}'})"
+        <div style="display:flex; gap:4px; flex-shrink:0; margin-top:2px;">
+          <button type="button"
+                  onclick="openEdit({{ f.id }}, '{{ f.name|replace("'", "\\'") }}', '{{ (f.marca or '')|replace("'", "\\'") }}', {{ f.calories }}, {{ f.protein }}, {{ f.carbs }}, {{ f.fat }}, {{ f.fiber or 'null' }}, {{ f.sodium or 'null' }}, '{{ f.unidad or 'g' }}')"
                   class="btn btn-soft btn-sm" style="padding:6px 10px; font-size:.8em;">Editar</button>
           <button type="button" onclick="deleteFood({{ f.id }})"
-                  style="background:none; border:1px solid var(--border); border-radius:8px; color:var(--faint); padding:6px 10px; font-size:.8em; cursor:pointer;"
+                  style="background:none; border:1px solid var(--border); border-radius:8px; color:var(--faint); padding:6px 10px; font-size:.8em; cursor:pointer; transition:all .15s;"
                   onmouseover="this.style.color='var(--bad)';this.style.borderColor='var(--bad)'"
                   onmouseout="this.style.color='var(--faint)';this.style.borderColor='var(--border)'">Borrar</button>
         </div>
@@ -106,11 +107,11 @@
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
         <div>
           <div class="label" style="margin-bottom:4px;">Fibra (g, opc.)</div>
-          <input id="edit-fiber" type="number" min="0" step="0.1" class="input">
+          <input id="edit-fiber" type="number" min="0" step="0.1" class="input" placeholder="—">
         </div>
         <div>
           <div class="label" style="margin-bottom:4px;">Sodio (mg, opc.)</div>
-          <input id="edit-sodium" type="number" min="0" step="1" class="input">
+          <input id="edit-sodium" type="number" min="0" step="1" class="input" placeholder="—">
         </div>
       </div>
       <button type="button" onclick="saveEdit()" id="edit-save-btn" class="btn btn-primary btn-block">
@@ -125,18 +126,18 @@
 <script>
 let editingId = null;
 
-function openEdit(id, food) {
+function openEdit(id, name, marca, cal, prot, carb, fat, fiber, sodium, unit) {
   editingId = id;
   document.getElementById('edit-id').value = id;
-  document.getElementById('edit-name').value = food.name || '';
-  document.getElementById('edit-marca').value = food.marca || '';
-  document.getElementById('edit-cal').value = food.calories || '';
-  document.getElementById('edit-prot').value = food.protein || '';
-  document.getElementById('edit-carb').value = food.carbs || '';
-  document.getElementById('edit-fat').value = food.fat || '';
-  document.getElementById('edit-fiber').value = food.fiber || '';
-  document.getElementById('edit-sodium').value = food.sodium || '';
-  document.getElementById('edit-unit').value = food.unidad === 'ml' ? 'ml' : 'g';
+  document.getElementById('edit-name').value = name;
+  document.getElementById('edit-marca').value = marca;
+  document.getElementById('edit-cal').value = cal;
+  document.getElementById('edit-prot').value = prot;
+  document.getElementById('edit-carb').value = carb;
+  document.getElementById('edit-fat').value = fat;
+  document.getElementById('edit-fiber').value = fiber !== null ? fiber : '';
+  document.getElementById('edit-sodium').value = sodium !== null ? sodium : '';
+  document.getElementById('edit-unit').value = unit === 'ml' ? 'ml' : 'g';
   document.getElementById('edit-modal').style.display = 'flex';
   document.getElementById('edit-name').focus();
 }
@@ -153,20 +154,22 @@ async function saveEdit() {
   if (!name) { document.getElementById('edit-name').focus(); return; }
   const btn = document.getElementById('edit-save-btn');
   btn.disabled = true; btn.textContent = 'Guardando…';
+  const fiberVal  = document.getElementById('edit-fiber').value;
+  const sodiumVal = document.getElementById('edit-sodium').value;
   try {
     const res = await fetch(`/api/community/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         name,
-        marca: document.getElementById('edit-marca').value.trim(),
-        calories: parseFloat(document.getElementById('edit-cal').value) || 0,
-        protein: parseFloat(document.getElementById('edit-prot').value) || 0,
-        carbs: parseFloat(document.getElementById('edit-carb').value) || 0,
-        fat: parseFloat(document.getElementById('edit-fat').value) || 0,
-        fiber: parseFloat(document.getElementById('edit-fiber').value) || null,
-        sodium: parseFloat(document.getElementById('edit-sodium').value) || null,
-        unidad: document.getElementById('edit-unit').value,
+        marca:   document.getElementById('edit-marca').value.trim(),
+        calories: parseFloat(document.getElementById('edit-cal').value)  || 0,
+        protein:  parseFloat(document.getElementById('edit-prot').value) || 0,
+        carbs:    parseFloat(document.getElementById('edit-carb').value) || 0,
+        fat:      parseFloat(document.getElementById('edit-fat').value)  || 0,
+        fiber:    fiberVal  !== '' ? parseFloat(fiberVal)  : null,
+        sodium:   sodiumVal !== '' ? parseFloat(sodiumVal) : null,
+        unidad:   document.getElementById('edit-unit').value,
       }),
     });
     if (res.ok) { closeEdit(); location.reload(); }
@@ -181,8 +184,8 @@ async function deleteFood(id) {
     const res = await fetch(`/api/community/${id}`, { method: 'DELETE' });
     if (res.ok) {
       const el = document.getElementById(`food-${id}`);
-      if (el) { el.style.opacity = '0'; el.style.transition = 'opacity .3s'; setTimeout(() => el.remove(), 300); }
-    } else alert('No se pudo eliminar.');
+      if (el) { el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }
+    } else { alert('No se pudo eliminar.'); }
   } catch (e) { alert('Error.'); }
 }
 </script>

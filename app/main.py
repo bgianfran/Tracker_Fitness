@@ -259,6 +259,57 @@ def api_search(q: str = "", meal: str = ""):
     return JSONResponse(content=search_rnpa(q, limit=15, meal_type=meal))
 
 
+@app.get("/api/search/ai")
+async def api_search_ai(q: str = ""):
+    """Use Claude Haiku to estimate nutrition for a food not found in the local DB."""
+    q = q.strip()
+    if not q:
+        return JSONResponse(content=[])
+
+    import anthropic as _anthropic
+    api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+    if not api_key:
+        return JSONResponse(status_code=503, content={"error": "ANTHROPIC_API_KEY no configurada"})
+
+    prompt = (
+        f"Estimá los valores nutricionales por 100g para el alimento: \"{q}\".\n"
+        "Devolvé SOLO un JSON (sin texto extra) con estas claves:\n"
+        '{"name": "nombre limpio y corto en español", "calories": número, "protein": número, '
+        '"carbs": número, "fat": número, "fiber": número_o_null, "sodium": número_o_null, '
+        '"unidad": "g", "confidence": "alta|media|baja", '
+        '"nota": "breve aclaración (ej: estimación, puede variar según preparación)"}'
+    )
+    try:
+        client = _anthropic.Anthropic(api_key=api_key)
+        resp = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=350,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        raw = resp.content[0].text.strip()
+        start, end = raw.find("{"), raw.rfind("}") + 1
+        data = json.loads(raw[start:end])
+        food = {
+            "name": str(data.get("name", q.title()))[:80],
+            "marca": "",
+            "categoria": "",
+            "calories": round(float(data.get("calories") or 0), 1),
+            "protein":  round(float(data.get("protein")  or 0), 1),
+            "carbs":    round(float(data.get("carbs")    or 0), 1),
+            "fat":      round(float(data.get("fat")      or 0), 1),
+            "fiber":    (round(float(data["fiber"]), 1) if data.get("fiber") is not None else None),
+            "sodium":   (round(float(data["sodium"]), 1) if data.get("sodium") is not None else None),
+            "unidad":   "g",
+            "source":   "ai_estimate",
+            "ai_confidence": data.get("confidence", "media"),
+            "ai_nota":  data.get("nota", ""),
+        }
+        food["portions"] = get_portions(food["name"], "", "g")
+        return JSONResponse(content=[food])
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+
 @app.get("/api/browse")
 def api_browse(cat: str = ""):
     if not cat:
@@ -725,14 +776,13 @@ def delete_meal(meal_id: int, request: Request, db: Session = Depends(get_db)):
     return JSONResponse(content={"success": True})
 
 
-# ─── Community foods (user's own contributions) ──────────────────────────────
+# ─── Community foods (user contributions) ───────────────────────────────────
 
 @app.get("/mis-alimentos", response_class=HTMLResponse)
 def mis_alimentos_page(request: Request, db: Session = Depends(get_db)):
     current_user, redirect = get_user_from_request(request, db)
     if redirect:
         return redirect
-    # Foods directly contributed by this user
     foods = db.query(CommunityFood).filter(
         CommunityFood.contributed_by == current_user.id
     ).order_by(CommunityFood.created_at.desc()).all()
@@ -756,7 +806,8 @@ def update_community_food(food_id: int, request: Request, db: Session = Depends(
         raise HTTPException(status_code=404)
     for field in ("name", "marca", "calories", "protein", "carbs", "fat", "fiber", "sodium", "unidad"):
         if field in payload:
-            setattr(food, field, payload[field])
+            val = payload[field]
+            setattr(food, field, (float(val) if val is not None and field != "name" and field != "marca" and field != "unidad" else val))
     db.commit()
     return JSONResponse({"ok": True})
 

@@ -132,7 +132,7 @@
               <span class="faint" style="font-size:.72em; white-space:nowrap;">o cantidad exacta</span>
             </div>
             <!-- Preview -->
-            <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin-bottom:10px;" id="item-preview">
+            <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin-bottom:6px;" id="item-preview">
               <div style="background:var(--surface-2); border-radius:8px; padding:8px; text-align:center;">
                 <div class="faint" style="font-size:.7em;">Cal</div>
                 <div id="prev-cal" style="font-weight:700; font-size:.9em;">–</div>
@@ -150,6 +150,8 @@
                 <div id="prev-fat" style="font-weight:700; font-size:.9em; color:var(--fat);">–</div>
               </div>
             </div>
+            <!-- Fiber / Sodium (shown when available) -->
+            <div id="prev-extra" style="display:none; font-size:.74em; color:var(--faint); margin-bottom:8px; padding:0 2px;"></div>
             <button type="button" onclick="addIngredient()" class="btn btn-primary btn-block">
               + Agregar al plato
             </button>
@@ -617,7 +619,7 @@ async function browseCategory(cat, btn) {
   searchResults.style.display = 'flex';
   try {
     const results = await fetch(`/api/browse?cat=${encodeURIComponent(cat)}`).then(r => r.json()).catch(() => []);
-    renderResults(results);
+    renderResults(results, '');
   } catch (e) { console.error(e); }
 }
 
@@ -628,14 +630,16 @@ async function doSearch() {
     searchResults.innerHTML = '';
     clearBrowseActive();
     toggleBrowse(true);
+    _aiSearchBusy = false;
     return;
   }
   toggleBrowse(false);
   searchResults.innerHTML = `<p class="muted" style="font-size:.82em; padding:8px;">Buscando...</p>`;
   searchResults.style.display = 'flex';
+  _aiSearchBusy = false;
   try {
     const results = await fetch(`/api/search?q=${encodeURIComponent(q)}&meal=${encodeURIComponent(selectedMeal)}`).then(r=>r.json()).catch(()=>[]);
-    renderResults(results);
+    renderResults(results, q);
   } catch(e) { console.error(e); }
 }
 
@@ -644,16 +648,27 @@ function renderFoodBtn(item) {
   const isBasic   = item.source === 'basico' || item.source === 'argenfood_unlu';
   const isGeneric = item.source === 'rnpa_generic';
   const isBranded = item.source === 'rnpa' && item.marca;
+  const isAI      = item.source === 'ai_estimate';
 
-  const badgeColor = isBasic ? 'var(--good)' : isGeneric ? 'var(--accent)' : 'var(--faint)';
-  const badgeLabel = isBasic ? 'básico' : isGeneric ? 'genérico' : '🇦🇷';
+  const badgeColor = isBasic ? 'var(--good)' : isGeneric ? 'var(--accent)' : isAI ? 'var(--warn)' : 'var(--faint)';
+  const badgeLabel = isBasic ? 'básico' : isGeneric ? 'genérico' : isAI ? '✨ IA' : '🇦🇷';
 
-  // Branded: marca = título principal, name = descripción corta
-  // Básico/genérico: name = título principal, sin subtítulo de marca
-  const titleText   = isBranded ? item.marca : item.name;
+  const titleText    = isBranded ? item.marca : item.name;
   const subtitleText = isBranded ? item.name : '';
   const subtitleHtml = subtitleText
     ? `<div style="font-size:.75em; color:var(--muted); margin-top:1px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:240px;">${subtitleText}</div>`
+    : '';
+
+  // Extra info line: fiber and/or sodium when available
+  const extras = [];
+  if (item.fiber  != null && item.fiber  > 0) extras.push(`Fibra: ${item.fiber}g`);
+  if (item.sodium != null && item.sodium > 0) extras.push(`Na: ${item.sodium}mg`);
+  const extraHtml = extras.length
+    ? `<span style="color:var(--faint); margin-left:6px;">&bull; ${extras.join(' &bull; ')}</span>`
+    : '';
+
+  const aiNota = isAI && item.ai_nota
+    ? `<div style="font-size:.72em; color:var(--warn); margin-top:2px; font-style:italic;">${item.ai_nota}</div>`
     : '';
 
   const data = JSON.stringify(item).replace(/'/g, '&#39;');
@@ -670,28 +685,109 @@ function renderFoodBtn(item) {
           <span style="font-size:.8em; font-weight:700; color:var(--accent);">${item.calories} kcal</span>
         </div>
       </div>
-      <div style="font-size:.75em; color:var(--faint); margin-top:3px;">P: ${item.protein}g &bull; C: ${item.carbs}g &bull; G: ${item.fat}g / 100${u}</div>
+      <div style="font-size:.75em; color:var(--faint); margin-top:3px;">P: ${item.protein}g &bull; C: ${item.carbs}g &bull; G: ${item.fat}g / 100${u}${extraHtml}</div>
+      ${aiNota}
     </button>`;
 }
 
-function renderResults(items) {
-  searchResults.innerHTML = items.length
-    ? items.map(renderFoodBtn).join('')
-    : `<p class="muted" style="font-size:.82em; padding:8px;">Sin resultados</p>`;
+// Group items that share the same base name into primary + collapsed variants
+function groupByName(items) {
+  const groups = new Map();
+  items.forEach(item => {
+    const key = item.name.toLowerCase().trim();
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(item);
+  });
+  return groups;
+}
+
+let _aiSearchBusy = false;
+
+function renderResults(items, query) {
+  if (!items.length) {
+    const q = query || searchInput.value.trim();
+    searchResults.innerHTML = `
+      <p class="muted" style="font-size:.82em; padding:8px 8px 4px;">Sin resultados en la base de datos.</p>
+      <button type="button" onclick="doAISearch(${JSON.stringify(q)})"
+              id="ai-fallback-btn"
+              class="btn btn-soft btn-sm" style="margin:4px 8px 8px; font-size:.82em;">
+        ✨ Buscar con IA — "${q}"
+      </button>`;
+    searchResults.style.display = 'flex';
+    return;
+  }
+
+  const groups = groupByName(items);
+  let html = '';
+  let variantIdx = 0;
+  groups.forEach((groupItems, key) => {
+    if (groupItems.length === 1) {
+      html += renderFoodBtn(groupItems[0]);
+    } else {
+      // First result is the primary (highest scored, already sorted)
+      html += renderFoodBtn(groupItems[0]);
+      // Remaining are variants, hidden by default
+      const vid = `variants-${variantIdx++}`;
+      const others = groupItems.slice(1);
+      html += `<div style="padding:0 4px 2px;">
+        <button type="button" onclick="toggleVariants('${vid}', this)"
+                style="font-size:.75em; color:var(--accent); background:none; border:none; cursor:pointer; padding:2px 6px;">
+          Ver otras ${others.length} marca${others.length > 1 ? 's' : ''} →
+        </button>
+        <div id="${vid}" style="display:none; margin-top:4px;" class="stack" style="gap:4px;">
+          ${others.map(renderFoodBtn).join('')}
+        </div>
+      </div>`;
+    }
+  });
+  searchResults.innerHTML = html;
   searchResults.style.display = 'flex';
+}
+
+function toggleVariants(id, btn) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const open = el.style.display !== 'none';
+  el.style.display = open ? 'none' : '';
+  btn.textContent = open
+    ? btn.textContent.replace('Ocultar', 'Ver')
+    : btn.textContent.replace('Ver', 'Ocultar');
+}
+
+async function doAISearch(q) {
+  if (_aiSearchBusy) return;
+  _aiSearchBusy = true;
+  const btn = document.getElementById('ai-fallback-btn');
+  if (btn) { btn.disabled = true; btn.textContent = '✨ Consultando IA…'; }
+  try {
+    const results = await fetch(`/api/search/ai?q=${encodeURIComponent(q)}`).then(r => r.json());
+    if (Array.isArray(results) && results.length) {
+      renderResults(results, q);
+    } else {
+      searchResults.innerHTML = `<p class="muted" style="font-size:.82em; padding:8px;">La IA no pudo estimar este alimento. Intentá con otro nombre.</p>`;
+    }
+  } catch (e) {
+    searchResults.innerHTML = `<p class="muted" style="font-size:.82em; padding:8px;">Error al consultar IA.</p>`;
+  }
+  _aiSearchBusy = false;
 }
 
 function selectFood(item) {
   const u = item.unidad === 'ml' ? 'ml' : 'g';
-  // Display: "Marca — descripción" when there's a brand (RNPA, Open Food Facts, community)
   const displayName = item.marca
     ? `${item.marca} — ${item.name}`
     : item.name;
-  // Store the display name as food_name so it reads well in the food log
   selectedFood = { ...item, food_name_display: displayName };
   document.getElementById('selected-name').textContent = displayName;
-  document.getElementById('selected-macros').textContent =
-    `${item.calories} kcal · P: ${item.protein}g · C: ${item.carbs}g · G: ${item.fat}g por 100${u}`;
+
+  // Base macros line
+  let macrosLine = `${item.calories} kcal · P: ${item.protein}g · C: ${item.carbs}g · G: ${item.fat}g por 100${u}`;
+  const extras = [];
+  if (item.fiber  != null && item.fiber  > 0) extras.push(`Fibra: ${item.fiber}g`);
+  if (item.sodium != null && item.sodium > 0) extras.push(`Na: ${item.sodium}mg`);
+  if (extras.length) macrosLine += ' · ' + extras.join(' · ');
+  document.getElementById('selected-macros').textContent = macrosLine;
+
   document.getElementById('unit-label').textContent = u;
   renderPortions(item, u);
   searchResults.style.display = 'none';
@@ -754,6 +850,14 @@ function updatePreview() {
   document.getElementById('prev-prot').textContent = (selectedFood.protein * f).toFixed(1) + 'g';
   document.getElementById('prev-carb').textContent = (selectedFood.carbs * f).toFixed(1) + 'g';
   document.getElementById('prev-fat').textContent  = (selectedFood.fat * f).toFixed(1) + 'g';
+
+  // Fiber / sodium for scaled quantity
+  const extra = document.getElementById('prev-extra');
+  const parts = [];
+  if (selectedFood.fiber  != null && selectedFood.fiber  > 0) parts.push(`Fibra: ${(selectedFood.fiber  * f).toFixed(1)}g`);
+  if (selectedFood.sodium != null && selectedFood.sodium > 0) parts.push(`Sodio: ${(selectedFood.sodium * f).toFixed(0)}mg`);
+  if (parts.length) { extra.textContent = parts.join(' · '); extra.style.display = ''; }
+  else extra.style.display = 'none';
 }
 
 function addIngredient() {
