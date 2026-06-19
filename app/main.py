@@ -1367,6 +1367,69 @@ def _build_workouts_context(request: Request, db: Session, current_user):
         except Exception as e:
             strava_error = f"Error Strava: {str(e)}"
 
+    # ── Analysis data for the "Data" tab ────────────────────────────────────
+    # Flat, JSON-serialisable list of every session in one shape. Muscle data
+    # only comes from Hevy (gym) sessions; manual/Strava still count towards
+    # session/duration/calorie totals.
+    analysis_sessions = []
+    for hw in hevy_workouts:
+        analysis_sessions.append({
+            "source": "hevy",
+            "date": hw.get("sort_date", ""),
+            "title": hw.get("title", "Entrenamiento"),
+            "duration_min": (hw.get("duration_seconds") or 0) // 60,
+            "volume_kg": hw.get("total_volume_kg") or 0,
+            "calories": 0,
+            "muscle_volume": hw.get("muscle_volume", {}),
+            "muscle_sets": hw.get("muscle_sets", {}),
+            "exercises": [
+                {"name": e["name"], "muscle": e["muscle"], "max_weight": e["max_weight"]}
+                for e in hw.get("exercises", []) if e.get("max_weight")
+            ],
+        })
+    for mw in manual_workouts:
+        analysis_sessions.append({
+            "source": "manual",
+            "date": mw.date.isoformat(),
+            "title": mw.custom_type or mw.activity_type,
+            "duration_min": mw.duration_min or 0,
+            "volume_kg": 0,
+            "calories": mw.calories_burned or 0,
+            "muscle_volume": {}, "muscle_sets": {}, "exercises": [],
+        })
+    for sw in strava_workouts:
+        analysis_sessions.append({
+            "source": "strava",
+            "date": sw.get("sort_date", ""),
+            "title": sw.get("title", sw.get("sport_type", "Actividad")),
+            "duration_min": (sw.get("duration_seconds") or 0) // 60,
+            "volume_kg": 0,
+            "calories": sw.get("calories") or 0,
+            "muscle_volume": {}, "muscle_sets": {}, "exercises": [],
+        })
+
+    # Preset period ranges (inclusive, ISO dates) computed server-side so the
+    # client doesn't have to redo date math / worry about timezones.
+    monday = week_start
+    prev_monday = monday - timedelta(days=7)
+    prev_sunday = monday - timedelta(days=1)
+    _months_es = ["ene", "feb", "mar", "abr", "may", "jun",
+                  "jul", "ago", "sep", "oct", "nov", "dic"]
+
+    def _fmt(d):
+        return f"{d.day} {_months_es[d.month - 1]}"
+
+    period_ranges = {
+        "dia": {"from": today.isoformat(), "to": today.isoformat()},
+        "semana": {"from": monday.isoformat(), "to": today.isoformat()},
+        "ultsemana": {"from": prev_monday.isoformat(), "to": prev_sunday.isoformat()},
+    }
+    period_labels = {
+        "dia": _fmt(today),
+        "semana": f"{_fmt(monday)} – {_fmt(today)}",
+        "ultsemana": f"{_fmt(prev_monday)} – {_fmt(prev_sunday)}",
+    }
+
     return {
         "request": request,
         "current_user": current_user,
@@ -1381,6 +1444,9 @@ def _build_workouts_context(request: Request, db: Session, current_user):
         "week_minutes": week_minutes,
         "week_kcal": week_kcal,
         "today": today,
+        "analysis_sessions": analysis_sessions,
+        "period_ranges": period_ranges,
+        "period_labels": period_labels,
         "anthropic_configured": bool(os.environ.get("ANTHROPIC_API_KEY")),
         "flash_strava_connected": request.query_params.get("strava_connected") == "1",
         "flash_strava_error": request.query_params.get("strava_error"),
@@ -1498,6 +1564,47 @@ Devolvé SOLO un JSON: {{"calories": número_entero, "explanation": "una línea 
         return JSONResponse(content=json.loads(raw[start:end]))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al estimar: {str(e)}")
+
+
+@app.post("/api/entrenos/ai-summary")
+async def entrenos_ai_summary(request: Request, db: Session = Depends(get_db)):
+    """Generate a short narrative training summary for a period from the
+    pre-aggregated stats the client computed for the selected period."""
+    current_user, _ = get_user_from_request(request, db)
+    if not current_user:
+        raise HTTPException(status_code=401)
+
+    import anthropic as _anthropic
+    api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+    if not api_key:
+        raise HTTPException(status_code=503, detail="ANTHROPIC_API_KEY no configurada")
+
+    payload = await request.json()
+    profile = db.query(UserProfile).filter(UserProfile.user_id == current_user.id).first()
+    perfil = ""
+    if profile:
+        perfil = f" El atleta tiene {profile.age} años, pesa {profile.weight_kg}kg y su objetivo es '{profile.goal}'."
+
+    client = _anthropic.Anthropic(api_key=api_key)
+    system = (
+        "Sos un entrenador de fuerza argentino. Te paso estadísticas YA calculadas "
+        "de cómo entrenó la persona en un período. Escribí un resumen breve y motivador "
+        "en español rioplatense (máximo 4 frases). Comentá cómo entrenó, qué grupo "
+        "muscular trabajó más, su nivel de fuerza (mejores levantamientos) y, si ves un "
+        "desbalance evidente, una sugerencia corta. No inventes datos que no estén en "
+        "las estadísticas." + perfil
+    )
+
+    try:
+        response = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=320,
+            system=system,
+            messages=[{"role": "user", "content": json.dumps(payload, ensure_ascii=False)}],
+        )
+        return JSONResponse(content={"summary": response.content[0].text.strip()})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al generar resumen: {str(e)}")
 
 
 @app.get("/api/workouts/all")
