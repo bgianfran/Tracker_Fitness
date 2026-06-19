@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Request, Depends, Form, HTTPException, UploadFile, File, Body
 from typing import List
-from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, FileResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
@@ -60,6 +60,16 @@ STRAVA_REDIRECT_URI = "https://trackerfitness-production.up.railway.app/strava/c
 def manifest():
     with open(os.path.join(BASE_DIR, "static", "manifest.json")) as f:
         return JSONResponse(content=json.load(f))
+
+
+@app.get("/sw.js")
+def service_worker():
+    """Serve the service worker from root so its scope covers the whole app."""
+    return FileResponse(
+        os.path.join(BASE_DIR, "static", "sw.js"),
+        media_type="application/javascript",
+        headers={"Service-Worker-Allowed": "/", "Cache-Control": "no-cache"},
+    )
 
 
 @app.on_event("startup")

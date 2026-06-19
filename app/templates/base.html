@@ -13,6 +13,8 @@
   <meta name="theme-color" content="#f0f2f5" id="theme-color-meta" />
   <meta name="description" content="Trackeá tus calorías, macros y entrenamiento" />
   <link rel="manifest" href="/manifest.json" />
+  <link rel="apple-touch-icon" href="/static/apple-touch-icon.png" />
+  <link rel="icon" type="image/png" href="/static/icon-192.png" />
 
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -656,6 +658,19 @@
         <button onclick="setCardStyle('plano')"   data-card-btn="plano"   style="flex:1;">Plano</button>
       </div>
     </div>
+
+    <!-- Install app -->
+    <div id="install-section" style="margin-bottom: 4px; display: none;">
+      <div class="eyebrow" style="margin-bottom: 8px;">Aplicación</div>
+      <button id="install-btn" onclick="installApp()" class="btn btn-primary btn-block" style="display:none;">
+        📲 Instalar app
+      </button>
+      <p id="install-ios" class="muted" style="display:none; font-size:.82em; line-height:1.5;">
+        Para instalar: tocá el botón <strong>Compartir</strong>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;"><path d="M12 16V4M8 8l4-4 4 4M4 14v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></svg>
+        y elegí <strong>“Agregar a inicio”</strong>.
+      </p>
+    </div>
   </div>
 
   <script>
@@ -715,6 +730,15 @@
       const p = getPrefs(); p.theme = t; savePrefs(p);
       const prefs = getPrefs();
       applyCardStyle(prefs.cardStyle || 'suave', t);
+      updateThemeColor();
+    }
+
+    /* Keep the browser/status-bar color in sync with the app background */
+    function updateThemeColor() {
+      const meta = document.getElementById('theme-color-meta');
+      if (!meta) return;
+      const bg = getComputedStyle(document.body).backgroundColor;
+      if (bg) meta.setAttribute('content', bg);
     }
 
     function setPalette(pal) {
@@ -723,6 +747,7 @@
         b.setAttribute('data-selected', b.getAttribute('data-palette-btn') === pal ? '1' : '0');
       });
       const p = getPrefs(); p.palette = pal; savePrefs(p);
+      updateThemeColor();
     }
 
     function setDensity(d) {
@@ -799,6 +824,7 @@
         b.setAttribute('data-on', b.getAttribute('data-density-btn') === density ? '1' : '0'));
       document.querySelectorAll('[data-card-btn]').forEach(b =>
         b.setAttribute('data-on', b.getAttribute('data-card-btn') === cardStyle ? '1' : '0'));
+      updateThemeColor();
     })();
 
     /* ── Active nav highlighting ── */
@@ -813,6 +839,54 @@
         if (active) el.setAttribute('data-active', '1');
       });
     })();
+
+    /* ── PWA: service worker + install ── */
+    let deferredPrompt = null;
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => {});
+      });
+    }
+
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+      || window.navigator.standalone === true;
+    const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+
+    function showInstallSection() {
+      const sec = document.getElementById('install-section');
+      if (sec) sec.style.display = '';
+    }
+
+    // Android / desktop Chrome: capture the native prompt
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      const btn = document.getElementById('install-btn');
+      if (btn) btn.style.display = '';
+      showInstallSection();
+    });
+
+    async function installApp() {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      await deferredPrompt.userChoice;
+      deferredPrompt = null;
+      const btn = document.getElementById('install-btn');
+      if (btn) btn.style.display = 'none';
+    }
+
+    window.addEventListener('appinstalled', () => {
+      const sec = document.getElementById('install-section');
+      if (sec) sec.style.display = 'none';
+    });
+
+    // iOS Safari has no prompt → show manual instructions (if not already installed)
+    if (isIOS && !isStandalone) {
+      const ios = document.getElementById('install-ios');
+      if (ios) ios.style.display = '';
+      showInstallSection();
+    }
   </script>
 
   {% block scripts %}{% endblock %}
