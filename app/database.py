@@ -40,6 +40,8 @@ class FoodEntry(Base):
     fat = Column(Float, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     eaten_at = Column(DateTime, nullable=True)  # local time when food was consumed
+    unidad = Column(String, nullable=True, default="g")     # "g" or "ml"
+    portion_label = Column(String, nullable=True)           # e.g. "1 vaso", "½ taza"
 
 
 class UserProfile(Base):
@@ -178,6 +180,19 @@ class CommunityFood(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
+class SavedMeal(Base):
+    """A reusable multi-ingredient meal (combo) saved by a user.
+    `items` is a JSON list of {name, quantity_g, calories, protein, carbs,
+    fat, unidad} with macros per 100 g/ml."""
+    __tablename__ = "saved_meals"
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    name = Column(String, nullable=False)
+    items = Column(Text, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
 def get_db():
     db = SessionLocal()
     try:
@@ -188,13 +203,28 @@ def get_db():
 
 def init_db():
     Base.metadata.create_all(bind=engine)
-    # Add eaten_at column if it doesn't exist (migration for existing deployments)
-    try:
-        with engine.connect() as conn:
-            if DATABASE_URL.startswith("postgresql"):
-                conn.execute(__import__("sqlalchemy").text(
-                    "ALTER TABLE food_entries ADD COLUMN IF NOT EXISTS eaten_at TIMESTAMP"
-                ))
-                conn.commit()
-    except Exception:
-        pass
+    # Lightweight migrations for existing deployments (add new columns if missing)
+    from sqlalchemy import text
+    pg = DATABASE_URL.startswith("postgresql")
+    migrations = [
+        "ALTER TABLE food_entries ADD COLUMN IF NOT EXISTS eaten_at TIMESTAMP",
+        "ALTER TABLE food_entries ADD COLUMN IF NOT EXISTS unidad VARCHAR",
+        "ALTER TABLE food_entries ADD COLUMN IF NOT EXISTS portion_label VARCHAR",
+    ]
+    if pg:
+        for stmt in migrations:
+            try:
+                with engine.connect() as conn:
+                    conn.execute(text(stmt))
+                    conn.commit()
+            except Exception:
+                pass
+    else:
+        # SQLite: no "IF NOT EXISTS" for columns; try and ignore "duplicate" errors
+        for col, typ in [("eaten_at", "TIMESTAMP"), ("unidad", "VARCHAR"), ("portion_label", "VARCHAR")]:
+            try:
+                with engine.connect() as conn:
+                    conn.execute(text(f"ALTER TABLE food_entries ADD COLUMN {col} {typ}"))
+                    conn.commit()
+            except Exception:
+                pass

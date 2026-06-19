@@ -13,7 +13,7 @@ import json
 from app.database import (
     get_db, init_db,
     User, FoodEntry, UserProfile, DayScore, ChatMessage,
-    BodyMeasurement, ManualWorkout, StravaToken, CommunityFood,
+    BodyMeasurement, ManualWorkout, StravaToken, CommunityFood, SavedMeal,
 )
 from app.rnpa_search import search_rnpa, browse_basics, BASIC_CATEGORIES
 from app.portions import get_portions
@@ -460,6 +460,32 @@ def comidas_page(request: Request, db: Session = Depends(get_db)):
         FoodEntry.user_id == current_user.id,
         FoodEntry.date >= thirty_days_ago,
     ).order_by(FoodEntry.date.desc()).all()
+
+    # Most frequently logged foods → quick re-add chips (macros stored per 100)
+    freq = {}  # name → {count, last_entry}
+    for e in food_history:
+        f = freq.setdefault(e.food_name, {"count": 0, "entry": e})
+        f["count"] += 1  # history is date-desc, so first seen = most recent
+    frequent_foods = []
+    for name, info in sorted(freq.items(), key=lambda kv: -kv[1]["count"])[:8]:
+        e = info["entry"]
+        q = e.quantity_g or 100.0
+        per100 = (q / 100.0) or 1.0
+        frequent_foods.append({
+            "name": name,
+            "quantity_g": round(q, 1),
+            "unidad": e.unidad or "g",
+            "calories": round((e.calories or 0) / per100, 1),
+            "protein": round((e.protein or 0) / per100, 1),
+            "carbs": round((e.carbs or 0) / per100, 1),
+            "fat": round((e.fat or 0) / per100, 1),
+        })
+
+    saved_meals = db.query(SavedMeal).filter(
+        SavedMeal.user_id == current_user.id,
+    ).order_by(SavedMeal.created_at.desc()).all()
+    saved_meals_data = [{"id": m.id, "name": m.name, "items": json.loads(m.items)} for m in saved_meals]
+
     return templates.TemplateResponse("comidas.html", {
         "request": request,
         "current_user": current_user,
@@ -469,6 +495,8 @@ def comidas_page(request: Request, db: Session = Depends(get_db)):
         "suggested_meal": _meal_from_hour(now.hour),
         "food_history": food_history,
         "basic_categories": BASIC_CATEGORIES,
+        "frequent_foods": frequent_foods,
+        "saved_meals": saved_meals_data,
     })
 
 
@@ -592,10 +620,49 @@ def add_food_batch(request: Request, db: Session = Depends(get_db), payload: dic
             carbs=round(float(item.get("carbs", 0)) * factor, 1),
             fat=round(float(item.get("fat", 0)) * factor, 1),
             eaten_at=eaten_at,
+            unidad="ml" if str(item.get("unidad", "g")).lower() == "ml" else "g",
+            portion_label=(item.get("portion_label") or None),
         )
         db.add(entry)
     db.commit()
     return {"ok": True, "saved": len(items)}
+
+
+@app.patch("/api/log/{entry_id}")
+def edit_entry(entry_id: int, request: Request, db: Session = Depends(get_db), payload: dict = Body(...)):
+    """Edit a logged entry's quantity, rescaling its macros from per-100 values."""
+    current_user, _ = get_user_from_request(request, db)
+    if not current_user:
+        raise HTTPException(status_code=401)
+    entry = db.query(FoodEntry).filter(
+        FoodEntry.id == entry_id,
+        FoodEntry.user_id == current_user.id,
+    ).first()
+    if not entry:
+        raise HTTPException(status_code=404)
+    try:
+        new_qty = float(payload.get("quantity_g", 0))
+    except (TypeError, ValueError):
+        new_qty = 0
+    if new_qty <= 0:
+        raise HTTPException(status_code=400, detail="Cantidad inválida")
+    # Recover per-100 macros from the currently stored (scaled) values
+    old_qty = entry.quantity_g or 100.0
+    per100 = (old_qty / 100.0) or 1.0
+    factor = new_qty / 100.0
+    entry.calories = round((entry.calories / per100) * factor, 1)
+    entry.protein = round((entry.protein / per100) * factor, 1)
+    entry.carbs = round((entry.carbs / per100) * factor, 1)
+    entry.fat = round((entry.fat / per100) * factor, 1)
+    entry.quantity_g = new_qty
+    if "portion_label" in payload:
+        entry.portion_label = payload.get("portion_label") or None
+    db.commit()
+    return JSONResponse(content={
+        "ok": True,
+        "calories": entry.calories, "protein": entry.protein,
+        "carbs": entry.carbs, "fat": entry.fat, "quantity_g": entry.quantity_g,
+    })
 
 
 @app.delete("/log/{entry_id}")
@@ -610,6 +677,50 @@ def delete_entry(entry_id: int, request: Request, db: Session = Depends(get_db))
     if not entry:
         raise HTTPException(status_code=404)
     db.delete(entry)
+    db.commit()
+    return JSONResponse(content={"success": True})
+
+
+# ─── Saved meals (combos) ─────────────────────────────────────────────────────
+
+@app.post("/api/meals")
+def save_meal(request: Request, db: Session = Depends(get_db), payload: dict = Body(...)):
+    current_user, _ = get_user_from_request(request, db)
+    if not current_user:
+        raise HTTPException(status_code=401)
+    name = str(payload.get("name", "")).strip()
+    items = payload.get("items", [])
+    if not name or not items:
+        raise HTTPException(status_code=400, detail="Nombre o ingredientes faltantes")
+    clean = []
+    for it in items:
+        clean.append({
+            "name": str(it.get("name", "Alimento")),
+            "quantity_g": float(it.get("quantity_g", 100) or 0),
+            "calories": float(it.get("calories", 0) or 0),
+            "protein": float(it.get("protein", 0) or 0),
+            "carbs": float(it.get("carbs", 0) or 0),
+            "fat": float(it.get("fat", 0) or 0),
+            "unidad": "ml" if str(it.get("unidad", "g")).lower() == "ml" else "g",
+        })
+    meal = SavedMeal(user_id=current_user.id, name=name, items=json.dumps(clean))
+    db.add(meal)
+    db.commit()
+    db.refresh(meal)
+    return JSONResponse(content={"ok": True, "id": meal.id})
+
+
+@app.delete("/api/meals/{meal_id}")
+def delete_meal(meal_id: int, request: Request, db: Session = Depends(get_db)):
+    current_user, _ = get_user_from_request(request, db)
+    if not current_user:
+        raise HTTPException(status_code=401)
+    meal = db.query(SavedMeal).filter(
+        SavedMeal.id == meal_id, SavedMeal.user_id == current_user.id,
+    ).first()
+    if not meal:
+        raise HTTPException(status_code=404)
+    db.delete(meal)
     db.commit()
     return JSONResponse(content={"success": True})
 

@@ -91,6 +91,9 @@
             </svg>
           </button>
         </div>
+        <!-- Quick add: frequent foods + saved meals (shown when not searching) -->
+        <div id="quick-add" style="margin-bottom:8px;"></div>
+
         <!-- Browse by category (shown when not searching / nothing selected) -->
         <div id="browse-chips" style="margin-bottom:8px;">
           <div class="faint" style="font-size:.76em; margin-bottom:8px;">O explorá por categoría:</div>
@@ -181,6 +184,9 @@
             <div id="total-fat" style="font-weight:700; font-size:.9em; color:var(--fat);">0g</div>
           </div>
         </div>
+        <button type="button" onclick="saveAsMeal()" class="btn btn-soft btn-block" style="margin-top:12px; font-size:.85em;">
+          ⭐ Guardar como plato
+        </button>
       </div>
 
       <button type="button" id="save-btn" onclick="savePlate()"
@@ -317,18 +323,27 @@
             </div>
             <div>
         {% endif %}
-              <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 16px; border-bottom:1px solid color-mix(in srgb, var(--border) 50%, transparent);">
-                <div>
+              <div id="hist-{{ entry.id }}" style="display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 16px; border-bottom:1px solid color-mix(in srgb, var(--border) 50%, transparent); transition:opacity .3s;">
+                <div style="min-width:0; flex:1;">
                   <div style="font-size:.88em; font-weight:600;">{{ entry.food_name }}</div>
                   <div class="faint" style="font-size:.76em;">
-                    {{ entry.quantity_g|round(0)|int }}g &bull;
-                    <span style="color:var(--accent); font-weight:600;">{{ entry.calories }} kcal</span> &bull;
-                    P: {{ entry.protein }}g
+                    <span class="hist-qty">{{ entry.quantity_g|round(0)|int }}{{ entry.unidad or 'g' }}</span> &bull;
+                    <span class="hist-cal" style="color:var(--accent); font-weight:600;">{{ entry.calories }} kcal</span> &bull;
+                    P: <span class="hist-prot">{{ entry.protein }}</span>g
+                    {% if entry.eaten_at %}<span style="margin-left:4px;">· {{ entry.eaten_at.strftime('%H:%M') }}</span>{% endif %}
                   </div>
                 </div>
-                {% if entry.eaten_at %}
-                <span class="faint" style="font-size:.78em; flex-shrink:0;">{{ entry.eaten_at.strftime('%H:%M') }}</span>
-                {% endif %}
+                <div style="display:flex; gap:2px; flex-shrink:0;">
+                  <button type="button" onclick="editEntry({{ entry.id }}, {{ entry.quantity_g|round(1) }}, '{{ entry.unidad or 'g' }}')"
+                          style="background:none; border:none; color:var(--faint); padding:4px; cursor:pointer;" title="Editar cantidad">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+                  </button>
+                  <button type="button" onclick="deleteHistEntry({{ entry.id }})"
+                          style="background:none; border:none; color:var(--faint); padding:4px; cursor:pointer;" title="Eliminar"
+                          onmouseover="this.style.color='var(--bad)'" onmouseout="this.style.color='var(--faint)'">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>
+                  </button>
+                </div>
               </div>
       {% endfor %}
       </div></div>
@@ -499,8 +514,95 @@ searchInput.addEventListener('input', () => {
 });
 
 function toggleBrowse(show) {
-  const b = document.getElementById('browse-chips');
-  if (b) b.style.display = show ? '' : 'none';
+  ['browse-chips', 'quick-add'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = show ? '' : 'none';
+  });
+}
+
+/* ── Quick add: frequent foods + saved meals ── */
+let FREQUENT = {{ frequent_foods | tojson }};
+let SAVED_MEALS = {{ saved_meals | tojson }};
+
+function renderQuickAdd() {
+  const cont = document.getElementById('quick-add');
+  if (!cont) return;
+  let html = '';
+
+  if (FREQUENT.length) {
+    html += `<div class="faint" style="font-size:.76em; margin-bottom:8px;">Frecuentes:</div>
+      <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px;">` +
+      FREQUENT.map((f, i) => {
+        const u = f.unidad === 'ml' ? 'ml' : 'g';
+        return `<button type="button" class="chip" onclick="addFrequent(${i})" title="Agregar ${f.quantity_g}${u}">
+          ➕ ${f.name} <span style="opacity:.6;">${f.quantity_g}${u}</span></button>`;
+      }).join('') + `</div>`;
+  }
+
+  if (SAVED_MEALS.length) {
+    html += `<div class="faint" style="font-size:.76em; margin-bottom:8px;">⭐ Mis platos:</div>
+      <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px;">` +
+      SAVED_MEALS.map((m, i) =>
+        `<span class="chip" style="gap:6px;">
+          <button type="button" onclick="addSavedMeal(${i})" style="background:none;border:none;color:inherit;font:inherit;cursor:pointer;padding:0;">
+            🍽️ ${m.name} <span style="opacity:.6;">(${m.items.length})</span></button>
+          <button type="button" onclick="deleteSavedMeal(${m.id}, this)" style="background:none;border:none;color:var(--faint);cursor:pointer;padding:0 0 0 2px;" title="Borrar plato">✕</button>
+        </span>`).join('') + `</div>`;
+  }
+  cont.innerHTML = html;
+}
+
+function addFrequent(i) {
+  const f = FREQUENT[i];
+  if (!f) return;
+  ingredients.push({
+    name: f.name, quantity_g: f.quantity_g,
+    calories: f.calories, protein: f.protein, carbs: f.carbs, fat: f.fat,
+    unidad: f.unidad || 'g',
+  });
+  renderPlate();
+  document.getElementById('plate-section').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function addSavedMeal(i) {
+  const m = SAVED_MEALS[i];
+  if (!m) return;
+  m.items.forEach(it => ingredients.push({
+    name: it.name, quantity_g: it.quantity_g,
+    calories: it.calories, protein: it.protein, carbs: it.carbs, fat: it.fat,
+    unidad: it.unidad || 'g',
+  }));
+  renderPlate();
+  document.getElementById('plate-section').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+async function deleteSavedMeal(id, btn) {
+  if (!confirm('¿Borrar este plato guardado?')) return;
+  try {
+    const res = await fetch(`/api/meals/${id}`, { method: 'DELETE' });
+    if (res.ok) {
+      SAVED_MEALS = SAVED_MEALS.filter(m => m.id !== id);
+      renderQuickAdd();
+    }
+  } catch (e) { alert('Error al borrar'); }
+}
+
+async function saveAsMeal() {
+  if (!ingredients.length) return;
+  const name = prompt('Nombre del plato (ej: Mi desayuno):');
+  if (!name || !name.trim()) return;
+  try {
+    const res = await fetch('/api/meals', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: name.trim(), items: ingredients }),
+    });
+    const data = await res.json();
+    if (data.ok) {
+      SAVED_MEALS.unshift({ id: data.id, name: name.trim(), items: ingredients.slice() });
+      renderQuickAdd();
+      alert('Plato guardado ⭐');
+    }
+  } catch (e) { alert('Error al guardar el plato'); }
 }
 
 function clearBrowseActive() {
@@ -658,11 +760,15 @@ function addIngredient() {
   if (!selectedFood) return;
   const qty = parseFloat(document.getElementById('quantity-input').value) || 0;
   if (qty <= 0) return;
+  const activeChip = document.querySelector('#portion-chips .portion-chip[data-on="1"] span');
+  let portionLabel = activeChip ? activeChip.textContent.trim() : null;
+  if (portionLabel && /\d+\s*(g|ml)$/.test(portionLabel)) portionLabel = null; // plain grams → no label
   ingredients.push({
     name: selectedFood.food_name_display || selectedFood.name, quantity_g: qty,
     calories: selectedFood.calories, protein: selectedFood.protein,
     carbs: selectedFood.carbs, fat: selectedFood.fat,
     unidad: selectedFood.unidad || 'g',
+    portion_label: portionLabel,
   });
   clearSelection();
   renderPlate();
@@ -943,5 +1049,42 @@ async function saveBarcodeFood() {
   } catch (e) { alert('Error al guardar.'); }
   btn.disabled = false; btn.textContent = 'Guardar y agregar';
 }
+
+/* ── Edit / delete logged entries (Registros tab) ── */
+async function editEntry(id, currentQty, unit) {
+  const u = unit === 'ml' ? 'ml' : 'g';
+  const val = prompt(`Nueva cantidad en ${u}:`, currentQty);
+  if (val === null) return;
+  const qty = parseFloat(val);
+  if (!qty || qty <= 0) { alert('Cantidad inválida'); return; }
+  try {
+    const res = await fetch(`/api/log/${id}`, {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ quantity_g: qty }),
+    });
+    const data = await res.json();
+    if (!data.ok) throw new Error();
+    const row = document.getElementById(`hist-${id}`);
+    if (row) {
+      row.querySelector('.hist-qty').textContent = Math.round(data.quantity_g) + u;
+      row.querySelector('.hist-cal').textContent = data.calories + ' kcal';
+      row.querySelector('.hist-prot').textContent = data.protein;
+    }
+  } catch (e) { alert('No se pudo editar'); }
+}
+
+async function deleteHistEntry(id) {
+  if (!confirm('¿Eliminar este registro?')) return;
+  try {
+    const res = await fetch(`/log/${id}`, { method: 'DELETE' });
+    if (res.ok) {
+      const row = document.getElementById(`hist-${id}`);
+      if (row) { row.style.opacity = '0'; setTimeout(() => row.remove(), 300); }
+    }
+  } catch (e) { alert('Error al eliminar'); }
+}
+
+// Initial render of frequent foods + saved meals
+renderQuickAdd();
 </script>
 {% endblock %}

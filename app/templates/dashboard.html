@@ -185,21 +185,29 @@
                   {% endif %}
                 </div>
                 <div class="faint" style="font-size:.78em; margin-top:2px;">
-                  {{ entry.quantity_g|round(0)|int }}g &bull;
-                  <span style="color:var(--accent); font-weight:600;">{{ entry.calories }} kcal</span> &bull;
-                  <span style="color:var(--protein);">P {{ entry.protein }}g</span> &bull;
-                  <span style="color:var(--carbs);">C {{ entry.carbs }}g</span> &bull;
-                  <span style="color:var(--fat);">G {{ entry.fat }}g</span>
+                  <span class="e-qty">{{ entry.quantity_g|round(0)|int }}{{ entry.unidad or 'g' }}</span> &bull;
+                  <span class="e-cal" style="color:var(--accent); font-weight:600;">{{ entry.calories }} kcal</span> &bull;
+                  <span style="color:var(--protein);">P <span class="e-prot">{{ entry.protein }}</span>g</span> &bull;
+                  <span style="color:var(--carbs);">C <span class="e-carb">{{ entry.carbs }}</span>g</span> &bull;
+                  <span style="color:var(--fat);">G <span class="e-fat">{{ entry.fat }}</span>g</span>
                 </div>
               </div>
-              <button onclick="deleteEntry({{ entry.id }})"
-                      style="background:none; border:none; color:var(--faint); padding:4px; border-radius:6px; transition:color .15s; flex-shrink:0;"
-                      onmouseover="this.style.color='var(--bad)'" onmouseout="this.style.color='var(--faint)'"
-                      title="Eliminar">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>
-                </svg>
-              </button>
+              <div style="display:flex; gap:2px; flex-shrink:0;">
+                <button onclick="editEntry({{ entry.id }}, {{ entry.quantity_g|round(1) }}, '{{ entry.unidad or 'g' }}')"
+                        style="background:none; border:none; color:var(--faint); padding:4px; border-radius:6px; transition:color .15s;"
+                        onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--faint)'"
+                        title="Editar cantidad">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+                </button>
+                <button onclick="deleteEntry({{ entry.id }})"
+                        style="background:none; border:none; color:var(--faint); padding:4px; border-radius:6px; transition:color .15s;"
+                        onmouseover="this.style.color='var(--bad)'" onmouseout="this.style.color='var(--faint)'"
+                        title="Eliminar">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>
+                  </svg>
+                </button>
+              </div>
             </div>
             {% endfor %}
           </div>
@@ -314,6 +322,24 @@ async function deleteEntry(id) {
       setTimeout(() => window.location.reload(), 350);
     }
   } catch(e) { alert('Error al eliminar'); }
+}
+
+async function editEntry(id, currentQty, unit) {
+  const u = unit === 'ml' ? 'ml' : 'g';
+  const val = prompt(`Nueva cantidad en ${u}:`, currentQty);
+  if (val === null) return;
+  const qty = parseFloat(val);
+  if (!qty || qty <= 0) { alert('Cantidad inválida'); return; }
+  try {
+    const res = await fetch(`/api/log/${id}`, {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ quantity_g: qty }),
+    });
+    const data = await res.json();
+    if (!data.ok) throw new Error();
+    // Reload so the calorie ring, macro bars and totals all reflect the change
+    window.location.reload();
+  } catch(e) { alert('No se pudo editar'); }
 }
 
 // 7-day calorie trend
