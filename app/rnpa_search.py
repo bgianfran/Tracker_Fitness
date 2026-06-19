@@ -141,14 +141,22 @@ def _load():
     # 3. RNPA branded products
     rnpa_path = _DATA_DIR / "alimentos_rnpa.csv"
     if rnpa_path.exists():
+        seen = set()
         with open(rnpa_path, newline="", encoding="utf-8") as f:
             for row in csv.DictReader(f):
                 if not row.get("calories"):
                     continue
                 unidad = row.get("unidad", "g").strip().lower()
                 marca = row.get("marca", "").strip().title()
+                name = _clean_name(row["name"])
+                # Drop exact duplicates (same name, brand and macros)
+                dedup_key = (name, marca, row["calories"], row["protein"],
+                             row["carbs"], row["fat"])
+                if dedup_key in seen:
+                    continue
+                seen.add(dedup_key)
                 _branded.append({
-                    "name": _clean_name(row["name"]),
+                    "name": name,
                     "marca": marca,
                     "categoria": row["categoria"],
                     "calories": _f(row["calories"]),
@@ -307,6 +315,36 @@ def search_rnpa(query: str, limit: int = 15, meal_type: str = "") -> list[dict]:
         it["portions"] = get_portions(it["name"], it.get("categoria", ""), it.get("unidad", "g"))
         results.append(it)
     return results
+
+
+# Browsable categories (curated básicos), in display order
+BASIC_CATEGORIES = [
+    ("Frutas", "🍎"),
+    ("Verduras y Hortalizas", "🥦"),
+    ("Carnes y Pescados", "🥩"),
+    ("Huevos y Lácteos", "🥛"),
+    ("Cereales y Harinas", "🍚"),
+    ("Legumbres", "🫘"),
+    ("Frutos Secos", "🥜"),
+    ("Aceites y Grasas", "🫒"),
+    ("Azúcares y Endulzantes", "🍯"),
+    ("Salsas y Aderezos", "🥫"),
+    ("Condimentos", "🧂"),
+    ("Suplementos", "💪"),
+]
+
+
+def browse_basics(categoria: str) -> list[dict]:
+    """Return all curated básicos of a category, with portions, alphabetically."""
+    cat = _normalize(categoria)
+    out = []
+    for item in _basics:
+        if _normalize(item["categoria"]) == cat:
+            it = dict(item)
+            it["portions"] = get_portions(it["name"], it.get("categoria", ""), it.get("unidad", "g"))
+            out.append(it)
+    out.sort(key=lambda x: x["name"])
+    return out
 
 
 # Load on import

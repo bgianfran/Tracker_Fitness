@@ -13,6 +13,7 @@
   .portion-chip { display:inline-flex; align-items:baseline; gap:4px; }
   .portion-chip[data-on="1"] { border-color:var(--accent); background:var(--accent-soft); color:var(--accent); }
   .portion-chip .pg { opacity:.6; font-size:.85em; font-weight:500; }
+  .browse-chip[data-on="1"] { border-color:var(--accent); background:var(--accent-soft); color:var(--accent); }
   .search-result-btn { width:100%; text-align:left; padding:10px 14px; border-radius:calc(var(--radius) - 6px);
     border:1px solid var(--border); background:var(--surface-2); cursor:pointer; transition:background .15s; }
   .search-result-btn:hover { background:var(--accent-soft); border-color:var(--accent); }
@@ -90,6 +91,18 @@
             </svg>
           </button>
         </div>
+        <!-- Browse by category (shown when not searching / nothing selected) -->
+        <div id="browse-chips" style="margin-bottom:8px;">
+          <div class="faint" style="font-size:.76em; margin-bottom:8px;">O explorá por categoría:</div>
+          <div style="display:flex; flex-wrap:wrap; gap:6px;">
+            {% for cat, icon in basic_categories %}
+            <button type="button" class="chip browse-chip" data-cat="{{ cat }}" onclick="browseCategory('{{ cat }}', this)">
+              {{ icon }} {{ cat }}
+            </button>
+            {% endfor %}
+          </div>
+        </div>
+
         <div id="search-results" class="stack" style="gap:4px; display:none; margin-bottom:8px;"></div>
 
         <!-- Selected food -->
@@ -485,9 +498,37 @@ searchInput.addEventListener('input', () => {
   debounceTimer = setTimeout(doSearch, 200);
 });
 
+function toggleBrowse(show) {
+  const b = document.getElementById('browse-chips');
+  if (b) b.style.display = show ? '' : 'none';
+}
+
+function clearBrowseActive() {
+  document.querySelectorAll('.browse-chip').forEach(c => c.setAttribute('data-on', '0'));
+}
+
+async function browseCategory(cat, btn) {
+  searchInput.value = '';
+  clearBrowseActive();
+  if (btn) btn.setAttribute('data-on', '1');
+  searchResults.innerHTML = `<p class="muted" style="font-size:.82em; padding:8px;">Cargando...</p>`;
+  searchResults.style.display = 'flex';
+  try {
+    const results = await fetch(`/api/browse?cat=${encodeURIComponent(cat)}`).then(r => r.json()).catch(() => []);
+    renderResults(results);
+  } catch (e) { console.error(e); }
+}
+
 async function doSearch() {
   const q = searchInput.value.trim();
-  if (q.length < 1) { searchResults.style.display = 'none'; searchResults.innerHTML = ''; return; }
+  if (q.length < 1) {
+    searchResults.style.display = 'none';
+    searchResults.innerHTML = '';
+    clearBrowseActive();
+    toggleBrowse(true);
+    return;
+  }
+  toggleBrowse(false);
   searchResults.innerHTML = `<p class="muted" style="font-size:.82em; padding:8px;">Buscando...</p>`;
   searchResults.style.display = 'flex';
   try {
@@ -554,6 +595,8 @@ function selectFood(item) {
   searchResults.style.display = 'none';
   searchResults.innerHTML = '';
   searchInput.value = '';
+  clearBrowseActive();
+  toggleBrowse(false);
   selectedArea.style.display = '';
   updatePreview();
 }
@@ -564,6 +607,7 @@ function clearSelection() {
   document.getElementById('portion-chips').innerHTML = '';
   document.getElementById('unit-label').textContent = 'g';
   searchInput.value = '';
+  toggleBrowse(true);
   searchInput.focus();
 }
 

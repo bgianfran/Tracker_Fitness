@@ -15,7 +15,7 @@ from app.database import (
     User, FoodEntry, UserProfile, DayScore, ChatMessage,
     BodyMeasurement, ManualWorkout, StravaToken, CommunityFood,
 )
-from app.rnpa_search import search_rnpa
+from app.rnpa_search import search_rnpa, browse_basics, BASIC_CATEGORIES
 from app.portions import get_portions
 from app.openfoodfacts import lookup as off_lookup
 from app.hevy import fetch_recent_workouts, format_workout_summary, get_workout_display_data
@@ -249,6 +249,13 @@ def api_search(q: str = "", meal: str = ""):
     return JSONResponse(content=search_rnpa(q, limit=15, meal_type=meal))
 
 
+@app.get("/api/browse")
+def api_browse(cat: str = ""):
+    if not cat:
+        return JSONResponse(content=[])
+    return JSONResponse(content=browse_basics(cat))
+
+
 def _cf_to_food(cf: CommunityFood) -> dict:
     """Convert a CommunityFood row into the same shape as search results."""
     food = {
@@ -451,6 +458,7 @@ def comidas_page(request: Request, db: Session = Depends(get_db)):
         "default_time": now.strftime("%H:%M"),
         "suggested_meal": _meal_from_hour(now.hour),
         "food_history": food_history,
+        "basic_categories": BASIC_CATEGORIES,
     })
 
 
