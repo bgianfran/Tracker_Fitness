@@ -725,6 +725,58 @@ def delete_meal(meal_id: int, request: Request, db: Session = Depends(get_db)):
     return JSONResponse(content={"success": True})
 
 
+# ─── Community foods (user's own contributions) ──────────────────────────────
+
+@app.get("/mis-alimentos", response_class=HTMLResponse)
+def mis_alimentos_page(request: Request, db: Session = Depends(get_db)):
+    current_user, redirect = get_user_from_request(request, db)
+    if redirect:
+        return redirect
+    # Foods directly contributed by this user
+    foods = db.query(CommunityFood).filter(
+        CommunityFood.contributed_by == current_user.id
+    ).order_by(CommunityFood.created_at.desc()).all()
+    return templates.TemplateResponse("mis_alimentos.html", {
+        "request": request,
+        "current_user": current_user,
+        "foods": foods,
+    })
+
+
+@app.put("/api/community/{food_id}")
+def update_community_food(food_id: int, request: Request, db: Session = Depends(get_db), payload: dict = Body(...)):
+    current_user, _ = get_user_from_request(request, db)
+    if not current_user:
+        raise HTTPException(status_code=401)
+    food = db.query(CommunityFood).filter(
+        CommunityFood.id == food_id,
+        CommunityFood.contributed_by == current_user.id,
+    ).first()
+    if not food:
+        raise HTTPException(status_code=404)
+    for field in ("name", "marca", "calories", "protein", "carbs", "fat", "fiber", "sodium", "unidad"):
+        if field in payload:
+            setattr(food, field, payload[field])
+    db.commit()
+    return JSONResponse({"ok": True})
+
+
+@app.delete("/api/community/{food_id}")
+def delete_community_food(food_id: int, request: Request, db: Session = Depends(get_db)):
+    current_user, _ = get_user_from_request(request, db)
+    if not current_user:
+        raise HTTPException(status_code=401)
+    food = db.query(CommunityFood).filter(
+        CommunityFood.id == food_id,
+        CommunityFood.contributed_by == current_user.id,
+    ).first()
+    if not food:
+        raise HTTPException(status_code=404)
+    db.delete(food)
+    db.commit()
+    return JSONResponse({"ok": True})
+
+
 # ─── History ────────────────────────────────────────────────────────────────
 
 @app.get("/history", response_class=HTMLResponse)
