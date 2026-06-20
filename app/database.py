@@ -1,5 +1,5 @@
 import os
-from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, Date, Text, ForeignKey
+from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, Date, Text, ForeignKey, Boolean, JSON
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from datetime import datetime, date
@@ -174,6 +174,48 @@ class CommunityFood(Base):
     source = Column(String, nullable=False, default="user")  # "openfoodfacts" | "user"
     contributed_by = Column(Integer, ForeignKey("users.id"), nullable=True)
     times_used = Column(Integer, default=0)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class Exercise(Base):
+    """Exercise catalog (the in-app library). Seeded from the public-domain
+    free-exercise-db; users can also add their own (is_custom=True).
+
+    Muscle groups are normalised to our Spanish taxonomy (primary_muscle /
+    secondary_muscles_es) so the analysis tab works natively, while the
+    original English values are kept for reference. Images are hot-linked
+    via CDN URLs; gif_url is left empty for now and can be filled later from
+    a separate animated source without changing the schema."""
+    __tablename__ = "exercises"
+
+    id = Column(Integer, primary_key=True)
+    slug = Column(String, unique=True, nullable=False, index=True)
+    name_en = Column(String, nullable=False)
+    name_es = Column(String, nullable=True)          # filled later (AI batch translate)
+
+    category = Column(String, nullable=True)          # raw EN: strength, cardio...
+    category_es = Column(String, nullable=True)       # Fuerza, Cardio...
+    equipment = Column(String, nullable=True)         # raw EN
+    equipment_es = Column(String, nullable=True, index=True)
+    force = Column(String, nullable=True)             # push / pull / static
+    level = Column(String, nullable=True)             # beginner / intermediate / expert
+    mechanic = Column(String, nullable=True)          # compound / isolation
+
+    primary_muscle = Column(String, nullable=True, index=True)   # canonical ES group
+    primary_muscles_raw = Column(JSON, nullable=True)            # original EN list
+    secondary_muscles_es = Column(JSON, nullable=True)           # canonical ES list
+    secondary_muscles_raw = Column(JSON, nullable=True)
+
+    instructions = Column(JSON, nullable=True)        # list of steps
+    images = Column(JSON, nullable=True)              # list of full CDN URLs
+    gif_url = Column(String, nullable=True)           # optional animated, linked later
+    coach_notes = Column(Text, nullable=True)         # extra notes for the AI coach
+
+    is_custom = Column(Boolean, default=False)
+    created_by = Column(Integer, ForeignKey("users.id"), nullable=True)
+    source = Column(String, nullable=True)            # e.g. "free-exercise-db"
+    license = Column(String, nullable=True)           # e.g. "Public Domain (Unlicense)"
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
