@@ -1,20 +1,15 @@
 {% extends "base.html" %}
-{% block title %}Nuevo entreno – FitTracker{% endblock %}
+{% block title %}Nueva rutina – FitTracker{% endblock %}
 
 {% block content %}
 <style>
   .pick-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(140px,1fr)); gap:10px; }
-  .pick-card {
-    border:1px solid var(--border); border-radius:12px; overflow:hidden; cursor:pointer;
-    background:var(--surface); transition:border-color .15s, transform .1s; display:flex; flex-direction:column;
-  }
+  .pick-card { border:1px solid var(--border); border-radius:12px; overflow:hidden; cursor:pointer; background:var(--surface); transition:border-color .15s, transform .1s; display:flex; flex-direction:column; }
   .pick-card:hover { border-color:var(--accent); transform:translateY(-2px); }
   .pick-thumb { width:100%; aspect-ratio:4/3; object-fit:cover; background:var(--surface-2); }
   .pick-thumb-fb { width:100%; aspect-ratio:4/3; background:var(--surface-2); display:flex; align-items:center; justify-content:center; font-size:1.8em; color:var(--faint); }
   .ex-mchip { flex:0 0 auto; padding:5px 11px; border-radius:999px; border:2px solid var(--border); background:none; font-size:.8em; font-weight:600; cursor:pointer; color:var(--muted); white-space:nowrap; transition:all .15s; }
   .ex-mchip[data-on="1"] { color:var(--on-accent); background:var(--accent); border-color:var(--accent); }
-  .set-row { display:grid; grid-template-columns:34px 1fr 1fr 34px; gap:8px; align-items:center; margin-bottom:6px; }
-  .set-row input { width:100%; }
   .modal-bg { position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:200; display:none; align-items:flex-end; justify-content:center; }
   .modal-bg[data-open="1"] { display:flex; }
   .modal-box { background:var(--surface); width:100%; max-width:620px; height:88vh; display:flex; flex-direction:column; border-radius:var(--radius) var(--radius) 0 0; }
@@ -22,66 +17,29 @@
 </style>
 
 <div style="max-width:680px; margin:0 auto;">
-
   <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px;">
-    <h1 style="font-size:1.3em;">Nuevo entreno de gym</h1>
-    <a href="/entrenos" class="btn btn-soft" style="font-size:.85em;">Cancelar</a>
+    <h1 style="font-size:1.3em;">Nueva rutina{% if folder_name %} · {{ folder_name }}{% endif %}</h1>
+    <a href="/rutinas" class="btn btn-soft" style="font-size:.85em;">Cancelar</a>
   </div>
 
-  {% if routine_name %}
-  <div class="card" style="margin-bottom:12px; background:var(--accent-soft); border:1px solid color-mix(in srgb, var(--accent) 35%, var(--border)); display:flex; align-items:center; gap:10px; font-size:.88em; color:var(--accent);">
-    📋 Desde la rutina <strong>{{ routine_name }}</strong> — ajustá los pesos y guardá.
-  </div>
-  {% endif %}
-  <input type="hidden" id="wk-routine" value="{{ routine_id or '' }}">
+  <input type="hidden" id="rt-folder" value="{{ folder_id or '' }}">
 
-  <!-- Session meta -->
   <div class="card" style="margin-bottom:16px;">
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-      <div>
-        <div class="label" style="margin-bottom:6px;">Fecha</div>
-        <input type="date" id="wk-date" value="{{ today.isoformat() }}" class="input">
-      </div>
-      <div>
-        <div class="label" style="margin-bottom:6px;">Duración (min)</div>
-        <input type="number" id="wk-duration" min="1" max="600" placeholder="Ej: 75" class="input">
-      </div>
-    </div>
-    {% if folders %}
-    <div style="margin-top:12px;">
-      <div class="label" style="margin-bottom:6px;">Carpeta (opcional)</div>
-      <select id="wk-folder" class="input">
-        <option value="">Sin carpeta</option>
-        {% for f in folders %}
-        <option value="{{ f.id }}" {% if preselect_folder == f.id %}selected{% endif %}>{{ f.name }}</option>
-        {% endfor %}
-      </select>
-    </div>
-    {% endif %}
-    <div style="margin-top:12px;">
-      <div class="label" style="margin-bottom:6px;">Título (opcional)</div>
-      <input type="text" id="wk-title" value="{{ routine_name or '' }}" placeholder="Ej: Push A, Pierna, Full body…" class="input">
-    </div>
-    <div style="margin-top:12px;">
-      <div class="label" style="margin-bottom:6px;">Notas (opcional)</div>
-      <textarea id="wk-notes" rows="2" class="input" style="min-height:54px; padding:10px 14px; resize:vertical;" placeholder="Sensaciones, lesiones, etc."></textarea>
-    </div>
+    <div class="label" style="margin-bottom:6px;">Nombre de la rutina</div>
+    <input type="text" id="rt-name" placeholder="Ej: Push A, Pierna, Full body…" class="input">
+    <div class="label" style="margin:12px 0 6px;">Notas (opcional)</div>
+    <textarea id="rt-notes" rows="2" class="input" style="min-height:54px; padding:10px 14px; resize:vertical;" placeholder="Objetivo del día, tempo, descansos…"></textarea>
   </div>
 
-  <!-- Exercises -->
-  <div id="session-exercises"></div>
+  <div id="routine-exercises"></div>
   <div id="empty-hint" class="card" style="text-align:center; color:var(--muted); font-size:.9em; padding:28px 16px;">
-    Todavía no agregaste ejercicios.
+    Agregá los ejercicios de la rutina con sus series y reps objetivo.
   </div>
 
   <button type="button" class="btn btn-soft btn-block" style="margin-top:12px;" onclick="openPicker()">➕ Agregar ejercicio</button>
-
-  <button type="button" id="save-btn" class="btn btn-primary btn-block" style="margin-top:10px; font-size:1em;" onclick="saveWorkout()">
-    Guardar entreno
-  </button>
+  <button type="button" id="save-btn" class="btn btn-primary btn-block" style="margin-top:10px; font-size:1em;" onclick="saveRoutine()">Guardar rutina</button>
 </div>
 
-<!-- Exercise picker -->
 <div class="modal-bg" id="pick-bg" onclick="if(event.target===this) closePicker()">
   <div class="modal-box">
     <div style="padding:14px 16px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; gap:10px;">
@@ -105,7 +63,6 @@
 {% block scripts %}
 <script>
 const ITEMS = {{ items | tojson }};
-const PREFILL = {{ prefill | tojson }};
 const PICK_CAP = 120;
 const MUSCLE_COLORS = {
   "Pecho":"#ef4444","Espalda":"#3b82f6","Hombros":"#f59e0b","Bíceps":"#8b5cf6",
@@ -117,7 +74,6 @@ function mColor(m){ return MUSCLE_COLORS[m] || MUSCLE_COLORS["Otro"]; }
 function esc(s){ return (s||"").replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 function attr(s){ return (s||"").replace(/"/g,'&quot;'); }
 
-/* ---- picker ---- */
 function openPicker(){ document.getElementById('pick-bg').setAttribute('data-open','1'); document.body.style.overflow='hidden'; renderPick(); document.getElementById('pick-search').focus(); }
 function closePicker(){ document.getElementById('pick-bg').setAttribute('data-open','0'); document.body.style.overflow=''; }
 function setPickMuscle(m, btn){ pickMuscle=m; document.querySelectorAll('#pick-bg .ex-mchip').forEach(b=>b.setAttribute('data-on','0')); btn.setAttribute('data-on','1'); renderPick(); }
@@ -135,13 +91,12 @@ function renderPick(){
   }).join('');
 }
 
-/* ---- session building ---- */
 function refreshEmpty(){
-  const has = document.querySelectorAll('#session-exercises .ex-block').length > 0;
+  const has = document.querySelectorAll('#routine-exercises .ex-block').length > 0;
   document.getElementById('empty-hint').style.display = has ? 'none' : '';
 }
-function addExercise(slug, name, muscle, nSets){
-  const wrap = document.getElementById('session-exercises');
+function addExercise(slug, name, muscle){
+  const wrap = document.getElementById('routine-exercises');
   const block = document.createElement('div');
   block.className = 'card ex-block';
   block.style.marginBottom = '12px';
@@ -154,72 +109,45 @@ function addExercise(slug, name, muscle, nSets){
       </div>
       <button type="button" onclick="this.closest('.ex-block').remove(); refreshEmpty();" style="background:none; border:none; color:var(--faint); cursor:pointer; font-size:1.2em; line-height:1;">×</button>
     </div>
-    <div class="set-row" style="font-size:.74em; color:var(--faint); font-weight:600;">
-      <div>#</div><div>Kg</div><div>Reps</div><div></div>
-    </div>
-    <div class="sets"></div>
-    <button type="button" class="btn btn-ghost" style="font-size:.82em; margin-top:4px;" onclick="addSet(this.closest('.ex-block'))">+ Agregar serie</button>`;
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+      <div>
+        <div class="label" style="margin-bottom:4px;">Series</div>
+        <input class="input rt-sets" type="number" inputmode="numeric" min="1" max="10" placeholder="Ej: 4" value="3">
+      </div>
+      <div>
+        <div class="label" style="margin-bottom:4px;">Reps objetivo</div>
+        <input class="input rt-reps" type="text" placeholder="Ej: 8-12">
+      </div>
+    </div>`;
   wrap.appendChild(block);
-  const count = Math.min(Math.max(parseInt(nSets) || 1, 1), 10);
-  for (let i = 0; i < count; i++) addSet(block);
   refreshEmpty();
   closePicker();
 }
-function addSet(block){
-  const sets = block.querySelector('.sets');
-  const rows = sets.querySelectorAll('.set-row');
-  const last = rows[rows.length - 1];
-  const kg = last ? last.querySelector('.set-kg').value : '';
-  const reps = last ? last.querySelector('.set-reps').value : '';
-  const row = document.createElement('div');
-  row.className = 'set-row';
-  row.innerHTML = `
-    <div class="set-n faint" style="font-size:.85em; text-align:center;"></div>
-    <input class="input set-kg" type="number" inputmode="decimal" min="0" step="0.5" placeholder="kg" value="${attr(kg)}">
-    <input class="input set-reps" type="number" inputmode="numeric" min="0" placeholder="reps" value="${attr(reps)}">
-    <button type="button" onclick="const b=this.closest('.ex-block'); this.closest('.set-row').remove(); renumber(b);" style="background:none; border:none; color:var(--faint); cursor:pointer;">×</button>`;
-  sets.appendChild(row);
-  renumber(block);
-}
-function renumber(block){
-  block.querySelectorAll('.sets .set-row').forEach((r,i)=>{ r.querySelector('.set-n').textContent = i+1; });
-}
 
-/* ---- save ---- */
-async function saveWorkout(){
+async function saveRoutine(){
+  const name = document.getElementById('rt-name').value.trim();
+  if (!name){ alert('Poné un nombre a la rutina.'); return; }
   const exercises = [];
-  document.querySelectorAll('#session-exercises .ex-block').forEach(block => {
-    const sets = [];
-    block.querySelectorAll('.sets .set-row').forEach(row => {
-      const kg = row.querySelector('.set-kg').value;
-      const reps = row.querySelector('.set-reps').value;
-      if (kg !== '' || reps !== '') sets.push({ weight_kg: kg, reps: reps });
+  document.querySelectorAll('#routine-exercises .ex-block').forEach(block => {
+    exercises.push({
+      slug: block.dataset.slug, name: block.dataset.name, muscle: block.dataset.muscle,
+      target_sets: block.querySelector('.rt-sets').value,
+      target_reps: block.querySelector('.rt-reps').value,
     });
-    exercises.push({ slug: block.dataset.slug, name: block.dataset.name, muscle: block.dataset.muscle, sets });
   });
   if (!exercises.length){ alert('Agregá al menos un ejercicio.'); return; }
-
-  const folderEl = document.getElementById('wk-folder');
   const payload = {
-    date: document.getElementById('wk-date').value,
-    title: document.getElementById('wk-title').value,
-    notes: document.getElementById('wk-notes').value,
-    duration_min: document.getElementById('wk-duration').value,
-    folder_id: folderEl ? folderEl.value : '',
-    routine_id: document.getElementById('wk-routine').value,
-    exercises,
+    name, notes: document.getElementById('rt-notes').value,
+    folder_id: document.getElementById('rt-folder').value, exercises,
   };
   const btn = document.getElementById('save-btn');
   btn.disabled = true; btn.textContent = 'Guardando…';
   try {
-    const resp = await fetch('/api/entreno', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+    const resp = await fetch('/api/rutina', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
     if (!resp.ok){ const e = await resp.json().catch(()=>({})); throw new Error(e.detail || 'Error'); }
-    window.location.href = '/entrenos';
-  } catch(e){ alert('Error al guardar: ' + e.message); btn.disabled=false; btn.textContent='Guardar entreno'; }
+    window.location.href = '/rutinas';
+  } catch(e){ alert('Error al guardar: ' + e.message); btn.disabled=false; btn.textContent='Guardar rutina'; }
 }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closePicker(); });
-
-// Pre-fill exercises when starting from a routine.
-(PREFILL || []).forEach(ex => addExercise(ex.slug, ex.name, ex.muscle, ex.target_sets));
 </script>
 {% endblock %}

@@ -265,6 +265,44 @@ class WorkoutSet(Base):
     rpe = Column(Float, nullable=True)
 
 
+class Folder(Base):
+    """A training block / folder that groups routines (e.g. "Hipertrofia")."""
+    __tablename__ = "folders"
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
+    name = Column(String, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class Routine(Base):
+    """A reusable routine template (e.g. "Push A") living inside a folder."""
+    __tablename__ = "routines"
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
+    folder_id = Column(Integer, ForeignKey("folders.id"), nullable=True, index=True)
+    name = Column(String, nullable=False)
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class RoutineExercise(Base):
+    """An exercise prescribed in a routine, with target sets/reps."""
+    __tablename__ = "routine_exercises"
+
+    id = Column(Integer, primary_key=True)
+    routine_id = Column(Integer, ForeignKey("routines.id"), nullable=False, index=True)
+    exercise_id = Column(Integer, ForeignKey("exercises.id"), nullable=True)
+    exercise_slug = Column(String, nullable=True)
+    name = Column(String, nullable=False)
+    muscle = Column(String, nullable=True)
+    order = Column(Integer, default=0)
+    target_sets = Column(Integer, nullable=True)
+    target_reps = Column(String, nullable=True)     # e.g. "8-12"
+    notes = Column(Text, nullable=True)
+
+
 def get_db():
     db = SessionLocal()
     try:

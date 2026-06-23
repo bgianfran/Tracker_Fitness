@@ -15,8 +15,12 @@ from app.database import (
     User, FoodEntry, UserProfile, DayScore, ChatMessage,
     BodyMeasurement, ManualWorkout, StravaToken, CommunityFood, Exercise,
     WorkoutSession, WorkoutExercise, WorkoutSet,
+    Folder, Routine, RoutineExercise,
 )
 from app.workout_native import build_native_sessions
+from app.routines_data import (
+    build_routines_context, get_routine_prefill, build_folder_progression,
+)
 from app.rnpa_search import search_rnpa, browse_basics, BASIC_CATEGORIES
 from app.portions import get_portions
 from app.openfoodfacts import lookup as off_lookup
@@ -1475,12 +1479,30 @@ def new_workout_page(request: Request, db: Session = Depends(get_db)):
     } for e in exercises]
     muscles = sorted({i["muscle"] for i in items})
 
+    # Optional pre-fill from a routine, and folder tagging.
+    prefill, routine_id, routine_name = [], None, None
+    folder_id = _opt_int(request.query_params.get("folder"))
+    rid = _opt_int(request.query_params.get("routine"))
+    if rid:
+        pf, r_folder, r_name = get_routine_prefill(db, current_user.id, rid)
+        if pf is not None:
+            prefill, routine_id, routine_name = pf, rid, r_name
+            if r_folder:
+                folder_id = r_folder
+
+    folders = db.query(Folder).filter(Folder.user_id == current_user.id).order_by(Folder.created_at).all()
+
     return templates.TemplateResponse("entreno_nuevo.html", {
         "request": request,
         "current_user": current_user,
         "items": items,
         "muscles": muscles,
         "today": date.today(),
+        "folders": [{"id": f.id, "name": f.name} for f in folders],
+        "prefill": prefill,
+        "routine_id": routine_id,
+        "routine_name": routine_name,
+        "preselect_folder": folder_id,
     })
 
 
@@ -1500,6 +1522,16 @@ async def create_native_workout(request: Request, db: Session = Depends(get_db))
     except (ValueError, TypeError):
         sess_date = date.today()
 
+    # Validate folder/routine ownership before tagging.
+    folder_id = _opt_int(payload.get("folder_id"))
+    if folder_id and not db.query(Folder.id).filter(
+            Folder.id == folder_id, Folder.user_id == current_user.id).first():
+        folder_id = None
+    routine_id = _opt_int(payload.get("routine_id"))
+    if routine_id and not db.query(Routine.id).filter(
+            Routine.id == routine_id, Routine.user_id == current_user.id).first():
+        routine_id = None
+
     sess = WorkoutSession(
         user_id=current_user.id,
         date=sess_date,
@@ -1507,6 +1539,8 @@ async def create_native_workout(request: Request, db: Session = Depends(get_db))
         notes=(payload.get("notes") or "").strip() or None,
         duration_min=_opt_int(payload.get("duration_min")),
         origin="app",
+        folder_id=folder_id,
+        routine_id=routine_id,
     )
     db.add(sess)
     db.flush()  # assign sess.id
@@ -1562,6 +1596,196 @@ def delete_native_workout(session_id: int, request: Request, db: Session = Depen
     db.delete(sess)
     db.commit()
     return JSONResponse(content={"success": True})
+
+
+# ─── Folders & routines (Fase 3) ─────────────────────────────────────────────
+
+@app.get("/rutinas", response_class=HTMLResponse)
+def routines_page(request: Request, db: Session = Depends(get_db)):
+    current_user, redirect = get_user_from_request(request, db)
+    if redirect:
+        return redirect
+    ctx = build_routines_context(db, current_user.id)
+    return templates.TemplateResponse("rutinas.html", {
+        "request": request,
+        "current_user": current_user,
+        "folders": ctx["folders"],
+        "loose_routines": ctx["loose_routines"],
+        "anthropic_configured": bool(os.environ.get("ANTHROPIC_API_KEY")),
+    })
+
+
+@app.post("/api/carpeta")
+async def create_folder(request: Request, db: Session = Depends(get_db)):
+    current_user, _ = get_user_from_request(request, db)
+    if not current_user:
+        raise HTTPException(status_code=401)
+    payload = await request.json()
+    name = (payload.get("name") or "").strip()
+    if not name:
+        raise HTTPException(status_code=400, detail="Poné un nombre a la carpeta.")
+    folder = Folder(user_id=current_user.id, name=name[:80])
+    db.add(folder)
+    db.commit()
+    return JSONResponse(content={"id": folder.id, "name": folder.name})
+
+
+@app.delete("/carpeta/{folder_id}")
+def delete_folder(folder_id: int, request: Request, db: Session = Depends(get_db)):
+    current_user, _ = get_user_from_request(request, db)
+    if not current_user:
+        raise HTTPException(status_code=401)
+    folder = db.query(Folder).filter(
+        Folder.id == folder_id, Folder.user_id == current_user.id).first()
+    if not folder:
+        raise HTTPException(status_code=404)
+    # Remove routines in the folder (+ their exercises). Logged sessions are
+    # kept but untagged so history isn't lost.
+    rids = [r.id for r in db.query(Routine).filter(Routine.folder_id == folder_id).all()]
+    if rids:
+        db.query(RoutineExercise).filter(RoutineExercise.routine_id.in_(rids)).delete(synchronize_session=False)
+        db.query(Routine).filter(Routine.id.in_(rids)).delete(synchronize_session=False)
+    db.query(WorkoutSession).filter(
+        WorkoutSession.folder_id == folder_id,
+        WorkoutSession.user_id == current_user.id,
+    ).update({"folder_id": None}, synchronize_session=False)
+    db.delete(folder)
+    db.commit()
+    return JSONResponse(content={"success": True})
+
+
+@app.get("/rutina/nueva", response_class=HTMLResponse)
+def new_routine_page(request: Request, db: Session = Depends(get_db)):
+    current_user, redirect = get_user_from_request(request, db)
+    if redirect:
+        return redirect
+    exercises = db.query(Exercise).order_by(Exercise.primary_muscle, Exercise.name_en).all()
+    items = [{
+        "slug": e.slug, "name": e.name_es or e.name_en,
+        "muscle": e.primary_muscle or "Otro", "thumb": (e.images or [None])[0],
+    } for e in exercises]
+    muscles = sorted({i["muscle"] for i in items})
+    folder_id = _opt_int(request.query_params.get("folder"))
+    folder = None
+    if folder_id:
+        folder = db.query(Folder).filter(
+            Folder.id == folder_id, Folder.user_id == current_user.id).first()
+    return templates.TemplateResponse("rutina_nueva.html", {
+        "request": request,
+        "current_user": current_user,
+        "items": items,
+        "muscles": muscles,
+        "folder_id": folder.id if folder else None,
+        "folder_name": folder.name if folder else None,
+    })
+
+
+@app.post("/api/rutina")
+async def create_routine(request: Request, db: Session = Depends(get_db)):
+    current_user, _ = get_user_from_request(request, db)
+    if not current_user:
+        raise HTTPException(status_code=401)
+    payload = await request.json()
+    name = (payload.get("name") or "").strip()
+    exercises = payload.get("exercises") or []
+    if not name:
+        raise HTTPException(status_code=400, detail="Poné un nombre a la rutina.")
+    if not exercises:
+        raise HTTPException(status_code=400, detail="Agregá al menos un ejercicio.")
+
+    folder_id = _opt_int(payload.get("folder_id"))
+    if folder_id and not db.query(Folder.id).filter(
+            Folder.id == folder_id, Folder.user_id == current_user.id).first():
+        folder_id = None
+
+    routine = Routine(user_id=current_user.id, folder_id=folder_id,
+                      name=name[:80], notes=(payload.get("notes") or "").strip() or None)
+    db.add(routine)
+    db.flush()
+
+    slugs = [e.get("slug") for e in exercises if e.get("slug")]
+    catalog = {c.slug: c for c in db.query(Exercise).filter(Exercise.slug.in_(slugs)).all()} if slugs else {}
+    for i, ex in enumerate(exercises):
+        cat = catalog.get(ex.get("slug"))
+        db.add(RoutineExercise(
+            routine_id=routine.id,
+            exercise_id=cat.id if cat else None,
+            exercise_slug=ex.get("slug"),
+            name=(ex.get("name") or (cat.name_es or cat.name_en if cat else None) or "Ejercicio"),
+            muscle=(ex.get("muscle") or (cat.primary_muscle if cat else None) or "Otro"),
+            order=i,
+            target_sets=_opt_int(ex.get("target_sets")),
+            target_reps=(ex.get("target_reps") or "").strip() or None,
+        ))
+    db.commit()
+    return JSONResponse(content={"id": routine.id})
+
+
+@app.delete("/rutina/{routine_id}")
+def delete_routine(routine_id: int, request: Request, db: Session = Depends(get_db)):
+    current_user, _ = get_user_from_request(request, db)
+    if not current_user:
+        raise HTTPException(status_code=401)
+    routine = db.query(Routine).filter(
+        Routine.id == routine_id, Routine.user_id == current_user.id).first()
+    if not routine:
+        raise HTTPException(status_code=404)
+    db.query(RoutineExercise).filter(RoutineExercise.routine_id == routine_id).delete(synchronize_session=False)
+    db.query(WorkoutSession).filter(
+        WorkoutSession.routine_id == routine_id,
+        WorkoutSession.user_id == current_user.id,
+    ).update({"routine_id": None}, synchronize_session=False)
+    db.delete(routine)
+    db.commit()
+    return JSONResponse(content={"success": True})
+
+
+@app.post("/api/carpeta/{folder_id}/analizar")
+def analyze_folder(folder_id: int, request: Request, db: Session = Depends(get_db)):
+    """AI coach: analyse every training day in a folder and recommend weights
+    for next time, aligned with the user's goal."""
+    current_user, _ = get_user_from_request(request, db)
+    if not current_user:
+        raise HTTPException(status_code=401)
+
+    import anthropic as _anthropic
+    api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+    if not api_key:
+        raise HTTPException(status_code=503, detail="ANTHROPIC_API_KEY no configurada")
+
+    folder_name, payload = build_folder_progression(db, current_user.id, folder_id)
+    if payload is None:
+        raise HTTPException(status_code=404, detail="Carpeta no encontrada.")
+    if not payload.get("sesiones"):
+        raise HTTPException(status_code=400, detail="Esta carpeta todavía no tiene entrenos registrados.")
+
+    profile = db.query(UserProfile).filter(UserProfile.user_id == current_user.id).first()
+    perfil = ""
+    if profile:
+        perfil = (f" El atleta tiene {profile.age} años, pesa {profile.weight_kg}kg "
+                  f"y su objetivo es '{profile.goal}'.")
+
+    client = _anthropic.Anthropic(api_key=api_key)
+    system = (
+        "Sos un entrenador de fuerza argentino. Te paso el historial de entrenos de "
+        "una carpeta (cada ejercicio con su progresión de peso/reps por fecha). "
+        "Analizá cómo viene progresando, detectá estancamientos o desbalances, y "
+        "recomendá QUÉ PESO Y REPS hacer la próxima vez en cada ejercicio principal, "
+        "siempre alineado al objetivo del atleta. Respondé en español rioplatense, "
+        "claro y accionable: un párrafo corto de resumen y después una lista por "
+        "ejercicio con la recomendación concreta. No inventes datos." + perfil
+    )
+
+    try:
+        response = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=900,
+            system=system,
+            messages=[{"role": "user", "content": json.dumps(payload, ensure_ascii=False)}],
+        )
+        return JSONResponse(content={"folder": folder_name, "analysis": response.content[0].text.strip()})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al analizar: {str(e)}")
 
 
 @app.post("/workouts")
