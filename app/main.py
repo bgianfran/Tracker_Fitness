@@ -81,13 +81,17 @@ def service_worker():
 @app.on_event("startup")
 def on_startup():
     init_db()
-    # Auto-seed the exercise catalog from the bundled dataset on first boot.
-    from app.exercise_catalog import seed_if_empty
+    # Auto-seed the exercise catalog from the bundled dataset on first boot,
+    # and backfill Spanish names for catalogs seeded before translation existed.
+    from app.exercise_catalog import seed_if_empty, ensure_name_es
     db = SessionLocal()
     try:
         n = seed_if_empty(db)
         if n:
             print(f"[startup] Seeded exercise catalog: {n} exercises")
+        t = ensure_name_es(db)
+        if t:
+            print(f"[startup] Backfilled Spanish names: {t} exercises")
     finally:
         db.close()
 
@@ -1416,6 +1420,7 @@ def exercise_library_page(request: Request, db: Session = Depends(get_db)):
     items = [{
         "slug": e.slug,
         "name": e.name_es or e.name_en,
+        "en": e.name_en,
         "muscle": e.primary_muscle or "Otro",
         "equipment": e.equipment_es or "Sin equipo",
         "category": e.category_es or "",

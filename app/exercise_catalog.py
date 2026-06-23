@@ -7,6 +7,8 @@ so the mapping logic lives in exactly one place.
 import json
 import os
 
+from app.exercise_es import translate_name
+
 IMG_BASE = "https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/"
 SOURCE = "free-exercise-db"
 LICENSE = "Public Domain (Unlicense)"
@@ -69,6 +71,7 @@ def build_row(rec):
     return {
         "slug": (rec.get("id") or rec.get("name", "")).strip().lower(),
         "name_en": rec.get("name", ""),
+        "name_es": translate_name(rec.get("name", "")),
         "category": rec.get("category"),
         "category_es": CATEGORY_ES.get(rec.get("category"), rec.get("category")),
         "equipment": rec.get("equipment"),
@@ -132,4 +135,20 @@ def seed_if_empty(db):
         return created
     except Exception:
         # Never let seeding break app startup.
+        return 0
+
+
+def ensure_name_es(db):
+    """Backfill Spanish names for catalogs seeded before translation existed.
+    Cheap, deterministic, no network. Returns how many rows were updated."""
+    from app.database import Exercise
+    try:
+        rows = db.query(Exercise).filter(Exercise.name_es.is_(None)).all()
+        for e in rows:
+            e.name_es = translate_name(e.name_en)
+        if rows:
+            db.commit()
+        return len(rows)
+    except Exception:
+        db.rollback()
         return 0

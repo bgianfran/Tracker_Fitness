@@ -118,7 +118,7 @@ function renderEx(){
   const q = (document.getElementById('ex-search').value || '').toLowerCase().trim();
   const eq = document.getElementById('ex-equipment').value;
   const matches = ITEMS.filter(it =>
-    (!q || it.name.toLowerCase().includes(q)) &&
+    (!q || it.name.toLowerCase().includes(q) || (it.en || '').toLowerCase().includes(q)) &&
     (!curMuscle || it.muscle === curMuscle) &&
     (!eq || it.equipment === eq)
   );
@@ -155,9 +155,18 @@ async function openEx(slug){
     if (!resp.ok) throw new Error('No se pudo cargar');
     const e = await resp.json();
     const color = mColor(e.primary_muscle);
-    const imgs = (e.images || []).map((u,i) =>
-      `<img src="${esc(u)}" loading="lazy" alt="" style="height:170px; border-radius:10px; border:1px solid var(--border);"
-            onerror="this.style.display='none'">`).join('');
+    const frames = e.images || [];
+    let media = '';
+    if (e.gif_url) {
+      media = `<img src="${esc(e.gif_url)}" alt="" style="width:100%; max-height:280px; object-fit:contain; border-radius:10px; border:1px solid var(--border);">`;
+    } else if (frames.length >= 2) {
+      media = `<div style="position:relative; display:flex; justify-content:center;">
+        <img id="ex-anim" src="${esc(frames[0])}" alt="" style="max-height:260px; max-width:100%; border-radius:10px; border:1px solid var(--border);" onerror="this.style.display='none'">
+        <button id="ex-anim-toggle" onclick="toggleAnim()" class="btn btn-soft" style="position:absolute; bottom:8px; right:8px; font-size:.76em; padding:4px 10px;">⏸ Animación</button>
+      </div>`;
+    } else if (frames.length === 1) {
+      media = `<img src="${esc(frames[0])}" alt="" style="max-height:260px; max-width:100%; border-radius:10px; border:1px solid var(--border);" onerror="this.style.display='none'">`;
+    }
     const meta = [e.equipment, e.level, e.mechanic, e.force].filter(Boolean)
       .map(x => `<span class="chip" style="font-size:.72em;">${esc(x)}</span>`).join('');
     const secs = (e.secondary_muscles||[]).map(m =>
@@ -173,7 +182,7 @@ async function openEx(slug){
         <button onclick="closeEx()" style="background:none; border:none; font-size:1.4em; color:var(--muted); cursor:pointer; line-height:1;">×</button>
       </div>
       <div style="padding:18px;">
-        ${imgs ? `<div style="display:flex; gap:10px; overflow-x:auto; margin-bottom:14px;">${imgs}</div>` : ''}
+        ${media ? `<div style="margin-bottom:14px;">${media}</div>` : ''}
         <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:6px;">
           <span class="chip" style="font-size:.74em; font-weight:700; color:${color}; border-color:${color};">${esc(e.primary_muscle)}</span>
           ${secs}
@@ -182,12 +191,33 @@ async function openEx(slug){
         ${steps ? `<div class="eyebrow" style="margin-bottom:8px;">Cómo se hace</div><ol style="padding-left:20px; font-size:.9em; color:var(--muted); line-height:1.5;">${steps}</ol>` : ''}
         <div class="faint" style="font-size:.72em; margin-top:16px;">Fuente: ${esc(e.source||'')} · ${esc(e.license||'')}</div>
       </div>`;
+    // GIF-like animation between the start/finish frames.
+    if (!e.gif_url && frames.length >= 2) startAnim(frames); else stopAnim();
   } catch(err) {
     modal.innerHTML = `<div style="padding:30px; text-align:center; color:var(--bad);">Error: ${esc(err.message)}</div>`;
   }
 }
 
+let animTimer = null, animFrames = [], animIdx = 0;
+function startAnim(frames){
+  stopAnim(); animFrames = frames; animIdx = 0;
+  const t = document.getElementById('ex-anim-toggle'); if (t) t.textContent = '⏸ Animación';
+  animTimer = setInterval(() => {
+    const img = document.getElementById('ex-anim');
+    if (!img) { stopAnim(); return; }
+    animIdx = (animIdx + 1) % animFrames.length;
+    img.src = animFrames[animIdx];
+  }, 900);
+}
+function stopAnim(){ if (animTimer) { clearInterval(animTimer); animTimer = null; } }
+function toggleAnim(){
+  const t = document.getElementById('ex-anim-toggle');
+  if (animTimer) { stopAnim(); if (t) t.textContent = '▶ Animar'; }
+  else if (animFrames.length >= 2) { startAnim(animFrames); if (t) t.textContent = '⏸ Animación'; }
+}
+
 function closeEx(){
+  stopAnim();
   document.getElementById('ex-modal-bg').setAttribute('data-open','0');
   document.body.style.overflow = '';
 }
