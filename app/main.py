@@ -14,7 +14,9 @@ from app.database import (
     get_db, init_db, SessionLocal,
     User, FoodEntry, UserProfile, DayScore, ChatMessage,
     BodyMeasurement, ManualWorkout, StravaToken, CommunityFood, Exercise,
+    WorkoutSession, WorkoutExercise, WorkoutSet,
 )
+from app.workout_native import build_native_sessions
 from app.rnpa_search import search_rnpa, browse_basics, BASIC_CATEGORIES
 from app.portions import get_portions
 from app.openfoodfacts import lookup as off_lookup
@@ -95,6 +97,20 @@ def _parse_eaten_at(eaten_at_str: str, today) -> datetime | None:
         return datetime(today.year, today.month, today.day, t.hour, t.minute)
     except (ValueError, AttributeError):
         return datetime.now()
+
+
+def _opt_int(v):
+    try:
+        return int(v) if v is not None and str(v).strip() != "" else None
+    except (ValueError, TypeError):
+        return None
+
+
+def _opt_float(v):
+    try:
+        return float(v) if v is not None and str(v).strip() != "" else None
+    except (ValueError, TypeError):
+        return None
 
 
 def _meal_from_hour(hour: int) -> str:
@@ -1234,13 +1250,20 @@ def _build_workouts_context(request: Request, db: Session, current_user):
         ManualWorkout.user_id == current_user.id,
     ).order_by(ManualWorkout.date.desc()).all()
 
+    # Native gym workouts (logged in-app)
+    native_workouts = build_native_sessions(db, current_user.id)
+
     # Weekly stats
+    week_start_str = str(week_start)
     week_manual = [mw for mw in manual_workouts if mw.date >= week_start]
-    week_hevy = [hw for hw in hevy_workouts if hw.get("sort_date", "") >= str(week_start)]
-    week_sessions = len(week_manual) + len(week_hevy)
+    week_hevy = [hw for hw in hevy_workouts if hw.get("sort_date", "") >= week_start_str]
+    week_native = [nw for nw in native_workouts if nw.get("sort_date", "") >= week_start_str]
+    week_sessions = len(week_manual) + len(week_hevy) + len(week_native)
     week_minutes = sum((mw.duration_min or 0) for mw in week_manual)
     for hw in week_hevy:
         week_minutes += (hw.get("duration_seconds", 0) or 0) // 60
+    for nw in week_native:
+        week_minutes += (nw.get("duration_seconds", 0) or 0) // 60
     week_kcal = sum((mw.calories_burned or 0) for mw in week_manual)
 
     # Strava
@@ -1267,9 +1290,24 @@ def _build_workouts_context(request: Request, db: Session, current_user):
 
     # ── Analysis data for the "Data" tab ────────────────────────────────────
     # Flat, JSON-serialisable list of every session in one shape. Muscle data
-    # only comes from Hevy (gym) sessions; manual/Strava still count towards
-    # session/duration/calorie totals.
+    # comes from native (in-app) gym sessions and Hevy; manual/Strava still
+    # count towards session/duration/calorie totals.
     analysis_sessions = []
+    for nw in native_workouts:
+        analysis_sessions.append({
+            "source": "app",
+            "date": nw.get("sort_date", ""),
+            "title": nw.get("title", "Entreno de gym"),
+            "duration_min": nw.get("duration_min") or 0,
+            "volume_kg": nw.get("total_volume_kg") or 0,
+            "calories": 0,
+            "muscle_volume": nw.get("muscle_volume", {}),
+            "muscle_sets": nw.get("muscle_sets", {}),
+            "exercises": [
+                {"name": e["name"], "muscle": e["muscle"], "max_weight": e["max_weight"]}
+                for e in nw.get("exercises", []) if e.get("max_weight")
+            ],
+        })
     for hw in hevy_workouts:
         analysis_sessions.append({
             "source": "hevy",
@@ -1334,6 +1372,7 @@ def _build_workouts_context(request: Request, db: Session, current_user):
         "profile": profile,
         "hevy_workouts": hevy_workouts,
         "manual_workouts": manual_workouts,
+        "native_workouts": native_workouts,
         "strava_workouts": strava_workouts,
         "strava_connected": strava_connected,
         "strava_error": strava_error,
@@ -1417,6 +1456,112 @@ def api_exercise_detail(slug: str, request: Request, db: Session = Depends(get_d
         "source": e.source,
         "license": e.license,
     })
+
+
+@app.get("/entreno/nuevo", response_class=HTMLResponse)
+def new_workout_page(request: Request, db: Session = Depends(get_db)):
+    """Native gym-workout builder: pick exercises from the library and log sets."""
+    current_user, redirect = get_user_from_request(request, db)
+    if redirect:
+        return redirect
+
+    exercises = db.query(Exercise).order_by(Exercise.primary_muscle, Exercise.name_en).all()
+    items = [{
+        "slug": e.slug,
+        "name": e.name_es or e.name_en,
+        "muscle": e.primary_muscle or "Otro",
+        "equipment": e.equipment_es or "Sin equipo",
+        "thumb": (e.images or [None])[0],
+    } for e in exercises]
+    muscles = sorted({i["muscle"] for i in items})
+
+    return templates.TemplateResponse("entreno_nuevo.html", {
+        "request": request,
+        "current_user": current_user,
+        "items": items,
+        "muscles": muscles,
+        "today": date.today(),
+    })
+
+
+@app.post("/api/entreno")
+async def create_native_workout(request: Request, db: Session = Depends(get_db)):
+    current_user, _ = get_user_from_request(request, db)
+    if not current_user:
+        raise HTTPException(status_code=401)
+
+    payload = await request.json()
+    exercises = payload.get("exercises") or []
+    if not exercises:
+        raise HTTPException(status_code=400, detail="Agregá al menos un ejercicio.")
+
+    try:
+        sess_date = date.fromisoformat(payload.get("date", "")) if payload.get("date") else date.today()
+    except (ValueError, TypeError):
+        sess_date = date.today()
+
+    sess = WorkoutSession(
+        user_id=current_user.id,
+        date=sess_date,
+        title=(payload.get("title") or "").strip() or None,
+        notes=(payload.get("notes") or "").strip() or None,
+        duration_min=_opt_int(payload.get("duration_min")),
+        origin="app",
+    )
+    db.add(sess)
+    db.flush()  # assign sess.id
+
+    # Pre-fetch catalog rows for the slugs used, to link + fill defaults.
+    slugs = [e.get("slug") for e in exercises if e.get("slug")]
+    catalog = {c.slug: c for c in db.query(Exercise).filter(Exercise.slug.in_(slugs)).all()} if slugs else {}
+
+    for i, ex in enumerate(exercises):
+        cat = catalog.get(ex.get("slug"))
+        we = WorkoutExercise(
+            session_id=sess.id,
+            exercise_id=cat.id if cat else None,
+            exercise_slug=ex.get("slug"),
+            name=(ex.get("name") or (cat.name_es or cat.name_en if cat else None) or "Ejercicio"),
+            muscle=(ex.get("muscle") or (cat.primary_muscle if cat else None) or "Otro"),
+            order=i,
+        )
+        db.add(we)
+        db.flush()
+        for j, st in enumerate(ex.get("sets") or []):
+            w = _opt_float(st.get("weight_kg"))
+            r = _opt_int(st.get("reps"))
+            if w is None and r is None:
+                continue  # skip empty rows
+            db.add(WorkoutSet(
+                workout_exercise_id=we.id,
+                set_index=j + 1,
+                type=st.get("type") or "normal",
+                weight_kg=w,
+                reps=r,
+                rpe=_opt_float(st.get("rpe")),
+            ))
+    db.commit()
+    return JSONResponse(content={"id": sess.id})
+
+
+@app.delete("/entreno/{session_id}")
+def delete_native_workout(session_id: int, request: Request, db: Session = Depends(get_db)):
+    current_user, _ = get_user_from_request(request, db)
+    if not current_user:
+        raise HTTPException(status_code=401)
+    sess = db.query(WorkoutSession).filter(
+        WorkoutSession.id == session_id,
+        WorkoutSession.user_id == current_user.id,
+    ).first()
+    if not sess:
+        raise HTTPException(status_code=404)
+    wex_ids = [w.id for w in db.query(WorkoutExercise).filter(WorkoutExercise.session_id == session_id).all()]
+    if wex_ids:
+        db.query(WorkoutSet).filter(WorkoutSet.workout_exercise_id.in_(wex_ids)).delete(synchronize_session=False)
+    db.query(WorkoutExercise).filter(WorkoutExercise.session_id == session_id).delete(synchronize_session=False)
+    db.delete(sess)
+    db.commit()
+    return JSONResponse(content={"success": True})
 
 
 @app.post("/workouts")

@@ -220,6 +220,51 @@ class Exercise(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
+class WorkoutSession(Base):
+    """A gym workout logged natively in the app (no Hevy needed).
+    folder_id / routine_id are reserved for Fase 3 (carpetas + rutinas)."""
+    __tablename__ = "workout_sessions"
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
+    date = Column(Date, nullable=False, default=date.today)
+    title = Column(String, nullable=True)
+    notes = Column(Text, nullable=True)
+    duration_min = Column(Integer, nullable=True)
+    origin = Column(String, default="app")          # app / hevy / strava
+    folder_id = Column(Integer, nullable=True, index=True)   # Fase 3
+    routine_id = Column(Integer, nullable=True, index=True)  # Fase 3
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class WorkoutExercise(Base):
+    """One exercise inside a WorkoutSession. Name/muscle are snapshotted at
+    log time so history stays stable even if the catalog changes."""
+    __tablename__ = "workout_exercises"
+
+    id = Column(Integer, primary_key=True)
+    session_id = Column(Integer, ForeignKey("workout_sessions.id"), nullable=False, index=True)
+    exercise_id = Column(Integer, ForeignKey("exercises.id"), nullable=True)
+    exercise_slug = Column(String, nullable=True)
+    name = Column(String, nullable=False)
+    muscle = Column(String, nullable=True)          # canonical ES group
+    order = Column(Integer, default=0)
+    notes = Column(Text, nullable=True)
+
+
+class WorkoutSet(Base):
+    """One set of a WorkoutExercise."""
+    __tablename__ = "workout_sets"
+
+    id = Column(Integer, primary_key=True)
+    workout_exercise_id = Column(Integer, ForeignKey("workout_exercises.id"), nullable=False, index=True)
+    set_index = Column(Integer, default=1)
+    type = Column(String, default="normal")         # normal / warmup / dropset / failure
+    weight_kg = Column(Float, nullable=True)
+    reps = Column(Integer, nullable=True)
+    rpe = Column(Float, nullable=True)
+
+
 def get_db():
     db = SessionLocal()
     try:
