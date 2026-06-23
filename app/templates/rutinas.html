@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% block title %}Rutinas – FitTracker{% endblock %}
+
+{% block content %}
+<div style="max-width:680px; margin:0 auto;">
+
+  <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:16px; flex-wrap:wrap;">
+    <div>
+      <h1 style="font-size:1.4em; margin-bottom:4px;">Carpetas y rutinas</h1>
+      <p class="muted" style="font-size:.88em;">Organizá tus rutinas por bloque y dejá que la IA analice tu progreso</p>
+    </div>
+    <a href="/entrenos" class="btn btn-soft" style="font-size:.85em;">← Entrenos</a>
+  </div>
+
+  <!-- New folder -->
+  <div class="card" style="margin-bottom:18px; display:flex; gap:8px; align-items:center;">
+    <input type="text" id="new-folder" class="input" placeholder="Nueva carpeta (ej: Hipertrofia)" style="flex:1;"
+           onkeydown="if(event.key==='Enter') createFolder()">
+    <button class="btn btn-primary" onclick="createFolder()">Crear</button>
+  </div>
+
+  {% if not folders and not loose_routines %}
+  <div class="card" style="text-align:center; padding:44px 20px;">
+    <div style="font-size:2.2em; margin-bottom:10px;">📂</div>
+    <div style="font-weight:600; color:var(--muted);">Todavía no tenés carpetas ni rutinas.</div>
+    <div class="faint" style="font-size:.85em; margin-top:6px;">Creá una carpeta arriba para empezar a organizar tus entrenos.</div>
+  </div>
+  {% endif %}
+
+  {% macro routine_card(r) %}
+  <div class="card" id="routine-{{ r.id }}" style="margin-bottom:8px;">
+    <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:10px;">
+      <div style="min-width:0;">
+        <div style="font-weight:700; font-size:.95em; margin-bottom:4px;">{{ r.name }}</div>
+        <div class="faint" style="font-size:.78em;">{{ r.exercise_count }} ejercicio{{ '' if r.exercise_count == 1 else 's' }}</div>
+        {% if r.exercises %}
+        <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;">
+          {% for ex in r.exercises[:6] %}<span class="chip" style="font-size:.72em; padding:2px 8px;">{{ ex.name }}</span>{% endfor %}
+          {% if r.exercises | length > 6 %}<span class="faint" style="font-size:.78em; align-self:center;">+{{ r.exercises | length - 6 }}</span>{% endif %}
+        </div>
+        {% endif %}
+      </div>
+      <button onclick="deleteRoutine({{ r.id }})" title="Eliminar rutina"
+        style="background:none; border:none; color:var(--faint); cursor:pointer; padding:4px; flex-shrink:0;"
+        onmouseover="this.style.color='var(--bad)'" onmouseout="this.style.color='var(--faint)'">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>
+      </button>
+    </div>
+    <a href="/entreno/nuevo?routine={{ r.id }}" class="btn btn-soft btn-block" style="margin-top:10px; font-size:.85em;">▶ Empezar este entreno</a>
+  </div>
+  {% endmacro %}
+
+  <!-- Folders -->
+  {% for f in folders %}
+  <div class="card" id="folder-{{ f.id }}" style="margin-bottom:16px;">
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px;">
+      <div style="display:flex; align-items:center; gap:8px; min-width:0;">
+        <span style="font-size:1.2em;">📂</span>
+        <strong style="font-size:1.02em;">{{ f.name }}</strong>
+        <span class="chip" style="font-size:.7em;">{{ f.session_count }} entreno{{ '' if f.session_count == 1 else 's' }}</span>
+      </div>
+      <button onclick="deleteFolder({{ f.id }})" title="Eliminar carpeta"
+        style="background:none; border:none; color:var(--faint); cursor:pointer; padding:4px; flex-shrink:0;"
+        onmouseover="this.style.color='var(--bad)'" onmouseout="this.style.color='var(--faint)'">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>
+      </button>
+    </div>
+
+    {% if f.routines %}
+      {% for r in f.routines %}{{ routine_card(r) }}{% endfor %}
+    {% else %}
+    <div class="faint" style="font-size:.84em; padding:4px 0 10px;">Sin rutinas todavía.</div>
+    {% endif %}
+
+    <a href="/rutina/nueva?folder={{ f.id }}" class="btn btn-ghost btn-block" style="margin-top:6px; font-size:.85em;">+ Nueva rutina en esta carpeta</a>
+
+    {% if anthropic_configured %}
+    <button class="btn btn-soft btn-block" style="margin-top:8px; font-size:.85em;"
+            id="ai-btn-{{ f.id }}" onclick="analyzeFolder({{ f.id }})"
+            {% if f.session_count == 0 %}disabled title="Registrá al menos un entreno en esta carpeta"{% endif %}>
+      🤖 Analizar con IA y recomendar pesos
+    </button>
+    <div id="ai-out-{{ f.id }}" style="display:none; margin-top:10px; font-size:.88em; line-height:1.55; background:var(--accent-soft); border-radius:10px; padding:14px; white-space:pre-wrap;"></div>
+    {% endif %}
+  </div>
+  {% endfor %}
+
+  <!-- Loose routines (no folder) -->
+  {% if loose_routines %}
+  <div class="eyebrow" style="margin:18px 0 8px;">Sin carpeta</div>
+  {% for r in loose_routines %}{{ routine_card(r) }}{% endfor %}
+  {% endif %}
+
+  <a href="/rutina/nueva" class="btn btn-ghost btn-block" style="margin-top:12px; font-size:.85em;">+ Nueva rutina (sin carpeta)</a>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function createFolder(){
+  const inp = document.getElementById('new-folder');
+  const name = inp.value.trim();
+  if (!name){ inp.focus(); return; }
+  try {
+    const resp = await fetch('/api/carpeta', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name}) });
+    if (!resp.ok){ const e = await resp.json().catch(()=>({})); throw new Error(e.detail||'Error'); }
+    window.location.reload();
+  } catch(e){ alert('Error: ' + e.message); }
+}
+
+async function deleteFolder(id){
+  if (!confirm('¿Eliminar la carpeta y sus rutinas? Los entrenos registrados se conservan (quedan sin carpeta).')) return;
+  try {
+    const resp = await fetch('/carpeta/' + id, { method:'DELETE' });
+    if (!resp.ok) throw new Error('No se pudo eliminar');
+    window.location.reload();
+  } catch(e){ alert('Error: ' + e.message); }
+}
+
+async function deleteRoutine(id){
+  if (!confirm('¿Eliminar esta rutina?')) return;
+  try {
+    const resp = await fetch('/rutina/' + id, { method:'DELETE' });
+    if (!resp.ok) throw new Error('No se pudo eliminar');
+    document.getElementById('routine-' + id)?.remove();
+  } catch(e){ alert('Error: ' + e.message); }
+}
+
+async function analyzeFolder(id){
+  const btn = document.getElementById('ai-btn-' + id);
+  const out = document.getElementById('ai-out-' + id);
+  const orig = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Analizando tu progreso…';
+  try {
+    const resp = await fetch('/api/carpeta/' + id + '/analizar', { method:'POST' });
+    if (!resp.ok){ const e = await resp.json().catch(()=>({})); throw new Error(e.detail||'Error'); }
+    const data = await resp.json();
+    out.textContent = data.analysis;
+    out.style.display = 'block';
+  } catch(e){ alert('Error al analizar: ' + e.message); }
+  finally { btn.disabled = false; btn.textContent = orig; }
+}
+</script>
+{% endblock %}

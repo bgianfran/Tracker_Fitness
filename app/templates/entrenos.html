@@ -21,6 +21,7 @@
   .workout-card.intensity-maxima { border-left-color: var(--bad); }
   .workout-card.source-hevy      { border-left-color: var(--accent); }
   .workout-card.source-strava    { border-left-color: #f97316; }
+  .workout-card.source-app       { border-left-color: var(--good); }
 </style>
 
 <div style="max-width:680px; margin:0 auto;">
@@ -29,19 +30,30 @@
       <h1 style="font-size:1.4em; margin-bottom:4px;">Entrenos</h1>
       <p class="muted" style="font-size:.88em;">Tus actividades, conexiones y rutinas</p>
     </div>
+    <a href="/ejercicios" class="btn btn-soft" style="font-size:.85em;">📚 Biblioteca</a>
   </div>
 
   <!-- Main tabs -->
   <div class="seg" style="width:100%; margin-bottom:20px;">
     <button id="main-tab-registrar" onclick="switchMainTab('registrar')" data-on="1" style="flex:1;">➕ Registrar</button>
     <button id="main-tab-rutinas"   onclick="switchMainTab('rutinas')"   data-on="0" style="flex:1;">📋 Mis Rutinas</button>
-    <button id="main-tab-historial" onclick="switchMainTab('historial')" data-on="0" style="flex:1;">📊 Historial</button>
+    <button id="main-tab-data" onclick="switchMainTab('data')" data-on="0" style="flex:1;">📊 Data</button>
   </div>
 
   <!-- ══════════════════════════════════════════════════════
        TAB 1: REGISTRAR
   ══════════════════════════════════════════════════════ -->
   <div id="tab-registrar">
+
+    <!-- Gym workout CTA (native logging) -->
+    <a href="/entreno/nuevo" class="card" style="display:flex; align-items:center; gap:14px; margin-bottom:16px; text-decoration:none; border:1px solid color-mix(in srgb, var(--accent) 35%, var(--border)); background:var(--accent-soft);">
+      <div style="font-size:1.8em;">💪</div>
+      <div style="flex:1;">
+        <div style="font-weight:700; color:var(--accent);">Registrar entreno de gym</div>
+        <div class="muted" style="font-size:.82em;">Elegí ejercicios de la biblioteca y cargá series, peso y reps</div>
+      </div>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>
+    </a>
 
     {% if flash_strava_connected %}
     <div style="background:color-mix(in srgb, var(--good) 15%, var(--surface)); border:1px solid color-mix(in srgb, var(--good) 40%, var(--border)); border-radius:var(--radius); padding:12px 16px; display:flex; align-items:center; gap:10px; margin-bottom:12px; font-size:.88em; color:var(--good);">
@@ -208,31 +220,64 @@
   <!-- ══════════════════════════════════════════════════════
        TAB 2: MIS RUTINAS
   ══════════════════════════════════════════════════════ -->
-  <div id="tab-rutinas" style="display:none; text-align:center; padding:60px 0;">
+  <div id="tab-rutinas" style="display:none; text-align:center; padding:48px 0;">
     <div style="font-size:3em; margin-bottom:16px;">📋</div>
-    <h3 style="font-size:1.1em; font-weight:700; margin-bottom:8px;">Mis Rutinas</h3>
-    <p class="muted" style="font-size:.88em; max-width:280px; margin:0 auto 20px;">Próximamente podrás crear y organizar tus rutinas de gym</p>
-    <div class="card" style="max-width:320px; margin:0 auto; text-align:left;">
-      <div class="eyebrow" style="margin-bottom:10px;">Lo que viene</div>
+    <h3 style="font-size:1.1em; font-weight:700; margin-bottom:8px;">Carpetas y rutinas</h3>
+    <p class="muted" style="font-size:.88em; max-width:300px; margin:0 auto 20px;">Organizá tus rutinas por bloque (ej: Hipertrofia) y dejá que la IA analice tu progreso y te recomiende los pesos para la próxima.</p>
+    <a href="/rutinas" class="btn btn-primary">Abrir carpetas y rutinas</a>
+    <div class="card" style="max-width:340px; margin:24px auto 0; text-align:left;">
+      <div class="eyebrow" style="margin-bottom:10px;">Qué podés hacer</div>
       <div class="stack" style="gap:8px; font-size:.88em; color:var(--muted);">
-        <div>📁 Carpetas por bloque de entrenamiento</div>
-        <div>💪 Rutinas predefinidas o personalizadas</div>
-        <div>🔄 Progresión de cargas automática</div>
-        <div>📊 Historial por ejercicio</div>
+        <div>📁 Crear carpetas por bloque de entrenamiento</div>
+        <div>💪 Armar rutinas con ejercicios de tu biblioteca</div>
+        <div>▶ Empezar una rutina y registrar el entreno</div>
+        <div>🤖 Pedirle a la IA que analice la carpeta y recomiende pesos</div>
       </div>
     </div>
   </div>
 
   <!-- ══════════════════════════════════════════════════════
-       TAB 3: HISTORIAL
+       TAB 3: DATA (análisis + historial)
   ══════════════════════════════════════════════════════ -->
-  <div id="tab-historial" style="display:none;">
-    <h2 style="font-size:1em; font-weight:700; margin-bottom:14px;">Actividades recientes</h2>
+  <div id="tab-data" style="display:none;">
+
+    <!-- Period selector -->
+    <div class="seg" style="width:100%; margin-bottom:6px;">
+      <button class="period-btn" data-period="dia"       onclick="selectPeriod('dia', this)"       data-on="0" style="flex:1;">Día</button>
+      <button class="period-btn" data-period="semana"    onclick="selectPeriod('semana', this)"    data-on="1" style="flex:1;">Semana</button>
+      <button class="period-btn" data-period="ultsemana" onclick="selectPeriod('ultsemana', this)" data-on="0" style="flex:1;">Últ. semana</button>
+      <button class="period-btn" data-period="otro"      onclick="selectPeriod('otro', this)"      data-on="0" style="flex:1;">Otro</button>
+    </div>
+    <div id="period-label" class="faint" style="font-size:.8em; text-align:center; margin-bottom:12px;"></div>
+
+    <!-- Custom range (shown when "Otro") -->
+    <div id="custom-range" style="display:none; gap:8px; margin-bottom:14px; align-items:flex-end; flex-wrap:wrap;">
+      <div>
+        <div class="label" style="margin-bottom:4px;">Desde</div>
+        <input type="date" id="custom-from" class="input" style="width:auto;">
+      </div>
+      <div>
+        <div class="label" style="margin-bottom:4px;">Hasta</div>
+        <input type="date" id="custom-to" class="input" style="width:auto;">
+      </div>
+      <button type="button" class="btn btn-primary" onclick="applyCustomRange()">Aplicar</button>
+    </div>
+
+    <!-- Analysis (rendered by JS) -->
+    <div id="analysis-content" style="margin-bottom:22px;"></div>
+
+    <h2 style="font-size:1em; font-weight:700; margin-bottom:14px;">Actividades del período</h2>
+    <div id="period-empty" style="display:none; text-align:center; padding:36px 0; color:var(--muted); font-size:.9em;">
+      No hay actividades registradas en este período.
+    </div>
 
     {% set days_es = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"] %}
     {% set months_es = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"] %}
 
     {% set ns = namespace(all_items=[]) %}
+    {% for nw in native_workouts %}
+      {% set ns.all_items = ns.all_items + [{"type": "app", "data": nw, "sort_date": nw.sort_date}] %}
+    {% endfor %}
     {% for mw in manual_workouts %}
       {% set ns.all_items = ns.all_items + [{"type": "manual", "data": mw, "sort_date": mw.date.isoformat()}] %}
     {% endfor %}
@@ -249,9 +294,47 @@
     <div class="stack" style="gap:8px;">
       {% for item in ns.all_items %}
 
-        {% if item.type == "manual" %}
+        {% if item.type == "app" %}
+        {% set nw = item.data %}
+        <div class="card workout-card act-card source-app" data-date="{{ item.sort_date }}" id="native-card-{{ nw.id }}">
+          <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px;">
+            <div style="display:flex; align-items:flex-start; gap:12px; flex:1; min-width:0;">
+              <div style="font-size:1.6em; flex-shrink:0; line-height:1; margin-top:2px;">💪</div>
+              <div style="flex:1; min-width:0;">
+                <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:3px;">
+                  <span style="font-weight:700; font-size:.95em;">{{ nw.title }}</span>
+                  <span class="chip" style="font-size:.72em; padding:2px 8px; color:var(--good); border-color:var(--good);">Gym</span>
+                </div>
+                <div class="faint" style="font-size:.78em;">{{ nw.date_label }}</div>
+                <div style="display:flex; flex-wrap:wrap; gap:12px; margin-top:8px; font-size:.85em; color:var(--muted);">
+                  {% if nw.duration_min %}<span>⏱ {{ nw.duration_min }} min</span>{% endif %}
+                  {% if nw.exercise_count %}<span>{{ nw.exercise_count }} ejercicios</span>{% endif %}
+                  {% if nw.total_volume_kg %}<span>{{ nw.total_volume_kg | round(0) | int }} kg vol.</span>{% endif %}
+                </div>
+                {% if nw.exercises %}
+                <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;">
+                  {% for ex in nw.exercises[:6] %}
+                  <span class="chip" style="font-size:.73em; padding:2px 8px;">{{ ex.name }}</span>
+                  {% endfor %}
+                  {% if nw.exercises | length > 6 %}
+                  <span class="faint" style="font-size:.78em; align-self:center;">+{{ nw.exercises | length - 6 }} más</span>
+                  {% endif %}
+                </div>
+                {% endif %}
+                {% if nw.notes %}<div class="muted" style="font-size:.8em; margin-top:6px;">{{ nw.notes }}</div>{% endif %}
+              </div>
+            </div>
+            <button onclick="deleteNativeWorkout({{ nw.id }}, this)"
+              style="background:none; border:none; color:var(--faint); padding:4px; cursor:pointer; flex-shrink:0; border-radius:6px;"
+              onmouseover="this.style.color='var(--bad)'" onmouseout="this.style.color='var(--faint)'">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>
+            </button>
+          </div>
+        </div>
+
+        {% elif item.type == "manual" %}
         {% set mw = item.data %}
-        <div class="card workout-card intensity-{{ mw.intensity or 'baja' }}" id="workout-card-{{ mw.id }}">
+        <div class="card workout-card act-card intensity-{{ mw.intensity or 'baja' }}" data-date="{{ item.sort_date }}" id="workout-card-{{ mw.id }}">
           <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px;">
             <div style="display:flex; align-items:flex-start; gap:12px; flex:1; min-width:0;">
               <div style="font-size:1.6em; flex-shrink:0; line-height:1; margin-top:2px;">
@@ -301,7 +384,7 @@
 
         {% elif item.type == "hevy" %}
         {% set hw = item.data %}
-        <div class="card workout-card source-hevy">
+        <div class="card workout-card act-card source-hevy" data-date="{{ item.sort_date }}">
           <div style="display:flex; align-items:flex-start; gap:12px;">
             <div style="font-size:1.6em; flex-shrink:0; line-height:1; margin-top:2px;">💪</div>
             <div style="flex:1; min-width:0;">
@@ -331,7 +414,7 @@
 
         {% elif item.type == "strava" %}
         {% set sw = item.data %}
-        <div class="card workout-card source-strava">
+        <div class="card workout-card act-card source-strava" data-date="{{ item.sort_date }}">
           <div style="display:flex; align-items:flex-start; gap:12px;">
             <div style="font-size:1.6em; flex-shrink:0; line-height:1; margin-top:2px;">{{ sw.get("emoji", "🏅") }}</div>
             <div style="flex:1; min-width:0;">
@@ -374,7 +457,7 @@
 {% block scripts %}
 <script>
 function switchMainTab(tab) {
-  ['registrar','rutinas','historial'].forEach(t => {
+  ['registrar','rutinas','data'].forEach(t => {
     document.getElementById(`tab-${t}`).style.display = t === tab ? '' : 'none';
     document.getElementById(`main-tab-${t}`).setAttribute('data-on', t === tab ? '1' : '0');
   });
@@ -436,6 +519,19 @@ async function estimateCalories() {
   finally { btn.disabled = false; btnText.textContent = 'Estimar con IA'; }
 }
 
+async function deleteNativeWorkout(id, btn) {
+  if (!confirm('¿Eliminar este entreno?')) return;
+  try {
+    const resp = await fetch(`/entreno/${id}`, { method: 'DELETE' });
+    if (resp.ok) {
+      const card = document.getElementById(`native-card-${id}`) || btn.closest('.card');
+      card.style.transition = 'opacity .3s, transform .3s';
+      card.style.opacity = '0'; card.style.transform = 'translateX(20px)';
+      setTimeout(() => window.location.reload(), 300);
+    } else { alert('Error al eliminar el entreno'); }
+  } catch(e) { alert('Error de red: ' + e.message); }
+}
+
 async function deleteWorkout(id, btn) {
   if (!confirm('¿Eliminar esta actividad?')) return;
   try {
@@ -448,5 +544,225 @@ async function deleteWorkout(id, btn) {
     } else { alert('Error al eliminar la actividad'); }
   } catch(e) { alert('Error de red: ' + e.message); }
 }
+
+/* ════════════════════════════════════════════════════════════════
+   DATA TAB — muscle-group + strength analysis by period
+   ════════════════════════════════════════════════════════════════ */
+const SESSIONS      = {{ analysis_sessions | tojson }};
+const PERIOD_RANGES = {{ period_ranges | tojson }};
+const PERIOD_LABELS = {{ period_labels | tojson }};
+const TODAY_ISO     = "{{ today.isoformat() }}";
+const ANTHROPIC_OK  = {{ 'true' if anthropic_configured else 'false' }};
+const MONTHS_ES = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
+const MUSCLE_COLORS = {
+  "Pecho":"#ef4444", "Espalda":"#3b82f6", "Hombros":"#f59e0b", "Bíceps":"#8b5cf6",
+  "Tríceps":"#a855f7", "Cuádriceps":"#10b981", "Isquios":"#14b8a6", "Glúteos":"#ec4899",
+  "Gemelos":"#06b6d4", "Abdominales":"#eab308", "Antebrazos":"#64748b", "Otro":"#94a3b8"
+};
+
+let currentRange = null;
+let lastStats = null;
+
+function fmtNum(n){ return Math.round(n || 0).toLocaleString('es-AR'); }
+function fmtKg(n){ return (n % 1 === 0 ? n : Number(n).toFixed(1)) + ' kg'; }
+function fmtISO(iso){ const p = iso.split('-'); return parseInt(p[2]) + ' ' + MONTHS_ES[parseInt(p[1]) - 1]; }
+
+function selectPeriod(period, btn){
+  document.querySelectorAll('.period-btn').forEach(b => b.setAttribute('data-on','0'));
+  btn.setAttribute('data-on','1');
+  const custom = document.getElementById('custom-range');
+  if (period === 'otro'){
+    custom.style.display = 'flex';
+    const f = document.getElementById('custom-from').value;
+    const t = document.getElementById('custom-to').value;
+    if (f && t && f <= t){ applyRange(f, t, fmtISO(f) + ' → ' + fmtISO(t)); }
+    else { document.getElementById('period-label').textContent = 'Elegí un rango de fechas'; }
+    return;
+  }
+  custom.style.display = 'none';
+  const r = PERIOD_RANGES[period];
+  applyRange(r.from, r.to, PERIOD_LABELS[period]);
+}
+
+function applyCustomRange(){
+  const f = document.getElementById('custom-from').value;
+  const t = document.getElementById('custom-to').value;
+  if (!f || !t){ alert('Elegí una fecha "desde" y una "hasta".'); return; }
+  if (f > t){ alert('La fecha "desde" debe ser anterior a la fecha "hasta".'); return; }
+  applyRange(f, t, fmtISO(f) + ' → ' + fmtISO(t));
+}
+
+function applyRange(from, to, label){
+  currentRange = { from, to, label };
+  document.getElementById('period-label').textContent = label;
+  lastStats = computeStats(from, to);
+  renderAnalysis(lastStats);
+  filterCards(from, to);
+}
+
+function computeStats(from, to){
+  const inRange = SESSIONS.filter(s => s.date && s.date >= from && s.date <= to);
+  let totalMin = 0, totalVol = 0, totalKcal = 0, gym = 0;
+  const muscleVol = {}, muscleSets = {}, bestLift = {};
+  inRange.forEach(s => {
+    totalMin  += s.duration_min || 0;
+    totalVol  += s.volume_kg || 0;
+    totalKcal += s.calories || 0;
+    if (s.source === 'hevy') gym++;
+    for (const [m, v] of Object.entries(s.muscle_volume || {})) muscleVol[m] = (muscleVol[m] || 0) + v;
+    for (const [m, v] of Object.entries(s.muscle_sets   || {})) muscleSets[m] = (muscleSets[m] || 0) + v;
+    (s.exercises || []).forEach(e => {
+      if (e.max_weight && e.max_weight > ((bestLift[e.name] || {}).weight || 0))
+        bestLift[e.name] = { weight: e.max_weight, muscle: e.muscle };
+    });
+  });
+  const muscles = Object.keys(muscleVol)
+    .map(m => ({ name: m, volume: muscleVol[m], sets: muscleSets[m] || 0 }))
+    .sort((a, b) => (b.volume - a.volume) || (b.sets - a.sets));
+  const lifts = Object.entries(bestLift)
+    .map(([name, o]) => ({ name, weight: o.weight, muscle: o.muscle }))
+    .sort((a, b) => b.weight - a.weight);
+  return { count: inRange.length, gym, totalMin, totalVol, totalKcal, muscles, lifts };
+}
+
+function buildSummary(st){
+  if (st.count === 0) return 'Sin actividad en este período.';
+  const parts = [];
+  let s = 'Entrenaste <b>' + st.count + '</b> ' + (st.count === 1 ? 'vez' : 'veces');
+  if (st.gym > 0 && st.gym !== st.count) s += ' (' + st.gym + ' de gym)';
+  s += ' con <b>' + fmtNum(st.totalMin) + ' min</b> en total';
+  if (st.totalVol > 0) s += ' y <b>' + fmtNum(st.totalVol) + ' kg</b> de volumen movido';
+  s += '.';
+  parts.push(s);
+  if (st.muscles.length){
+    const sumVol = st.muscles.reduce((a, m) => a + m.volume, 0) || 1;
+    const top = st.muscles[0];
+    const pct = Math.round(top.volume / sumVol * 100);
+    parts.push('El grupo más trabajado fue <b>' + top.name + '</b> (' + pct + '% del volumen, ' + top.sets + (top.sets === 1 ? ' serie' : ' series') + ').');
+    if (st.muscles.length > 2)
+      parts.push('El menos trabajado fue ' + st.muscles[st.muscles.length - 1].name + '.');
+  }
+  if (st.lifts.length){
+    const top = st.lifts[0];
+    parts.push('Tu mayor carga fue <b>' + top.name + '</b> con <b>' + fmtKg(top.weight) + '</b>.');
+  }
+  if (st.totalKcal > 0) parts.push('Quemaste ~' + fmtNum(st.totalKcal) + ' kcal.');
+  return parts.join(' ');
+}
+
+function renderAnalysis(st){
+  const el = document.getElementById('analysis-content');
+  if (st.count === 0){
+    el.innerHTML = '<div class="card" style="text-align:center; color:var(--muted); font-size:.9em; padding:28px 16px;">📭 No registraste entrenamientos en este período.</div>';
+    return;
+  }
+
+  let html = '<div style="display:grid; grid-template-columns:repeat(3,1fr); gap:var(--gap); margin-bottom:14px;">'
+    + '<div class="card" style="text-align:center;"><div style="font-size:1.5em;font-weight:700;color:var(--accent);">' + st.count + '</div><div class="faint" style="font-size:.74em;margin-top:2px;">' + (st.count === 1 ? 'Sesión' : 'Sesiones') + '</div></div>'
+    + '<div class="card" style="text-align:center;"><div style="font-size:1.5em;font-weight:700;color:var(--accent);">' + fmtNum(st.totalMin) + '</div><div class="faint" style="font-size:.74em;margin-top:2px;">Minutos</div></div>'
+    + '<div class="card" style="text-align:center;"><div style="font-size:1.5em;font-weight:700;color:#f97316;">' + fmtNum(st.totalVol) + '</div><div class="faint" style="font-size:.74em;margin-top:2px;">kg volumen</div></div>'
+    + '</div>';
+
+  // Narrative summary (+ optional AI)
+  html += '<div class="card" style="margin-bottom:14px;">'
+    + '<div class="eyebrow" style="margin-bottom:8px;">📝 Resumen</div>'
+    + '<div id="summary-text" style="font-size:.9em; color:var(--muted); line-height:1.55;">' + buildSummary(st) + '</div>';
+  if (ANTHROPIC_OK){
+    html += '<button type="button" id="ai-summary-btn" onclick="aiSummary()" class="btn btn-soft" style="margin-top:12px; font-size:.85em;">'
+      + '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:5px;"><path d="M13 3 5 13h6l-1 8 8-10h-6l1-8Z"/></svg>'
+      + 'Analizar con IA</button>'
+      + '<div id="ai-summary-out" style="display:none; font-size:.88em; color:var(--text); background:var(--accent-soft); border-radius:10px; padding:12px 14px; margin-top:10px; line-height:1.55;"></div>';
+  }
+  html += '</div>';
+
+  // Muscle-group load breakdown
+  if (st.muscles.length){
+    const maxVol = st.muscles[0].volume || 1;
+    const sumVol = st.muscles.reduce((a, m) => a + m.volume, 0) || 1;
+    html += '<div class="card" style="margin-bottom:14px;"><div class="eyebrow" style="margin-bottom:12px;">💪 Carga por grupo muscular</div><div class="stack" style="gap:12px;">';
+    st.muscles.forEach(m => {
+      const pct = Math.round(m.volume / sumVol * 100);
+      const w = Math.max(4, Math.round(m.volume / maxVol * 100));
+      const color = MUSCLE_COLORS[m.name] || MUSCLE_COLORS['Otro'];
+      const volLabel = m.volume > 0 ? fmtNum(m.volume) + ' kg · ' : '';
+      html += '<div><div style="display:flex; justify-content:space-between; font-size:.84em; margin-bottom:4px;">'
+        + '<span style="font-weight:600;">' + m.name + '</span>'
+        + '<span class="faint">' + volLabel + m.sets + ' ser. · ' + pct + '%</span></div>'
+        + '<div style="height:8px; border-radius:999px; background:var(--surface-2); overflow:hidden;">'
+        + '<div style="height:100%; width:' + w + '%; background:' + color + '; border-radius:999px; transition:width .3s;"></div></div></div>';
+    });
+    html += '</div></div>';
+  } else if (st.gym === 0){
+    html += '<div class="card" style="margin-bottom:14px; font-size:.86em; color:var(--muted);">💡 No hay sesiones de gimnasio (Hevy) en este período, así que todavía no puedo analizar grupos musculares. Conectá Hevy desde tu Perfil para ver la carga por músculo.</div>';
+  }
+
+  // Strength levels
+  if (st.lifts.length){
+    html += '<div class="card"><div class="eyebrow" style="margin-bottom:12px;">🏋️ Niveles de fuerza · mejor carga del período</div><div class="stack" style="gap:8px;">';
+    st.lifts.slice(0, 6).forEach(l => {
+      const color = MUSCLE_COLORS[l.muscle] || MUSCLE_COLORS['Otro'];
+      html += '<div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">'
+        + '<div style="display:flex; align-items:center; gap:8px; min-width:0;">'
+        + '<span class="chip" style="font-size:.7em; padding:2px 8px; color:' + color + '; border-color:' + color + ';">' + l.muscle + '</span>'
+        + '<span style="font-size:.88em; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + l.name + '</span></div>'
+        + '<span style="font-size:.9em; font-weight:700; color:var(--accent); white-space:nowrap;">' + fmtKg(l.weight) + '</span></div>';
+    });
+    html += '</div></div>';
+  }
+
+  el.innerHTML = html;
+}
+
+function filterCards(from, to){
+  const cards = document.querySelectorAll('#tab-data .act-card');
+  let shown = 0;
+  cards.forEach(c => {
+    const d = c.getAttribute('data-date') || '';
+    const ok = d >= from && d <= to;
+    c.style.display = ok ? '' : 'none';
+    if (ok) shown++;
+  });
+  const empty = document.getElementById('period-empty');
+  if (empty) empty.style.display = (cards.length > 0 && shown === 0) ? 'block' : 'none';
+}
+
+async function aiSummary(){
+  if (!lastStats) return;
+  const btn = document.getElementById('ai-summary-btn');
+  const out = document.getElementById('ai-summary-out');
+  const orig = btn.innerHTML;
+  btn.disabled = true; btn.textContent = 'Analizando…';
+  try {
+    const payload = {
+      periodo: (currentRange && currentRange.label) || '',
+      sesiones: lastStats.count,
+      sesiones_gym: lastStats.gym,
+      minutos: Math.round(lastStats.totalMin),
+      volumen_kg: Math.round(lastStats.totalVol),
+      kcal: Math.round(lastStats.totalKcal),
+      grupos_musculares: lastStats.muscles.map(m => ({ grupo: m.name, volumen_kg: Math.round(m.volume), series: m.sets })),
+      mejores_levantamientos: lastStats.lifts.slice(0, 8).map(l => ({ ejercicio: l.name, kg: l.weight, grupo: l.muscle })),
+    };
+    const resp = await fetch('/api/entrenos/ai-summary', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
+    });
+    if (!resp.ok){ const e = await resp.json().catch(() => ({})); throw new Error(e.detail || 'Error desconocido'); }
+    const data = await resp.json();
+    out.textContent = data.summary;
+    out.style.display = 'block';
+  } catch(e){ alert('Error al generar resumen: ' + e.message); }
+  finally { btn.disabled = false; btn.innerHTML = orig; }
+}
+
+function initData(){
+  const cf = document.getElementById('custom-from');
+  const ct = document.getElementById('custom-to');
+  if (cf && !cf.value) cf.value = TODAY_ISO;
+  if (ct && !ct.value) ct.value = TODAY_ISO;
+  if (PERIOD_RANGES.semana)
+    applyRange(PERIOD_RANGES.semana.from, PERIOD_RANGES.semana.to, PERIOD_LABELS.semana);
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initData);
+else initData();
 </script>
 {% endblock %}

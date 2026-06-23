@@ -1,5 +1,5 @@
 import os
-from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, Date, Text, ForeignKey
+from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, Date, Text, ForeignKey, Boolean, JSON
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from datetime import datetime, date
@@ -191,6 +191,131 @@ class SavedMeal(Base):
     name = Column(String, nullable=False)
     items = Column(Text, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class Exercise(Base):
+    """Exercise catalog (the in-app library). Seeded from the public-domain
+    free-exercise-db; users can also add their own (is_custom=True).
+
+    Muscle groups are normalised to our Spanish taxonomy (primary_muscle /
+    secondary_muscles_es) so the analysis tab works natively, while the
+    original English values are kept for reference. Images are hot-linked
+    via CDN URLs; gif_url is left empty for now and can be filled later from
+    a separate animated source without changing the schema."""
+    __tablename__ = "exercises"
+
+    id = Column(Integer, primary_key=True)
+    slug = Column(String, unique=True, nullable=False, index=True)
+    name_en = Column(String, nullable=False)
+    name_es = Column(String, nullable=True)          # filled later (AI batch translate)
+
+    category = Column(String, nullable=True)          # raw EN: strength, cardio...
+    category_es = Column(String, nullable=True)       # Fuerza, Cardio...
+    equipment = Column(String, nullable=True)         # raw EN
+    equipment_es = Column(String, nullable=True, index=True)
+    force = Column(String, nullable=True)             # push / pull / static
+    level = Column(String, nullable=True)             # beginner / intermediate / expert
+    mechanic = Column(String, nullable=True)          # compound / isolation
+
+    primary_muscle = Column(String, nullable=True, index=True)   # canonical ES group
+    primary_muscles_raw = Column(JSON, nullable=True)            # original EN list
+    secondary_muscles_es = Column(JSON, nullable=True)           # canonical ES list
+    secondary_muscles_raw = Column(JSON, nullable=True)
+
+    instructions = Column(JSON, nullable=True)        # list of steps
+    images = Column(JSON, nullable=True)              # list of full CDN URLs
+    gif_url = Column(String, nullable=True)           # optional animated, linked later
+    coach_notes = Column(Text, nullable=True)         # extra notes for the AI coach
+
+    is_custom = Column(Boolean, default=False)
+    created_by = Column(Integer, ForeignKey("users.id"), nullable=True)
+    source = Column(String, nullable=True)            # e.g. "free-exercise-db"
+    license = Column(String, nullable=True)           # e.g. "Public Domain (Unlicense)"
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class WorkoutSession(Base):
+    """A gym workout logged natively in the app (no Hevy needed).
+    folder_id / routine_id are reserved for Fase 3 (carpetas + rutinas)."""
+    __tablename__ = "workout_sessions"
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
+    date = Column(Date, nullable=False, default=date.today)
+    title = Column(String, nullable=True)
+    notes = Column(Text, nullable=True)
+    duration_min = Column(Integer, nullable=True)
+    origin = Column(String, default="app")          # app / hevy / strava
+    folder_id = Column(Integer, nullable=True, index=True)   # Fase 3
+    routine_id = Column(Integer, nullable=True, index=True)  # Fase 3
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class WorkoutExercise(Base):
+    """One exercise inside a WorkoutSession. Name/muscle are snapshotted at
+    log time so history stays stable even if the catalog changes."""
+    __tablename__ = "workout_exercises"
+
+    id = Column(Integer, primary_key=True)
+    session_id = Column(Integer, ForeignKey("workout_sessions.id"), nullable=False, index=True)
+    exercise_id = Column(Integer, ForeignKey("exercises.id"), nullable=True)
+    exercise_slug = Column(String, nullable=True)
+    name = Column(String, nullable=False)
+    muscle = Column(String, nullable=True)          # canonical ES group
+    order = Column(Integer, default=0)
+    notes = Column(Text, nullable=True)
+
+
+class WorkoutSet(Base):
+    """One set of a WorkoutExercise."""
+    __tablename__ = "workout_sets"
+
+    id = Column(Integer, primary_key=True)
+    workout_exercise_id = Column(Integer, ForeignKey("workout_exercises.id"), nullable=False, index=True)
+    set_index = Column(Integer, default=1)
+    type = Column(String, default="normal")         # normal / warmup / dropset / failure
+    weight_kg = Column(Float, nullable=True)
+    reps = Column(Integer, nullable=True)
+    rpe = Column(Float, nullable=True)
+
+
+class Folder(Base):
+    """A training block / folder that groups routines (e.g. "Hipertrofia")."""
+    __tablename__ = "folders"
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
+    name = Column(String, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class Routine(Base):
+    """A reusable routine template (e.g. "Push A") living inside a folder."""
+    __tablename__ = "routines"
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
+    folder_id = Column(Integer, ForeignKey("folders.id"), nullable=True, index=True)
+    name = Column(String, nullable=False)
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class RoutineExercise(Base):
+    """An exercise prescribed in a routine, with target sets/reps."""
+    __tablename__ = "routine_exercises"
+
+    id = Column(Integer, primary_key=True)
+    routine_id = Column(Integer, ForeignKey("routines.id"), nullable=False, index=True)
+    exercise_id = Column(Integer, ForeignKey("exercises.id"), nullable=True)
+    exercise_slug = Column(String, nullable=True)
+    name = Column(String, nullable=False)
+    muscle = Column(String, nullable=True)
+    order = Column(Integer, default=0)
+    target_sets = Column(Integer, nullable=True)
+    target_reps = Column(String, nullable=True)     # e.g. "8-12"
+    notes = Column(Text, nullable=True)
 
 
 def get_db():
