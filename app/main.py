@@ -11,9 +11,9 @@ import base64
 import json
 
 from app.database import (
-    get_db, init_db,
+    get_db, init_db, SessionLocal,
     User, FoodEntry, UserProfile, DayScore, ChatMessage,
-    BodyMeasurement, ManualWorkout, StravaToken, CommunityFood,
+    BodyMeasurement, ManualWorkout, StravaToken, CommunityFood, Exercise,
 )
 from app.rnpa_search import search_rnpa, browse_basics, BASIC_CATEGORIES
 from app.portions import get_portions
@@ -75,6 +75,15 @@ def service_worker():
 @app.on_event("startup")
 def on_startup():
     init_db()
+    # Auto-seed the exercise catalog from the bundled dataset on first boot.
+    from app.exercise_catalog import seed_if_empty
+    db = SessionLocal()
+    try:
+        n = seed_if_empty(db)
+        if n:
+            print(f"[startup] Seeded exercise catalog: {n} exercises")
+    finally:
+        db.close()
 
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -1349,6 +1358,65 @@ def entrenos_page(request: Request, db: Session = Depends(get_db)):
         return redirect
     ctx = _build_workouts_context(request, db, current_user)
     return templates.TemplateResponse("entrenos.html", ctx)
+
+
+@app.get("/ejercicios", response_class=HTMLResponse)
+@app.get("/biblioteca", response_class=HTMLResponse)
+def exercise_library_page(request: Request, db: Session = Depends(get_db)):
+    """Browse the in-app exercise catalog (no Hevy required)."""
+    current_user, redirect = get_user_from_request(request, db)
+    if redirect:
+        return redirect
+
+    exercises = db.query(Exercise).order_by(Exercise.primary_muscle, Exercise.name_en).all()
+    # Minimal payload for instant client-side search/filter (detail fetched on click).
+    items = [{
+        "slug": e.slug,
+        "name": e.name_es or e.name_en,
+        "muscle": e.primary_muscle or "Otro",
+        "equipment": e.equipment_es or "Sin equipo",
+        "category": e.category_es or "",
+        "thumb": (e.images or [None])[0],
+    } for e in exercises]
+
+    muscles = sorted({i["muscle"] for i in items})
+    equipment = sorted({i["equipment"] for i in items})
+
+    return templates.TemplateResponse("ejercicios.html", {
+        "request": request,
+        "current_user": current_user,
+        "items": items,
+        "muscles": muscles,
+        "equipment": equipment,
+        "total": len(items),
+    })
+
+
+@app.get("/api/ejercicios/{slug}")
+def api_exercise_detail(slug: str, request: Request, db: Session = Depends(get_db)):
+    current_user, _ = get_user_from_request(request, db)
+    if not current_user:
+        raise HTTPException(status_code=401)
+    e = db.query(Exercise).filter(Exercise.slug == slug).first()
+    if not e:
+        raise HTTPException(status_code=404)
+    return JSONResponse(content={
+        "slug": e.slug,
+        "name": e.name_es or e.name_en,
+        "name_en": e.name_en,
+        "primary_muscle": e.primary_muscle,
+        "secondary_muscles": e.secondary_muscles_es or [],
+        "equipment": e.equipment_es or "Sin equipo",
+        "category": e.category_es or "",
+        "level": e.level,
+        "mechanic": e.mechanic,
+        "force": e.force,
+        "instructions": e.instructions or [],
+        "images": e.images or [],
+        "coach_notes": e.coach_notes,
+        "source": e.source,
+        "license": e.license,
+    })
 
 
 @app.post("/workouts")
