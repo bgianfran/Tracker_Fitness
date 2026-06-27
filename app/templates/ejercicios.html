@@ -46,7 +46,10 @@
       <h1 style="font-size:1.4em; margin-bottom:4px;">Biblioteca de ejercicios</h1>
       <p class="muted" style="font-size:.88em;">{{ total }} ejercicios · con fotos, músculos e instrucciones</p>
     </div>
-    <a href="/entrenos" class="btn btn-soft" style="font-size:.85em;">← Entrenos</a>
+    <div style="display:flex; gap:8px;">
+      <a href="/ejercicio/nuevo" class="btn btn-primary" style="font-size:.85em;">➕ Nuevo</a>
+      <a href="/entrenos" class="btn btn-soft" style="font-size:.85em;">← Entrenos</a>
+    </div>
   </div>
 
   {% if total == 0 %}
@@ -169,12 +172,20 @@ async function openEx(slug){
     } else if (frames.length === 1) {
       media = `<img src="${esc(frames[0])}" alt="" style="max-height:260px; max-width:100%; border-radius:10px; border:1px solid var(--border);" onerror="this.style.display='none'">`;
     }
-    const meta = [e.equipment, e.level, e.mechanic, e.force].filter(Boolean)
+    const meta = [e.equipment, e.force_es, e.region_es, e.level, e.mechanic].filter(Boolean)
       .map(x => `<span class="chip" style="font-size:.72em;">${esc(x)}</span>`).join('');
     const secs = (e.secondary_muscles||[]).map(m =>
       `<span class="chip" style="font-size:.72em; color:${mColor(m)}; border-color:${mColor(m)};">${esc(m)}</span>`).join('');
     const steps = (e.instructions||[]).map((s,i) =>
       `<li style="margin-bottom:8px;">${esc(s)}</li>`).join('');
+    const loadEntries = Object.entries(e.muscle_load || {}).sort((a,b)=>b[1]-a[1]);
+    const load = loadEntries.length ? `<div style="margin-bottom:16px;">
+      <div class="eyebrow" style="margin-bottom:8px;">Carga por músculo</div>
+      <div class="stack" style="gap:7px;">` + loadEntries.map(([m,p]) => `
+        <div>
+          <div style="display:flex; justify-content:space-between; font-size:.8em; margin-bottom:3px;"><span style="font-weight:600;">${esc(m)}</span><span class="faint">${p}%</span></div>
+          <div style="height:7px; border-radius:999px; background:var(--surface-2); overflow:hidden;"><div style="height:100%; width:${p}%; background:${mColor(m)};"></div></div>
+        </div>`).join('') + `</div></div>` : '';
     modal.innerHTML = `
       <div style="padding:16px 18px; border-bottom:1px solid var(--border); display:flex; align-items:flex-start; justify-content:space-between; gap:12px; position:sticky; top:0; background:var(--surface);">
         <div>
@@ -190,8 +201,10 @@ async function openEx(slug){
           ${secs}
         </div>
         <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:16px;">${meta}</div>
+        ${load}
         ${steps ? `<div class="eyebrow" style="margin-bottom:8px;">Cómo se hace</div><ol style="padding-left:20px; font-size:.9em; color:var(--muted); line-height:1.5;">${steps}</ol>` : ''}
-        <div class="faint" style="font-size:.72em; margin-top:16px;">Fuente: ${esc(e.source||'')} · ${esc(e.license||'')}</div>
+        <a href="/ejercicio/${esc(e.slug)}/editar" class="btn btn-soft btn-block" style="margin-top:16px; font-size:.85em;">✏️ Editar este ejercicio</a>
+        <div class="faint" style="font-size:.72em; margin-top:12px;">Fuente: ${esc(e.source||'')} · ${esc(e.license||'')}</div>
       </div>`;
     // GIF-like animation between the start/finish frames.
     if (!e.gif_url && frames.length >= 2) startAnim(frames); else stopAnim();

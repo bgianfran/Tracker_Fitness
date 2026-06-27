@@ -21,6 +21,10 @@ from app.workout_native import build_native_sessions
 from app.routines_data import (
     build_routines_context, get_routine_prefill, build_folder_progression,
 )
+from app.exercise_catalog import (
+    MUSCLE_GROUPS, EQUIPMENT_OPTIONS, CATEGORY_OPTIONS, FORCE_OPTIONS,
+    REGION_OPTIONS, LEVEL_OPTIONS, default_region, default_muscle_load,
+)
 from app.rnpa_search import search_rnpa, browse_basics, BASIC_CATEGORIES
 from app.portions import get_portions
 from app.openfoodfacts import lookup as off_lookup
@@ -1662,6 +1666,9 @@ def api_exercise_detail(slug: str, request: Request, db: Session = Depends(get_d
     e = db.query(Exercise).filter(Exercise.slug == slug).first()
     if not e:
         raise HTTPException(status_code=404)
+    force_es = {"push": "Empuje", "pull": "Tracción", "static": "Estático"}.get(e.force)
+    region_es = {"superior": "Tren superior", "inferior": "Tren inferior",
+                 "core": "Core / Abdomen", "completo": "Cuerpo completo"}.get(e.region)
     return JSONResponse(content={
         "slug": e.slug,
         "name": e.name_es or e.name_en,
@@ -1673,12 +1680,142 @@ def api_exercise_detail(slug: str, request: Request, db: Session = Depends(get_d
         "level": e.level,
         "mechanic": e.mechanic,
         "force": e.force,
+        "force_es": force_es,
+        "region": e.region,
+        "region_es": region_es,
+        "muscle_load": e.muscle_load or {},
         "instructions": e.instructions or [],
         "images": e.images or [],
+        "gif_url": e.gif_url,
         "coach_notes": e.coach_notes,
+        "is_custom": bool(e.is_custom),
         "source": e.source,
         "license": e.license,
     })
+
+
+# ─── Exercise editor (curate the catalog group by group) ─────────────────────
+
+def _slugify(text):
+    import re
+    s = re.sub(r"[^a-z0-9]+", "_", (text or "").strip().lower()).strip("_")
+    return s or "ejercicio"
+
+
+def _editor_ctx(request, current_user, e=None):
+    if e is not None:
+        load = e.muscle_load or default_muscle_load(e.primary_muscle, e.secondary_muscles_es)
+        ex = {
+            "slug": e.slug, "name_es": e.name_es or e.name_en, "name_en": e.name_en,
+            "category_es": e.category_es, "equipment_es": e.equipment_es,
+            "force": e.force, "region": e.region or default_region(e.primary_muscle, e.secondary_muscles_es),
+            "level": e.level, "primary_muscle": e.primary_muscle,
+            "muscle_load": load, "instructions": "\n".join(e.instructions or []),
+            "coach_notes": e.coach_notes or "", "gif_url": e.gif_url or "",
+            "images": e.images or [], "is_custom": bool(e.is_custom),
+        }
+    else:
+        ex = {"slug": None, "name_es": "", "name_en": "", "category_es": "Fuerza",
+              "equipment_es": "Peso corporal", "force": "", "region": "",
+              "level": "beginner", "primary_muscle": "Pecho", "muscle_load": {},
+              "instructions": "", "coach_notes": "", "gif_url": "", "images": [], "is_custom": True}
+    return {
+        "request": request, "current_user": current_user, "ex": ex, "is_new": e is None,
+        "muscle_groups": MUSCLE_GROUPS, "equipment_options": EQUIPMENT_OPTIONS,
+        "category_options": CATEGORY_OPTIONS, "force_options": FORCE_OPTIONS,
+        "region_options": REGION_OPTIONS, "level_options": LEVEL_OPTIONS,
+    }
+
+
+@app.get("/ejercicio/nuevo", response_class=HTMLResponse)
+def new_exercise_page(request: Request, db: Session = Depends(get_db)):
+    current_user, redirect = get_user_from_request(request, db)
+    if redirect:
+        return redirect
+    return templates.TemplateResponse("ejercicio_editar.html", _editor_ctx(request, current_user, None))
+
+
+@app.get("/ejercicio/{slug}/editar", response_class=HTMLResponse)
+def edit_exercise_page(slug: str, request: Request, db: Session = Depends(get_db)):
+    current_user, redirect = get_user_from_request(request, db)
+    if redirect:
+        return redirect
+    e = db.query(Exercise).filter(Exercise.slug == slug).first()
+    if not e:
+        raise HTTPException(status_code=404)
+    return templates.TemplateResponse("ejercicio_editar.html", _editor_ctx(request, current_user, e))
+
+
+def _apply_exercise_fields(e, p):
+    def s(v):
+        return (v or "").strip() or None
+    e.name_es = s(p.get("name_es")) or e.name_es
+    e.category_es = s(p.get("category_es"))
+    e.equipment_es = s(p.get("equipment_es")) or "Sin equipo"
+    e.force = s(p.get("force"))
+    e.region = s(p.get("region"))
+    e.level = s(p.get("level"))
+    pm = s(p.get("primary_muscle"))
+    if pm:
+        e.primary_muscle = pm
+    # muscle_load: list of {muscle, pct}
+    ml = {}
+    for row in (p.get("muscle_load") or []):
+        m = (row.get("muscle") or "").strip()
+        try:
+            pct = int(round(float(row.get("pct"))))
+        except (ValueError, TypeError):
+            pct = 0
+        if m and pct > 0:
+            ml[m] = ml.get(m, 0) + pct
+    if ml:
+        e.muscle_load = ml
+        e.secondary_muscles_es = [m for m in ml.keys() if m != e.primary_muscle]
+    instr = p.get("instructions")
+    if isinstance(instr, str):
+        e.instructions = [ln.strip() for ln in instr.splitlines() if ln.strip()]
+    elif isinstance(instr, list):
+        e.instructions = [str(x).strip() for x in instr if str(x).strip()]
+    e.coach_notes = s(p.get("coach_notes"))
+    if p.get("gif_url") is not None:
+        e.gif_url = s(p.get("gif_url"))
+
+
+@app.post("/api/ejercicio/{slug}")
+async def update_exercise(slug: str, request: Request, db: Session = Depends(get_db)):
+    current_user, _ = get_user_from_request(request, db)
+    if not current_user:
+        raise HTTPException(status_code=401)
+    e = db.query(Exercise).filter(Exercise.slug == slug).first()
+    if not e:
+        raise HTTPException(status_code=404)
+    p = await request.json()
+    _apply_exercise_fields(e, p)
+    db.commit()
+    return JSONResponse(content={"slug": e.slug})
+
+
+@app.post("/api/ejercicio")
+async def create_exercise(request: Request, db: Session = Depends(get_db)):
+    current_user, _ = get_user_from_request(request, db)
+    if not current_user:
+        raise HTTPException(status_code=401)
+    p = await request.json()
+    name = (p.get("name_es") or p.get("name_en") or "").strip()
+    if not name:
+        raise HTTPException(status_code=400, detail="Poné un nombre al ejercicio.")
+    base = _slugify(name)
+    slug = base
+    n = 2
+    while db.query(Exercise.id).filter(Exercise.slug == slug).first():
+        slug = f"{base}_{n}"
+        n += 1
+    e = Exercise(slug=slug, name_en=name, name_es=name, is_custom=True,
+                 created_by=current_user.id, source="custom", license="Propio")
+    _apply_exercise_fields(e, p)
+    db.add(e)
+    db.commit()
+    return JSONResponse(content={"slug": e.slug})
 
 
 @app.get("/entreno/nuevo", response_class=HTMLResponse)

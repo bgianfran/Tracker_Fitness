@@ -52,6 +52,66 @@ CATEGORY_ES = {
 }
 
 
+# ── Vocabularios para el editor de ejercicios ────────────────────────────────
+MUSCLE_GROUPS = [
+    "Pecho", "Espalda", "Hombros", "Bíceps", "Tríceps", "Antebrazos",
+    "Abdominales", "Cuádriceps", "Isquios", "Glúteos", "Gemelos", "Aductores",
+]
+EQUIPMENT_OPTIONS = [
+    "Peso corporal", "Barra", "Mancuerna", "Polea", "Máquina", "Pesa rusa",
+    "Bandas", "Balón medicinal", "Pelota de ejercicio", "Barra Z", "Rodillo",
+    "Multipower", "Otro", "Sin equipo",
+]
+CATEGORY_OPTIONS = [
+    "Fuerza", "Calentamiento", "Estiramiento", "Pliometría",
+    "Powerlifting", "Halterofilia", "Strongman", "Cardio",
+]
+# (value, label) — value se guarda en `force`
+FORCE_OPTIONS = [("push", "Empuje"), ("pull", "Tracción"), ("static", "Estático")]
+# (value, label) — value se guarda en `region`
+REGION_OPTIONS = [
+    ("superior", "Tren superior"), ("inferior", "Tren inferior"),
+    ("core", "Core / Abdomen"), ("completo", "Cuerpo completo"),
+]
+LEVEL_OPTIONS = [("beginner", "Principiante"), ("intermediate", "Intermedio"), ("expert", "Experto")]
+
+_LOWER = {"Cuádriceps", "Isquios", "Glúteos", "Gemelos", "Aductores"}
+_UPPER = {"Pecho", "Espalda", "Hombros", "Bíceps", "Tríceps", "Antebrazos"}
+
+
+def default_region(primary_muscle, secondary_muscles=None):
+    """Best-effort tren superior/inferior/core/completo from the muscles."""
+    sec = set(secondary_muscles or [])
+    allm = ({primary_muscle} | sec)
+    has_low = bool(allm & _LOWER)
+    has_up = bool(allm & _UPPER)
+    if primary_muscle == "Abdominales":
+        return "core"
+    if has_low and has_up:
+        return "completo"
+    if has_low:
+        return "inferior"
+    return "superior"
+
+
+def default_muscle_load(primary_muscle, secondary_muscles=None):
+    """Auto split: primary ~65%, secondaries share the rest. Editable later."""
+    sec = [m for m in (secondary_muscles or []) if m and m != primary_muscle]
+    if not primary_muscle:
+        return {}
+    if not sec:
+        return {primary_muscle: 100}
+    primary_pct = 65
+    each = round((100 - primary_pct) / len(sec))
+    load = {primary_muscle: primary_pct}
+    for m in sec:
+        load[m] = each
+    # fix rounding so it sums ~100
+    diff = 100 - sum(load.values())
+    load[primary_muscle] += diff
+    return load
+
+
 def to_es_list(muscles):
     """Map a list of EN muscle names to canonical ES groups (deduped, ordered)."""
     out = []

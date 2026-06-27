@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Nuevo ejercicio' if is_new else 'Editar ejercicio' }} – FitTracker{% endblock %}
+
+{% block content %}
+<style>
+  .ed-label { font-size:.8em; font-weight:600; color:var(--muted); margin-bottom:5px; }
+  .ml-row { display:grid; grid-template-columns:1fr 90px 30px; gap:8px; align-items:center; margin-bottom:6px; }
+</style>
+
+<div style="max-width:620px; margin:0 auto;">
+  <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px;">
+    <h1 style="font-size:1.3em;">{{ 'Nuevo ejercicio' if is_new else 'Editar ejercicio' }}</h1>
+    <a href="/ejercicios" class="btn btn-soft" style="font-size:.85em;">Cancelar</a>
+  </div>
+
+  {% if not is_new and ex.images %}
+  <div style="display:flex; gap:8px; overflow-x:auto; margin-bottom:14px;">
+    {% for img in ex.images[:2] %}<img src="{{ img }}" alt="" style="height:120px; border-radius:10px; border:1px solid var(--border);" onerror="this.style.display='none'">{% endfor %}
+  </div>
+  <div class="faint" style="font-size:.78em; margin:-6px 0 14px;">Original: {{ ex.name_en }}</div>
+  {% endif %}
+
+  <div class="card stack" style="gap:14px;">
+    <div>
+      <div class="ed-label">Nombre</div>
+      <input type="text" id="f-name" class="input" value="{{ ex.name_es }}" placeholder="Ej: Press de banca (con barra)">
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+      <div>
+        <div class="ed-label">Categoría</div>
+        <select id="f-category" class="input">
+          {% for c in category_options %}<option value="{{ c }}" {% if ex.category_es == c %}selected{% endif %}>{{ c }}</option>{% endfor %}
+        </select>
+      </div>
+      <div>
+        <div class="ed-label">Equipamiento</div>
+        <select id="f-equipment" class="input">
+          {% for q in equipment_options %}<option value="{{ q }}" {% if ex.equipment_es == q %}selected{% endif %}>{{ q }}</option>{% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+      <div>
+        <div class="ed-label">Tipo</div>
+        <select id="f-force" class="input">
+          <option value="">—</option>
+          {% for v, label in force_options %}<option value="{{ v }}" {% if ex.force == v %}selected{% endif %}>{{ label }}</option>{% endfor %}
+        </select>
+      </div>
+      <div>
+        <div class="ed-label">Enfoque (tren)</div>
+        <select id="f-region" class="input">
+          <option value="">—</option>
+          {% for v, label in region_options %}<option value="{{ v }}" {% if ex.region == v %}selected{% endif %}>{{ label }}</option>{% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+      <div>
+        <div class="ed-label">Nivel</div>
+        <select id="f-level" class="input">
+          {% for v, label in level_options %}<option value="{{ v }}" {% if ex.level == v %}selected{% endif %}>{{ label }}</option>{% endfor %}
+        </select>
+      </div>
+      <div>
+        <div class="ed-label">Músculo principal</div>
+        <select id="f-primary" class="input" onchange="ensurePrimaryInLoad()">
+          {% for m in muscle_groups %}<option value="{{ m }}" {% if ex.primary_muscle == m %}selected{% endif %}>{{ m }}</option>{% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <div>
+      <div style="display:flex; align-items:center; justify-content:space-between;">
+        <div class="ed-label">Carga muscular (% de trabajo)</div>
+        <span id="load-total" class="faint" style="font-size:.78em;"></span>
+      </div>
+      <div id="muscle-load"></div>
+      <button type="button" class="btn btn-ghost" style="font-size:.8em; margin-top:4px;" onclick="addMuscleRow()">+ Agregar músculo</button>
+    </div>
+
+    <div>
+      <div class="ed-label">Indicaciones (una por línea)</div>
+      <textarea id="f-instructions" class="input" rows="6" style="min-height:120px; padding:10px 14px; resize:vertical; line-height:1.45;" placeholder="Paso 1...&#10;Paso 2...">{{ ex.instructions }}</textarea>
+    </div>
+
+    <div>
+      <div class="ed-label">Notas para el coach IA (opcional)</div>
+      <textarea id="f-notes" class="input" rows="2" style="min-height:54px; padding:10px 14px; resize:vertical;" placeholder="Cues, errores comunes, tempo sugerido...">{{ ex.coach_notes }}</textarea>
+    </div>
+
+    <div>
+      <div class="ed-label">GIF / imagen (URL, opcional)</div>
+      <input type="text" id="f-gif" class="input" value="{{ ex.gif_url }}" placeholder="https://...">
+      <div class="faint" style="font-size:.74em; margin-top:4px;">Si la cargás, se muestra animada en lugar de las fotos.</div>
+    </div>
+  </div>
+
+  <button type="button" id="save-btn" class="btn btn-primary btn-block" style="margin-top:14px; font-size:1em;" onclick="saveExercise()">
+    {{ 'Crear ejercicio' if is_new else 'Guardar cambios' }}
+  </button>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const MUSCLES = {{ muscle_groups | tojson }};
+const LOAD = {{ ex.muscle_load | tojson }};
+const POST_URL = {{ ('"/api/ejercicio"' if is_new else '"/api/ejercicio/' ~ ex.slug ~ '"') | safe }};
+
+function esc(s){ return (s||"").replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+function muscleSelect(sel){
+  return `<select class="input ml-muscle">` +
+    MUSCLES.map(m => `<option value="${esc(m)}" ${m===sel?'selected':''}>${esc(m)}</option>`).join('') +
+    `</select>`;
+}
+function addMuscleRow(muscle, pct){
+  const wrap = document.getElementById('muscle-load');
+  const row = document.createElement('div');
+  row.className = 'ml-row';
+  row.innerHTML = `
+    ${muscleSelect(muscle || MUSCLES[0])}
+    <input class="input ml-pct" type="number" min="0" max="100" step="5" placeholder="%" value="${pct ?? ''}" oninput="recalcLoad()">
+    <button type="button" onclick="this.closest('.ml-row').remove(); recalcLoad();" style="background:none; border:none; color:var(--faint); cursor:pointer;">×</button>`;
+  wrap.appendChild(row);
+  row.querySelector('.ml-muscle').addEventListener('change', recalcLoad);
+  recalcLoad();
+}
+function recalcLoad(){
+  let total = 0;
+  document.querySelectorAll('#muscle-load .ml-pct').forEach(i => total += parseFloat(i.value) || 0);
+  const el = document.getElementById('load-total');
+  el.textContent = 'Total: ' + total + '%';
+  el.style.color = (total === 100) ? 'var(--good)' : 'var(--warn)';
+}
+function ensurePrimaryInLoad(){
+  // make sure the chosen primary muscle has a row
+  const pm = document.getElementById('f-primary').value;
+  const present = [...document.querySelectorAll('#muscle-load .ml-muscle')].some(s => s.value === pm);
+  if (!present) addMuscleRow(pm, '');
+}
+
+// init muscle-load rows
+(function(){
+  const entries = Object.entries(LOAD || {});
+  if (entries.length){ entries.forEach(([m, p]) => addMuscleRow(m, p)); }
+  else { addMuscleRow(document.getElementById('f-primary').value, 65); }
+})();
+
+async function saveExercise(){
+  const muscle_load = [];
+  document.querySelectorAll('#muscle-load .ml-row').forEach(r => {
+    muscle_load.push({ muscle: r.querySelector('.ml-muscle').value, pct: r.querySelector('.ml-pct').value });
+  });
+  const payload = {
+    name_es: document.getElementById('f-name').value,
+    category_es: document.getElementById('f-category').value,
+    equipment_es: document.getElementById('f-equipment').value,
+    force: document.getElementById('f-force').value,
+    region: document.getElementById('f-region').value,
+    level: document.getElementById('f-level').value,
+    primary_muscle: document.getElementById('f-primary').value,
+    muscle_load,
+    instructions: document.getElementById('f-instructions').value,
+    coach_notes: document.getElementById('f-notes').value,
+    gif_url: document.getElementById('f-gif').value,
+  };
+  if (!payload.name_es.trim()){ alert('Poné un nombre al ejercicio.'); return; }
+  const btn = document.getElementById('save-btn');
+  btn.disabled = true; btn.textContent = 'Guardando…';
+  try {
+    const resp = await fetch(POST_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+    if (!resp.ok){ const e = await resp.json().catch(()=>({})); throw new Error(e.detail || 'Error'); }
+    window.location.href = '/ejercicios';
+  } catch(e){ alert('Error al guardar: ' + e.message); btn.disabled=false; btn.textContent='Guardar'; }
+}
+</script>
+{% endblock %}

@@ -213,11 +213,13 @@ class Exercise(Base):
     category_es = Column(String, nullable=True)       # Fuerza, Cardio...
     equipment = Column(String, nullable=True)         # raw EN
     equipment_es = Column(String, nullable=True, index=True)
-    force = Column(String, nullable=True)             # push / pull / static
+    force = Column(String, nullable=True)             # push / pull / static (empuje/tracción)
+    region = Column(String, nullable=True, index=True)  # superior / inferior / core / completo
     level = Column(String, nullable=True)             # beginner / intermediate / expert
     mechanic = Column(String, nullable=True)          # compound / isolation
 
     primary_muscle = Column(String, nullable=True, index=True)   # canonical ES group
+    muscle_load = Column(JSON, nullable=True)         # {"Pecho": 70, "Tríceps": 20, ...} % de trabajo
     primary_muscles_raw = Column(JSON, nullable=True)            # original EN list
     secondary_muscles_es = Column(JSON, nullable=True)           # canonical ES list
     secondary_muscles_raw = Column(JSON, nullable=True)
@@ -341,6 +343,8 @@ def init_db():
         "ALTER TABLE routine_exercises ADD COLUMN IF NOT EXISTS sets JSON",
         "ALTER TABLE routine_exercises ADD COLUMN IF NOT EXISTS superset INTEGER",
         "ALTER TABLE workout_exercises ADD COLUMN IF NOT EXISTS superset INTEGER",
+        "ALTER TABLE exercises ADD COLUMN IF NOT EXISTS region VARCHAR",
+        "ALTER TABLE exercises ADD COLUMN IF NOT EXISTS muscle_load JSON",
     ]
     if pg:
         for stmt in migrations:
@@ -359,6 +363,8 @@ def init_db():
             ("routine_exercises", "sets", "TEXT"),
             ("routine_exercises", "superset", "INTEGER"),
             ("workout_exercises", "superset", "INTEGER"),
+            ("exercises", "region", "VARCHAR"),
+            ("exercises", "muscle_load", "TEXT"),
         ]
         for tbl, col, typ in sqlite_cols:
             try:
