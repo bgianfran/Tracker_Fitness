@@ -10,6 +10,9 @@
   .pick-thumb-fb { width:48px; height:48px; flex-shrink:0; border-radius:9px; background:var(--surface-2); display:flex; align-items:center; justify-content:center; font-size:1.4em; color:var(--faint); }
   .ex-mchip { flex:0 0 auto; padding:5px 11px; border-radius:999px; border:2px solid var(--border); background:none; font-size:.8em; font-weight:600; cursor:pointer; color:var(--muted); white-space:nowrap; transition:all .15s; }
   .ex-mchip[data-on="1"] { color:var(--on-accent); background:var(--accent); border-color:var(--accent); }
+  .set-row { display:grid; grid-template-columns:30px 1fr 1fr 0.85fr 28px; gap:7px; align-items:center; margin-bottom:6px; }
+  .set-row input { width:100%; text-align:center; }
+  .ex-vol { font-size:.78em; font-weight:700; color:var(--accent); white-space:nowrap; }
   .modal-bg { position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:200; display:none; align-items:flex-end; justify-content:center; }
   .modal-bg[data-open="1"] { display:flex; }
   .modal-box { background:var(--surface); width:100%; max-width:620px; height:88vh; display:flex; flex-direction:column; border-radius:var(--radius) var(--radius) 0 0; }
@@ -37,6 +40,7 @@
   </div>
 
   <button type="button" class="btn btn-soft btn-block" style="margin-top:12px;" onclick="openPicker()">➕ Agregar ejercicio</button>
+  <div id="total-vol" class="card" style="margin-top:12px; text-align:center; font-size:.9em; color:var(--muted);"><strong>0 kg</strong> de volumen · 0 series</div>
   <button type="button" id="save-btn" class="btn btn-primary btn-block" style="margin-top:10px; font-size:1em;" onclick="saveRoutine()">Guardar rutina</button>
 </div>
 
@@ -107,21 +111,65 @@ function addExercise(slug, name, muscle){
         <span class="chip" style="font-size:.68em; padding:1px 7px; color:${mColor(muscle)}; border-color:${mColor(muscle)};">${esc(muscle)}</span>
         <strong style="font-size:.92em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${esc(name)}</strong>
       </div>
-      <button type="button" onclick="this.closest('.ex-block').remove(); refreshEmpty();" style="background:none; border:none; color:var(--faint); cursor:pointer; font-size:1.2em; line-height:1;">×</button>
+      <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
+        <span class="ex-vol">0 kg</span>
+        <button type="button" onclick="const b=this.closest('.ex-block'); b.remove(); refreshEmpty(); recalcTotal();" style="background:none; border:none; color:var(--faint); cursor:pointer; font-size:1.2em; line-height:1;">×</button>
+      </div>
     </div>
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-      <div>
-        <div class="label" style="margin-bottom:4px;">Series</div>
-        <input class="input rt-sets" type="number" inputmode="numeric" min="1" max="10" placeholder="Ej: 4" value="3">
-      </div>
-      <div>
-        <div class="label" style="margin-bottom:4px;">Reps objetivo</div>
-        <input class="input rt-reps" type="text" placeholder="Ej: 8-12">
-      </div>
-    </div>`;
+    <div class="set-row" style="font-size:.72em; color:var(--faint); font-weight:600;">
+      <div>#</div><div>Kg</div><div>Reps</div><div>RPE</div><div></div>
+    </div>
+    <div class="sets"></div>
+    <button type="button" class="btn btn-ghost" style="font-size:.82em; margin-top:4px;" onclick="addSet(this.closest('.ex-block'))">+ Agregar serie</button>`;
   wrap.appendChild(block);
+  addSet(block); addSet(block); addSet(block);   // start with 3 sets
   refreshEmpty();
   closePicker();
+}
+function addSet(block, preset){
+  const sets = block.querySelector('.sets');
+  const rows = sets.querySelectorAll('.set-row');
+  const last = rows[rows.length - 1];
+  const kg   = preset ? (preset.weight ?? '') : (last ? last.querySelector('.set-kg').value : '');
+  const reps = preset ? (preset.reps ?? '')   : (last ? last.querySelector('.set-reps').value : '');
+  const rpe  = preset ? (preset.rpe ?? '')    : '';
+  const row = document.createElement('div');
+  row.className = 'set-row';
+  row.innerHTML = `
+    <div class="set-n faint" style="font-size:.85em; text-align:center;"></div>
+    <input class="input set-kg" type="number" inputmode="decimal" min="0" step="0.5" placeholder="kg" value="${attr(String(kg))}" oninput="recalcVolume(this.closest('.ex-block'))">
+    <input class="input set-reps" type="number" inputmode="numeric" min="0" placeholder="reps" value="${attr(String(reps))}" oninput="recalcVolume(this.closest('.ex-block'))">
+    <input class="input set-rpe" type="number" inputmode="decimal" min="1" max="10" step="0.5" placeholder="RPE" value="${attr(String(rpe))}">
+    <button type="button" onclick="const b=this.closest('.ex-block'); this.closest('.set-row').remove(); renumber(b); recalcVolume(b);" style="background:none; border:none; color:var(--faint); cursor:pointer;">×</button>`;
+  sets.appendChild(row);
+  renumber(block);
+  recalcVolume(block);
+}
+function renumber(block){
+  block.querySelectorAll('.sets .set-row').forEach((r,i)=>{ r.querySelector('.set-n').textContent = i+1; });
+}
+function recalcVolume(block){
+  if (!block) return;
+  let vol = 0;
+  block.querySelectorAll('.sets .set-row').forEach(r => {
+    const kg = parseFloat(r.querySelector('.set-kg').value) || 0;
+    const reps = parseInt(r.querySelector('.set-reps').value) || 0;
+    vol += kg * reps;
+  });
+  const badge = block.querySelector('.ex-vol');
+  if (badge) badge.textContent = Math.round(vol).toLocaleString('es-AR') + ' kg';
+  recalcTotal();
+}
+function recalcTotal(){
+  let total = 0, sets = 0;
+  document.querySelectorAll('#routine-exercises .ex-block .sets .set-row').forEach(r => {
+    const kg = parseFloat(r.querySelector('.set-kg').value) || 0;
+    const reps = parseInt(r.querySelector('.set-reps').value) || 0;
+    if (kg || reps) sets++;
+    total += kg * reps;
+  });
+  const el = document.getElementById('total-vol');
+  if (el) el.innerHTML = `<strong>${Math.round(total).toLocaleString('es-AR')} kg</strong> de volumen · ${sets} series`;
 }
 
 async function saveRoutine(){
@@ -129,10 +177,15 @@ async function saveRoutine(){
   if (!name){ alert('Poné un nombre a la rutina.'); return; }
   const exercises = [];
   document.querySelectorAll('#routine-exercises .ex-block').forEach(block => {
+    const sets = [];
+    block.querySelectorAll('.sets .set-row').forEach(row => {
+      const w = row.querySelector('.set-kg').value;
+      const r = row.querySelector('.set-reps').value;
+      const rpe = row.querySelector('.set-rpe').value;
+      sets.push({ weight: w, reps: r, rpe: rpe });
+    });
     exercises.push({
-      slug: block.dataset.slug, name: block.dataset.name, muscle: block.dataset.muscle,
-      target_sets: block.querySelector('.rt-sets').value,
-      target_reps: block.querySelector('.rt-reps').value,
+      slug: block.dataset.slug, name: block.dataset.name, muscle: block.dataset.muscle, sets,
     });
   });
   if (!exercises.length){ alert('Agregá al menos un ejercicio.'); return; }

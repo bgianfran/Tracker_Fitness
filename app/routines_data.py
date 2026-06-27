@@ -17,9 +17,12 @@ def build_routines_context(db, user_id):
                 .order_by(RoutineExercise.order, RoutineExercise.id).all())
     ex_by_routine = defaultdict(list)
     for rx in rexs:
+        sets = rx.sets or []
         ex_by_routine[rx.routine_id].append({
             "name": rx.name, "muscle": rx.muscle,
-            "target_sets": rx.target_sets, "target_reps": rx.target_reps,
+            "target_sets": rx.target_sets or len(sets), "target_reps": rx.target_reps,
+            "sets": sets,
+            "volume": round(sum((s.get("weight") or 0) * (s.get("reps") or 0) for s in sets), 1),
         })
 
     # sessions logged per folder
@@ -33,7 +36,8 @@ def build_routines_context(db, user_id):
     def routine_dict(r):
         exs = ex_by_routine.get(r.id, [])
         return {"id": r.id, "name": r.name, "notes": r.notes,
-                "exercises": exs, "exercise_count": len(exs)}
+                "exercises": exs, "exercise_count": len(exs),
+                "volume": round(sum(e.get("volume") or 0 for e in exs), 1)}
 
     folder_list = [{
         "id": f.id, "name": f.name,
@@ -55,10 +59,17 @@ def get_routine_prefill(db, user_id, routine_id):
     rexs = (db.query(RoutineExercise)
             .filter(RoutineExercise.routine_id == r.id)
             .order_by(RoutineExercise.order, RoutineExercise.id).all())
-    prefill = [{
-        "slug": rx.exercise_slug, "name": rx.name, "muscle": rx.muscle,
-        "target_sets": rx.target_sets or 3, "target_reps": rx.target_reps or "",
-    } for rx in rexs]
+    prefill = []
+    for rx in rexs:
+        sets = rx.sets or []
+        if not sets:
+            # Legacy routines without per-set data: synthesise from target_sets.
+            n = rx.target_sets or 3
+            sets = [{"weight": None, "reps": rx.target_reps, "rpe": None} for _ in range(n)]
+        prefill.append({
+            "slug": rx.exercise_slug, "name": rx.name, "muscle": rx.muscle,
+            "sets": sets, "target_sets": rx.target_sets or 3, "target_reps": rx.target_reps or "",
+        })
     return prefill, r.folder_id, r.name
 
 
@@ -102,14 +113,18 @@ def build_folder_progression(db, user_id, folder_id):
             continue
         top = max(wsets, key=lambda x: (x.weight_kg or 0, x.reps or 0))
         volume = sum((x.weight_kg or 0) * (x.reps or 0) for x in wsets)
+        rpes = [x.rpe for x in wsets if x.rpe is not None]
         muscle_by_ex[w.name] = w.muscle or "Otro"
-        progression[w.name].append({
+        entry = {
             "fecha": date_by_session.get(w.session_id),
             "peso_top": round(top.weight_kg or 0, 1),
             "reps_top": top.reps or 0,
             "series": len(wsets),
             "volumen": round(volume, 1),
-        })
+        }
+        if rpes:
+            entry["rpe_promedio"] = round(sum(rpes) / len(rpes), 1)
+        progression[w.name].append(entry)
 
     ejercicios = [{
         "ejercicio": name,

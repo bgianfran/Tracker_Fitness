@@ -32,11 +32,15 @@
     <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:10px;">
       <div style="min-width:0;">
         <div style="font-weight:700; font-size:.95em; margin-bottom:4px;">{{ r.name }}</div>
-        <div class="faint" style="font-size:.78em;">{{ r.exercise_count }} ejercicio{{ '' if r.exercise_count == 1 else 's' }}</div>
+        <div class="faint" style="font-size:.78em;">
+          {{ r.exercise_count }} ejercicio{{ '' if r.exercise_count == 1 else 's' }}{% if r.volume %} · {{ r.volume | round(0) | int }} kg planificados{% endif %}
+        </div>
         {% if r.exercises %}
-        <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;">
-          {% for ex in r.exercises[:6] %}<span class="chip" style="font-size:.72em; padding:2px 8px;">{{ ex.name }}</span>{% endfor %}
-          {% if r.exercises | length > 6 %}<span class="faint" style="font-size:.78em; align-self:center;">+{{ r.exercises | length - 6 }}</span>{% endif %}
+        <div class="stack" style="gap:3px; margin-top:8px; font-size:.8em; color:var(--muted);">
+          {% for ex in r.exercises[:8] %}
+          <div>• {{ ex.name }}{% if ex.target_sets %} <span class="faint">— {{ ex.target_sets }} {{ 'serie' if ex.target_sets == 1 else 'series' }}{% if ex.target_reps %} × {{ ex.target_reps }}{% endif %}</span>{% endif %}</div>
+          {% endfor %}
+          {% if r.exercises | length > 8 %}<div class="faint">+{{ r.exercises | length - 8 }} más</div>{% endif %}
         </div>
         {% endif %}
       </div>

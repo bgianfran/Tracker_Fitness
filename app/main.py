@@ -1926,6 +1926,17 @@ async def create_routine(request: Request, db: Session = Depends(get_db)):
     catalog = {c.slug: c for c in db.query(Exercise).filter(Exercise.slug.in_(slugs)).all()} if slugs else {}
     for i, ex in enumerate(exercises):
         cat = catalog.get(ex.get("slug"))
+        # Normalise per-set targets [{weight, reps, rpe}] to numbers.
+        norm_sets = []
+        for s in (ex.get("sets") or []):
+            w, r, rpe = _opt_float(s.get("weight")), _opt_int(s.get("reps")), _opt_float(s.get("rpe"))
+            if w is None and r is None and rpe is None:
+                continue
+            norm_sets.append({"weight": w, "reps": r, "rpe": rpe})
+        # Legacy fallback fields for compact display.
+        target_sets = len(norm_sets) or _opt_int(ex.get("target_sets"))
+        target_reps = (ex.get("target_reps") or "").strip() or (
+            str(norm_sets[0]["reps"]) if norm_sets and norm_sets[0]["reps"] is not None else None)
         db.add(RoutineExercise(
             routine_id=routine.id,
             exercise_id=cat.id if cat else None,
@@ -1933,8 +1944,9 @@ async def create_routine(request: Request, db: Session = Depends(get_db)):
             name=(ex.get("name") or (cat.name_es or cat.name_en if cat else None) or "Ejercicio"),
             muscle=(ex.get("muscle") or (cat.primary_muscle if cat else None) or "Otro"),
             order=i,
-            target_sets=_opt_int(ex.get("target_sets")),
-            target_reps=(ex.get("target_reps") or "").strip() or None,
+            target_sets=target_sets,
+            target_reps=target_reps,
+            sets=norm_sets or None,
         ))
     db.commit()
     return JSONResponse(content={"id": routine.id})
