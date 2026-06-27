@@ -264,6 +264,7 @@ class WorkoutExercise(Base):
     name = Column(String, nullable=False)
     muscle = Column(String, nullable=True)          # canonical ES group
     order = Column(Integer, default=0)
+    superset = Column(Integer, nullable=True)       # group id; same id = same superset
     notes = Column(Text, nullable=True)
 
 
@@ -316,6 +317,7 @@ class RoutineExercise(Base):
     target_sets = Column(Integer, nullable=True)
     target_reps = Column(String, nullable=True)     # e.g. "8-12" (legacy/fallback)
     sets = Column(JSON, nullable=True)              # [{reps, weight, rpe}, ...] per-set targets
+    superset = Column(Integer, nullable=True)       # group id; same id = same superset
     notes = Column(Text, nullable=True)
 
 
@@ -337,6 +339,8 @@ def init_db():
         "ALTER TABLE food_entries ADD COLUMN IF NOT EXISTS unidad VARCHAR",
         "ALTER TABLE food_entries ADD COLUMN IF NOT EXISTS portion_label VARCHAR",
         "ALTER TABLE routine_exercises ADD COLUMN IF NOT EXISTS sets JSON",
+        "ALTER TABLE routine_exercises ADD COLUMN IF NOT EXISTS superset INTEGER",
+        "ALTER TABLE workout_exercises ADD COLUMN IF NOT EXISTS superset INTEGER",
     ]
     if pg:
         for stmt in migrations:
@@ -353,6 +357,8 @@ def init_db():
             ("food_entries", "unidad", "VARCHAR"),
             ("food_entries", "portion_label", "VARCHAR"),
             ("routine_exercises", "sets", "TEXT"),
+            ("routine_exercises", "superset", "INTEGER"),
+            ("workout_exercises", "superset", "INTEGER"),
         ]
         for tbl, col, typ in sqlite_cols:
             try:

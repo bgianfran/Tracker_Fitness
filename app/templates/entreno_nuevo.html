@@ -75,6 +75,15 @@
     Todavía no agregaste ejercicios.
   </div>
 
+  <!-- Superset action bar (shown when exercises are selected) -->
+  <div id="superset-bar" style="display:none; align-items:center; gap:10px; justify-content:space-between; margin-top:10px; padding:10px 12px; background:var(--accent-soft); border-radius:12px;">
+    <span id="ss-count" class="muted" style="font-size:.84em;">0 seleccionados</span>
+    <div style="display:flex; gap:8px;">
+      <button type="button" id="ss-create-btn" class="btn btn-primary" style="font-size:.8em; padding:6px 12px; min-height:auto;" onclick="createSuperset()" disabled>🔗 Crear superserie</button>
+      <button type="button" class="btn btn-ghost" style="font-size:.8em; padding:6px 12px; min-height:auto;" onclick="clearSelection()">Cancelar</button>
+    </div>
+  </div>
+
   <button type="button" class="btn btn-soft btn-block" style="margin-top:12px;" onclick="openPicker()">➕ Agregar ejercicio</button>
 
   <div id="total-vol" class="card" style="margin-top:12px; text-align:center; font-size:.9em; color:var(--muted);"><strong>0 kg</strong> de volumen · 0 series</div>
@@ -143,21 +152,24 @@ function refreshEmpty(){
   const has = document.querySelectorAll('#session-exercises .ex-block').length > 0;
   document.getElementById('empty-hint').style.display = has ? 'none' : '';
 }
-function addExercise(slug, name, muscle, presetSets){
+function addExercise(slug, name, muscle, presetSets, superset){
   const wrap = document.getElementById('session-exercises');
   const block = document.createElement('div');
   block.className = 'card ex-block';
   block.style.marginBottom = '12px';
   block.dataset.slug = slug; block.dataset.name = name; block.dataset.muscle = muscle;
+  block.dataset.superset = superset || '';
   block.innerHTML = `
     <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px;">
       <div style="display:flex; align-items:center; gap:8px; min-width:0;">
+        <input type="checkbox" class="ss-check" onchange="updateSupersetBar()" title="Seleccionar para superserie" style="width:17px; height:17px; flex-shrink:0; cursor:pointer; accent-color:var(--accent);">
         <span class="chip" style="font-size:.68em; padding:1px 7px; color:${mColor(muscle)}; border-color:${mColor(muscle)};">${esc(muscle)}</span>
         <strong style="font-size:.92em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${esc(name)}</strong>
+        <span class="ss-badge chip" style="display:none; font-size:.62em; padding:1px 6px; cursor:pointer; white-space:nowrap;" onclick="removeFromSuperset(this.closest('.ex-block'))" title="Quitar de la superserie"></span>
       </div>
       <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
         <span class="ex-vol">0 kg</span>
-        <button type="button" onclick="const b=this.closest('.ex-block'); b.remove(); refreshEmpty(); recalcTotal();" style="background:none; border:none; color:var(--faint); cursor:pointer; font-size:1.2em; line-height:1;">×</button>
+        <button type="button" onclick="const b=this.closest('.ex-block'); b.remove(); refreshEmpty(); recalcTotal(); applySupersetColors(); updateSupersetBar();" style="background:none; border:none; color:var(--faint); cursor:pointer; font-size:1.2em; line-height:1;">×</button>
       </div>
     </div>
     <div class="set-row" style="font-size:.72em; color:var(--faint); font-weight:600;">
@@ -219,6 +231,58 @@ function renumber(block){
   block.querySelectorAll('.sets .set-row').forEach((r,i)=>{ r.querySelector('.set-n').textContent = i+1; });
 }
 
+/* ---- supersets ---- */
+const SS_COLORS = ["#f59e0b","#8b5cf6","#10b981","#ec4899","#06b6d4","#ef4444","#14b8a6","#eab308"];
+function ssBlocks(){ return [...document.querySelectorAll('#session-exercises .ex-block')]; }
+function updateSupersetBar(){
+  const n = ssBlocks().filter(b => b.querySelector('.ss-check')?.checked).length;
+  const bar = document.getElementById('superset-bar');
+  bar.style.display = n > 0 ? 'flex' : 'none';
+  document.getElementById('ss-create-btn').disabled = n < 2;
+  document.getElementById('ss-count').textContent = n + ' seleccionado' + (n === 1 ? '' : 's');
+}
+function clearSelection(){
+  ssBlocks().forEach(b => { const c = b.querySelector('.ss-check'); if (c) c.checked = false; });
+  updateSupersetBar();
+}
+function createSuperset(){
+  const checked = ssBlocks().filter(b => b.querySelector('.ss-check').checked);
+  if (checked.length < 2) return;
+  let maxg = 0;
+  ssBlocks().forEach(b => { const g = parseInt(b.dataset.superset) || 0; if (g > maxg) maxg = g; });
+  const gid = maxg + 1;
+  checked.forEach(b => { b.dataset.superset = gid; });
+  // Make the grouped blocks adjacent, preserving their order.
+  let anchor = checked[0];
+  checked.slice(1).forEach(b => { anchor.parentNode.insertBefore(b, anchor.nextSibling); anchor = b; });
+  clearSelection();
+  applySupersetColors();
+}
+function removeFromSuperset(block){
+  block.dataset.superset = '';
+  applySupersetColors();
+}
+function applySupersetColors(){
+  const blocks = ssBlocks();
+  const counts = {};
+  blocks.forEach(b => { const g = b.dataset.superset; if (g) counts[g] = (counts[g] || 0) + 1; });
+  const groups = Object.keys(counts).filter(g => counts[g] >= 2).sort((a, b) => (+a) - (+b));
+  const colorOf = {}, letterOf = {};
+  groups.forEach((g, i) => { colorOf[g] = SS_COLORS[i % SS_COLORS.length]; letterOf[g] = String.fromCharCode(65 + i); });
+  blocks.forEach(b => {
+    const g = b.dataset.superset;
+    const badge = b.querySelector('.ss-badge');
+    if (g && colorOf[g]) {
+      b.style.borderLeft = '5px solid ' + colorOf[g];
+      if (badge) { badge.style.display = ''; badge.style.color = colorOf[g]; badge.style.borderColor = colorOf[g]; badge.textContent = '🔗 Superserie ' + letterOf[g]; }
+    } else {
+      if (g && !colorOf[g]) b.dataset.superset = '';   // drop dangling single-member group
+      b.style.borderLeft = '';
+      if (badge) { badge.style.display = 'none'; badge.textContent = ''; }
+    }
+  });
+}
+
 /* ---- save ---- */
 async function saveWorkout(){
   const exercises = [];
@@ -230,7 +294,7 @@ async function saveWorkout(){
       const rpe = row.querySelector('.set-rpe').value;
       if (kg !== '' || reps !== '') sets.push({ weight_kg: kg, reps: reps, rpe: rpe });
     });
-    exercises.push({ slug: block.dataset.slug, name: block.dataset.name, muscle: block.dataset.muscle, sets });
+    exercises.push({ slug: block.dataset.slug, name: block.dataset.name, muscle: block.dataset.muscle, superset: block.dataset.superset || null, sets });
   });
   if (!exercises.length){ alert('Agregá al menos un ejercicio.'); return; }
 
@@ -254,7 +318,8 @@ async function saveWorkout(){
 }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closePicker(); });
 
-// Pre-fill exercises when starting from a routine (per-set weight/reps/RPE).
-(PREFILL || []).forEach(ex => addExercise(ex.slug, ex.name, ex.muscle, ex.sets || ex.target_sets));
+// Pre-fill exercises when starting from a routine (per-set weight/reps/RPE + supersets).
+(PREFILL || []).forEach(ex => addExercise(ex.slug, ex.name, ex.muscle, ex.sets || ex.target_sets, ex.superset));
+applySupersetColors();
 </script>
 {% endblock %}

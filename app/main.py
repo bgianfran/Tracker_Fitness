@@ -1777,6 +1777,7 @@ async def create_native_workout(request: Request, db: Session = Depends(get_db))
             name=(ex.get("name") or (cat.name_es or cat.name_en if cat else None) or "Ejercicio"),
             muscle=(ex.get("muscle") or (cat.primary_muscle if cat else None) or "Otro"),
             order=i,
+            superset=_opt_int(ex.get("superset")),
         )
         db.add(we)
         db.flush()
@@ -1947,6 +1948,7 @@ async def create_routine(request: Request, db: Session = Depends(get_db)):
             target_sets=target_sets,
             target_reps=target_reps,
             sets=norm_sets or None,
+            superset=_opt_int(ex.get("superset")),
         ))
     db.commit()
     return JSONResponse(content={"id": routine.id})

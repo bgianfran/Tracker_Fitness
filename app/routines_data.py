@@ -69,6 +69,7 @@ def get_routine_prefill(db, user_id, routine_id):
         prefill.append({
             "slug": rx.exercise_slug, "name": rx.name, "muscle": rx.muscle,
             "sets": sets, "target_sets": rx.target_sets or 3, "target_reps": rx.target_reps or "",
+            "superset": rx.superset,
         })
     return prefill, r.folder_id, r.name
 
